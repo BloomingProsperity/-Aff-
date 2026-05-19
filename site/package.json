@@ -6,9 +6,10 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
+    "dev": "node scripts/serve-static.mjs",
+    "build": "node scripts/build-static.mjs",
+    "preview": "node scripts/serve-static.mjs",
+    "build:astro": "astro build",
     "astro": "astro"
   },
   "dependencies": {

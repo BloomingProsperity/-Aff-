@@ -1,5 +1,6 @@
 .claude/
 .omc/
+.playwright-mcp/
 
 site/.claude/
 site/.omc/
