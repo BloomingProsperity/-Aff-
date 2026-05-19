@@ -145,7 +145,11 @@ function Hero({ featured }) {
           <div className="hero-product-frame">
             <Kicker tone="brand">本期主打</Kicker>
             <div className="hero-feature-card">
-              <a href={`#/cards/${featured.slug}`} className="hero-feature-art card-art-frame">
+              <a
+                href={`#/cards/${featured.slug}`}
+                className={window.cardArtFrameClass(featured, "hero-feature-art")}
+                style={window.cardArtFrameStyle(featured)}
+              >
                 <img src={window.cardArt(featured)} alt="" className="art" />
               </a>
               <div className="hero-feature-text">
@@ -176,7 +180,7 @@ function ProductCard({ card }) {
   return (
     <article className="pc" id={`card-${card.slug}`}>
       <a href={`#/cards/${card.slug}`} className="pc-cardface-link" aria-label={`${card.name} 详情`}>
-        <span className="card-art-frame">
+        <span className={window.cardArtFrameClass(card)} style={window.cardArtFrameStyle(card)}>
           <img src={window.cardArt(card)} alt="" className="art" />
         </span>
         {card.tag && <span className="pc-badge">{card.tag}</span>}
@@ -250,9 +254,11 @@ function GiftCardStrip() {
         </div>
         <div className="ggrid">
           {GIFT_CARDS.map(g => (
-            <a key={g.slug} href={`#/shop/${g.slug}`} className="gc">
+            <a key={g.slug} href={`/#/shop/${g.slug}`} className="gc">
               <div className="gc-face">
-                <img src={window.giftArt(g)} alt="" className="art" style={{ width: "100%", height: "auto", aspectRatio: "1.586/1", display: "block" }} />
+                <span className={window.giftArtFrameClass(g)} style={window.giftArtFrameStyle(g)}>
+                  <img src={window.giftArt(g)} alt="" className="art" />
+                </span>
               </div>
               <div className="gc-body">
                 <div className="gc-head">

@@ -27,7 +27,7 @@ function DetailHeader({ back = "#/", backLabel = "全部产品" }) {
           <a className="hdr-tab" href="/#faq">常见问题</a>
         </nav>
         <div className="hdr-right">
-          <a className="hdr-link" href={back}>← {backLabel}</a>
+          <a className="hdr-link" href={back}>返回{backLabel}</a>
           <a className="ca-button ca-button--primary" href="https://t.me/Whohaoe" target="_blank" rel="noopener">加入社群</a>
         </div>
       </div>
@@ -51,11 +51,11 @@ function CardDetail({ slug }) {
       {/* Hero */}
       <section className="d-hero">
         <div className="wrap d-hero-inner">
-          <div className="d-hero-art card-art-frame">
+          <div className={window.cardArtFrameClass(card, "d-hero-art")} style={window.cardArtFrameStyle(card)}>
             <img src={cardArt(card)} alt={`${card.name} 卡面`} className="art" />
           </div>
           <div className="d-hero-text">
-            <a href="/#cards" className="d-back">← 全部银行卡</a>
+            <a href="/#cards" className="d-back">全部银行卡</a>
             <div className="ca-kicker">{card.issuer}</div>
             <h1 className="d-h1">{card.name}</h1>
             <p className="d-lead">{card.lead}</p>
@@ -167,16 +167,16 @@ function CardDetail({ slug }) {
           <h2 className="ca-h2" style={{ marginBottom: 24 }}>看看其它卡</h2>
           <div className="cross">
             {others.map(c => (
-              <a key={c.slug} href={`#/cards/${c.slug}`} className="cross-item">
+              <a key={c.slug} href={`/#/cards/${c.slug}`} className="cross-item">
                 <div className="cross-face">
-                  <span className="card-art-frame">
+                  <span className={window.cardArtFrameClass(c)} style={window.cardArtFrameStyle(c)}>
                     <img src={cardArt(c)} alt="" className="art" />
                   </span>
                 </div>
                 <div className="cross-body">
                   <div className="ca-kicker">{c.issuer}</div>
                   <strong>{c.name}</strong>
-                  <span className="cross-cta">查看 →</span>
+                  <span className="cross-cta">查看详情</span>
                 </div>
               </a>
             ))}
@@ -202,11 +202,11 @@ function GiftDetail({ slug }) {
 
       <section className="d-hero">
         <div className="wrap d-hero-inner">
-          <div className="d-hero-art">
+          <div className={window.giftArtFrameClass(g, "d-hero-art")} style={window.giftArtFrameStyle(g)}>
             <img src={giftArt(g)} alt={`${d.name} 礼品卡`} className="art" />
           </div>
           <div className="d-hero-text">
-            <a href="/#gifts" className="d-back">← 全部礼品卡</a>
+            <a href="/#gifts" className="d-back">全部礼品卡</a>
             <div className="ca-kicker">{d.sub}</div>
             <h1 className="d-h1">{d.name}</h1>
             <p className="d-lead">{d.desc}</p>
@@ -264,14 +264,16 @@ function GiftDetail({ slug }) {
           <h2 className="ca-h2" style={{ marginBottom: 24 }}>看看其它礼品卡</h2>
           <div className="cross">
             {others.map(x => (
-              <a key={x.slug} href={`#/shop/${x.slug}`} className="cross-item">
+              <a key={x.slug} href={`/#/shop/${x.slug}`} className="cross-item">
                 <div className="cross-face">
-                  <img src={giftArt(x)} alt="" className="art" />
+                  <span className={window.giftArtFrameClass(x)} style={window.giftArtFrameStyle(x)}>
+                    <img src={giftArt(x)} alt="" className="art" />
+                  </span>
                 </div>
                 <div className="cross-body">
                   <div className="ca-kicker">{x.scope}</div>
                   <strong>{x.name}</strong>
-                  <span className="cross-cta">查看 →</span>
+                  <span className="cross-cta">查看详情</span>
                 </div>
               </a>
             ))}
@@ -299,7 +301,7 @@ function NotFound() {
         <div className="wrap" style={{ textAlign: "center", padding: "80px 0" }}>
           <h1 className="ca-h2">未找到该产品</h1>
           <p style={{ marginTop: 14 }}>
-            <a className="link-jade" href="#/">← 返回首页</a>
+            <a className="link-jade" href="#/">返回首页</a>
           </p>
         </div>
       </section>

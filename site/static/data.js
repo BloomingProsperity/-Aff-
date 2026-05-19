@@ -34,6 +34,20 @@ window.giftFaceToDataUrl = function(g) {
 // 优先使用 officialArt 字段（指向官方卡面 URL）；否则用 SVG mock
 window.cardArt = function(card) { return card.officialArt || window.cardFaceToDataUrl(card); };
 window.giftArt = function(g)    { return g.officialArt    || window.giftFaceToDataUrl(g); };
+window.cardArtFrameClass = function(card, extra = "") {
+  const layout = card && card.artLayout ? `card-art-frame--${card.artLayout}` : "";
+  return ["card-art-frame", layout, extra].filter(Boolean).join(" ");
+};
+window.cardArtFrameStyle = function(card) {
+  return card && card.artRatio ? { "--card-art-ratio": card.artRatio } : undefined;
+};
+window.giftArtFrameClass = function(g, extra = "") {
+  const layout = g && g.artLayout ? `gift-art-frame--${g.artLayout}` : "";
+  return ["gift-art-frame", layout, extra].filter(Boolean).join(" ");
+};
+window.giftArtFrameStyle = function(g) {
+  return g && g.artRatio ? { "--gift-art-ratio": g.artRatio } : undefined;
+};
 window.CARDS = [
   {
     slug: "bybit-card",
@@ -144,6 +158,8 @@ window.CARDS = [
     network: "Visa / Mastercard",
     bin: "香港",
     officialArt: "/images/cards/official/pokepay-card.png",
+    artLayout: "portrait",
+    artRatio: "287 / 414",
     applyUrl: "https://t.me/Whohaoe",
     youtubeId: "CUfqusNgyVU",
     pros: [
@@ -245,7 +261,16 @@ window.PITFALLS = [
 
 // ── 礼品卡商店（首页轮播 6 张热门）─────────────────────────
 window.GIFT_CARDS = [
-  { slug: "apple",    name: "Apple Gift Card",  scope: "App Store / iTunes",      tag: "热销", price: "$10 起", color: "#1d1d1f" },
+  {
+    slug: "apple",
+    name: "Apple Gift Card",
+    scope: "App Store / iTunes",
+    tag: "热销",
+    price: "$10 起",
+    color: "#1d1d1f",
+    officialArt: "/images/gifts/official/apple-gift-card.jpg",
+    artRatio: "2982 / 1176",
+  },
   { slug: "steam",    name: "Steam 钱包卡",      scope: "美 / 欧 / 英区",           tag: "热销", price: "$5 起",  color: "#1b2838" },
   { slug: "netflix",  name: "Netflix 礼品卡",    scope: "美 / 英区",                tag: null,   price: "$15 起", color: "#a51722" },
   { slug: "google",   name: "Google Play",       scope: "美 / 日 / 英区",           tag: null,   price: "$10 起", color: "#1f60c4" },
@@ -267,7 +292,7 @@ window.TUTORIALS = {
     { n: "01", t: "注册 Bybit 主账户",     b: "邮箱 + 手机号同时验证。开户地区建议选择哈萨克斯坦等非受限地区，大陆身份证可完成 KYC。" },
     { n: "02", t: "KYC L1 身份认证",        b: "大陆身份证正反面 + 人脸识别。通过后获得 USDT 充提权限。全程 3–5 分钟。" },
     { n: "03", t: "充值 USDT 到资金账户",   b: "从 OKX、Binance、钱包转账，仅 TRC20 网络免费。建议首次转入 100 USDT 以上以触发卡申请门槛。" },
-    { n: "04", t: "申请虚拟卡",             b: "侧边栏「Bybit Card」→「虚拟卡」→「立即申请」。几秒钟发卡。" },
+    { n: "04", t: "申请虚拟卡",             b: "侧边栏进入「Bybit Card」，选择「虚拟卡」，再点「立即申请」。几秒钟发卡。" },
     { n: "05", t: "绑定支付宝 / 微信",      b: "支付宝 App > 我的 > 银行卡 > 添加卡。输入卡号 + 有效期 + CVV。验证短信到 Bybit App 的消息中心。" },
     { n: "06", t: "小额测试消费",           b: "推荐先扫一个 7-Eleven 二维码或便利店付 5–10 元。成功扣账后返现 1–3 天到账。" },
   ],
@@ -275,14 +300,14 @@ window.TUTORIALS = {
     { n: "01", t: "注册 Bybit.eu 账户",     b: "需要欧洲居住地址 + 邮箱手机。bybit.eu 与 bybit.com 是不同实体，账户不共享。" },
     { n: "02", t: "KYC 验证",               b: "上传欧盟护照或居留卡 + 居住地址证明（电费单 / 银行账单）。1 个工作日内审核完成。" },
     { n: "03", t: "充值 USDC",              b: "建议充值 100 USDC 以触发新户 10 USDC 体验金。EEA 用户也可法币入金。" },
-    { n: "04", t: "申请欧洲卡",             b: "Card 页面 → 申请虚拟卡 → 同意 EEA 条款。即时发卡。" },
+    { n: "04", t: "申请欧洲卡",             b: "Card 页面选择申请虚拟卡，同意 EEA 条款后即时发卡。" },
     { n: "05", t: "Apple Pay / Google Pay", b: "推荐绑 Apple Pay，欧洲 BIN 在 Stripe 通过率更高，可用于 ChatGPT、Claude 订阅。" },
   ],
   "safepal-card": [
     { n: "01", t: "下载 SafePal App",       b: "iOS / Android 商店搜索 SafePal。注册时支持邮箱或手机号，不强制 KYC。" },
     { n: "02", t: "完成卡片 KYC",           b: "卡片申请入口需独立 KYC：护照 + 人脸 + 自拍持证。2026 年起不再受理身份证。" },
     { n: "03", t: "链上铸造 NFT 开卡",      b: "需 ETH 主网 Gas 费（约 $3–8）。点击「Mint Card NFT」，等待区块确认（10–20 分钟）。" },
-    { n: "04", t: "激活并充值",             b: "Card 页面 → 激活 → 充值 USDT / USDC。SafePal 内置 IBAN 账户可用于法币转入。" },
+    { n: "04", t: "激活并充值",             b: "Card 页面激活后充值 USDT / USDC。SafePal 内置 IBAN 账户可用于法币转入。" },
     { n: "05", t: "绑定支付宝",             b: "支付宝添加卡，验证短信发送到 SafePal App 内消息。直刷不稳，建议改走 Apple Pay。" },
   ],
   "pokepay": [

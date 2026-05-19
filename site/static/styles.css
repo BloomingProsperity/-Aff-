@@ -184,13 +184,34 @@ a { color: inherit; text-decoration: none; }
 }
 
 .card-art-frame {
-  aspect-ratio: 1.586 / 1;
+  aspect-ratio: var(--card-art-ratio, 1.586 / 1);
   border-radius: var(--radius-lg);
   background: var(--bg-page);
   overflow: hidden;
 }
 
+.card-art-frame--portrait {
+  background: transparent;
+  width: min(62%, 220px);
+  margin-inline: auto;
+}
+
 .card-art-frame > .art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.gift-art-frame {
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--gift-art-ratio, 1.586 / 1);
+  border-radius: var(--radius-lg);
+  background: var(--bg-page);
+  overflow: hidden;
+}
+
+.gift-art-frame > .art {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -228,8 +249,16 @@ a { color: inherit; text-decoration: none; }
   transition: border-color 150ms ease;
 }
 .pc:hover { border-color: var(--color-ink); }
-.pc-cardface-link { display: block; padding: 18px 18px 0; position: relative; }
+.pc-cardface-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 226px;
+  padding: 18px 18px 0;
+  position: relative;
+}
 .pc-cardface-link .card-art-frame { display: block; }
+.pc-cardface-link .card-art-frame:not(.card-art-frame--portrait) { width: 100%; }
 .pc-badge {
   position: absolute; top: 28px; right: 28px;
   background: var(--color-ink); color: #fff;
@@ -298,7 +327,7 @@ a { color: inherit; text-decoration: none; }
 }
 .gc:hover { border-color: var(--color-ink); }
 .gc-face {
-  width: 88px; aspect-ratio: 1.586/1;
+  width: 88px;
   border-radius: 8px;
   display: grid; place-items: center;
   color: rgba(255,255,255,.95);
@@ -311,9 +340,6 @@ a { color: inherit; text-decoration: none; }
 .gc-scope { font-size: 11px; color: var(--fg-3); margin-bottom: 6px; }
 .gc-row { display: flex; justify-content: space-between; align-items: baseline; }
 .gc-price { font-size: 13px; font-weight: 700; color: var(--color-ink); font-variant-numeric: tabular-nums; }
-.gc-arrow { font-size: 14px; color: var(--fg-3); transition: transform 150ms ease, color 150ms ease; }
-.gc:hover .gc-arrow { transform: translateX(2px); color: var(--fg-brand); }
-
 /* ============================================================
    Trust
    ============================================================ */
@@ -409,6 +435,12 @@ a { color: inherit; text-decoration: none; }
 }
 .d-hero-art { width: 100%; max-width: 520px; }
 .d-hero-art.card-art-frame { width: 100%; max-width: 520px; }
+.d-hero-art.gift-art-frame { width: 100%; max-width: 620px; }
+.d-hero-art.card-art-frame--portrait {
+  width: min(58vw, 320px);
+  max-width: 320px;
+  justify-self: center;
+}
 .d-hero-text { display: flex; flex-direction: column; gap: 14px; }
 .d-back { font-size: 13px; color: var(--fg-3); font-weight: 700; align-self: flex-start; }
 .d-back:hover { color: var(--fg-brand); }
@@ -489,6 +521,8 @@ a { color: inherit; text-decoration: none; }
 .cross-item:hover { border-color: var(--color-ink); }
 .cross-face { padding: 14px 14px 0; }
 .cross-face .card-art-frame { display: block; }
+.cross-face .card-art-frame--portrait { width: min(62%, 150px); }
+.cross-face .gift-art-frame { display: block; }
 .cross-body { padding: 14px; display: flex; flex-direction: column; gap: 4px; }
 .cross-body strong { font-size: 15px; color: var(--color-ink); margin-top: 2px; }
 .cross-cta { font-size: 12px; font-weight: 700; color: var(--fg-brand); margin-top: 4px; }
