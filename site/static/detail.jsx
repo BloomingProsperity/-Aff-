@@ -8,12 +8,17 @@ const GIFT_DETAILS = window.GIFT_DETAILS;
 const cardArt = window.cardArt;
 const giftArt = window.giftArt;
 
+const dHomeHref = (section = "") => section ? `/#${section}` : "/";
+const dCardHref = slug => `/cards/${slug}`;
+const dGiftHref = slug => `/shop/${slug}`;
+const dGiftBuyHref = (slug, region) => region ? `/shop/${slug}/buy/${region}` : `/shop/${slug}/buy`;
+
 // ── 详情页顶栏（共用） ──────────────────────────────────────
-function DetailHeader({ back = "#/", backLabel = "全部产品" }) {
+function DetailHeader({ back = "/", backLabel = "全部产品" }) {
   return (
     <header className="hdr hdr--detail">
       <div className="hdr-inner">
-        <a href="#/" className="brand">
+        <a href="/" className="brand">
           <span className="ca-brand-mark">卡</span>
           <span className="brand-word">
             <span className="brand-zh">卡研所</span>
@@ -21,10 +26,10 @@ function DetailHeader({ back = "#/", backLabel = "全部产品" }) {
           </span>
         </a>
         <nav className="hdr-nav">
-          <a className="hdr-tab" href="#/">首页</a>
-          <a className="hdr-tab" href="/#cards">银行卡</a>
-          <a className="hdr-tab" href="/#gifts">礼品卡</a>
-          <a className="hdr-tab" href="/#faq">常见问题</a>
+          <a className="hdr-tab" href="/">首页</a>
+          <a className="hdr-tab" href={dHomeHref("cards")}>银行卡</a>
+          <a className="hdr-tab" href={dHomeHref("gifts")}>礼品卡</a>
+          <a className="hdr-tab" href={dHomeHref("faq")}>常见问题</a>
         </nav>
         <div className="hdr-right">
           <a className="hdr-link" href={back}>返回{backLabel}</a>
@@ -46,7 +51,7 @@ function CardDetail({ slug }) {
 
   return (
     <div className="detail">
-      <DetailHeader back="/#cards" backLabel="银行卡" />
+      <DetailHeader back={dHomeHref("cards")} backLabel="银行卡" />
 
       {/* Hero */}
       <section className="d-hero">
@@ -55,7 +60,7 @@ function CardDetail({ slug }) {
             <img src={cardArt(card)} alt={`${card.name} 卡面`} className="art" />
           </div>
           <div className="d-hero-text">
-            <a href="/#cards" className="d-back">全部银行卡</a>
+            <a href={dHomeHref("cards")} className="d-back">全部银行卡</a>
             <div className="ca-kicker">{card.issuer}</div>
             <h1 className="d-h1">{card.name}</h1>
             <p className="d-lead">{card.lead}</p>
@@ -167,7 +172,7 @@ function CardDetail({ slug }) {
           <h2 className="ca-h2" style={{ marginBottom: 24 }}>看看其它卡</h2>
           <div className="cross">
             {others.map(c => (
-              <a key={c.slug} href={`/#/cards/${c.slug}`} className="cross-item">
+              <a key={c.slug} href={dCardHref(c.slug)} className="cross-item">
                 <div className="cross-face">
                   <span className={window.cardArtFrameClass(c)} style={window.cardArtFrameStyle(c)}>
                     <img src={cardArt(c)} alt="" className="art" />
@@ -198,7 +203,7 @@ function GiftDetail({ slug }) {
 
   return (
     <div className="detail">
-      <DetailHeader back="/#gifts" backLabel="礼品卡" />
+      <DetailHeader back={dHomeHref("gifts")} backLabel="礼品卡" />
 
       <section className="d-hero">
         <div className="wrap d-hero-inner">
@@ -206,12 +211,12 @@ function GiftDetail({ slug }) {
             <img src={giftArt(g)} alt={`${d.name} 礼品卡`} className="art" />
           </div>
           <div className="d-hero-text">
-            <a href="/#gifts" className="d-back">全部礼品卡</a>
+            <a href={dHomeHref("gifts")} className="d-back">全部礼品卡</a>
             <div className="ca-kicker">{d.sub}</div>
             <h1 className="d-h1">{d.name}</h1>
             <p className="d-lead">{d.desc}</p>
             <div className="d-cta">
-              <a className="ca-button ca-button--primary ca-button--lg" href="https://t.me/Whohaoe" target="_blank" rel="noopener" data-aff={slug}>立即购买</a>
+              <a className="ca-button ca-button--primary ca-button--lg" href={dGiftBuyHref(slug)} data-aff={slug}>立即购买</a>
               <a className="ca-button ca-button--outline ca-button--lg" href="#use">使用说明</a>
             </div>
           </div>
@@ -234,7 +239,7 @@ function GiftDetail({ slug }) {
                   <span className="region-cur">{r.currency}</span>
                 </div>
                 <div className="region-denom">{r.denom}</div>
-                <a className="region-buy" href="https://t.me/Whohaoe" target="_blank" rel="noopener" data-aff={`${slug}-${r.code}`}>购买 {r.code} 区码</a>
+                <a className="region-buy" href={dGiftBuyHref(slug, r.code)} data-aff={`${slug}-${r.code}`}>购买 {r.code} 区码</a>
               </article>
             ))}
           </div>
@@ -264,7 +269,7 @@ function GiftDetail({ slug }) {
           <h2 className="ca-h2" style={{ marginBottom: 24 }}>看看其它礼品卡</h2>
           <div className="cross">
             {others.map(x => (
-              <a key={x.slug} href={`/#/shop/${x.slug}`} className="cross-item">
+              <a key={x.slug} href={dGiftHref(x.slug)} className="cross-item">
                 <div className="cross-face">
                   <span className={window.giftArtFrameClass(x)} style={window.giftArtFrameStyle(x)}>
                     <img src={giftArt(x)} alt="" className="art" />
@@ -277,6 +282,90 @@ function GiftDetail({ slug }) {
                 </div>
               </a>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <window.Footer />
+    </div>
+  );
+}
+
+function GiftBuy({ slug, region }) {
+  const g = GIFTS_BY_SLUG[slug];
+  const d = GIFT_DETAILS[slug];
+  if (!g || !d) return <NotFound />;
+
+  const selected = d.regions.find(r => r.code.toLowerCase() === String(region || "").toLowerCase()) || null;
+  const regions = selected ? [selected, ...d.regions.filter(r => r.code !== selected.code)] : d.regions;
+
+  return (
+    <div className="detail">
+      <DetailHeader back={dGiftHref(slug)} backLabel={`${d.name} 详情`} />
+
+      <section className="d-hero buy-hero">
+        <div className="wrap d-hero-inner">
+          <div className={window.giftArtFrameClass(g, "d-hero-art")} style={window.giftArtFrameStyle(g)}>
+            <img src={giftArt(g)} alt={`${d.name} 礼品卡`} className="art" />
+          </div>
+          <div className="d-hero-text">
+            <a href={dGiftHref(slug)} className="d-back">返回礼品卡详情</a>
+            <div className="ca-kicker">{selected ? `${selected.name} · ${selected.currency}` : d.sub}</div>
+            <h1 className="d-h1">购买 {d.name}</h1>
+            <p className="d-lead">
+              {selected
+                ? `当前选择 ${selected.name}，可选面额 ${selected.denom}。确认区码和面额后联系客服下单。`
+                : "选择区码和面额后进入下单沟通，避免买错区导致无法兑换。"}
+            </p>
+            <div className="buy-summary">
+              <div><span>产品</span><strong>{d.name}</strong></div>
+              <div><span>区码</span><strong>{selected ? selected.code : "待选择"}</strong></div>
+              <div><span>面额</span><strong>{selected ? selected.denom : g.price}</strong></div>
+            </div>
+            <div className="d-cta">
+              <a
+                className="ca-button ca-button--primary ca-button--lg"
+                href="https://t.me/Whohaoe"
+                target="_blank"
+                rel="noopener"
+                data-aff={selected ? `${slug}-${selected.code}` : slug}
+              >
+                联系下单
+              </a>
+              <a className="ca-button ca-button--outline ca-button--lg" href="#regions">选择区码</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="k-section" id="regions">
+        <div className="wrap">
+          <div className="grid-head">
+            <h2 className="ca-h2">选择购买区码</h2>
+            <span className="ca-meta">购买页：{dGiftBuyHref(slug)}</span>
+          </div>
+          <div className="region-grid">
+            {regions.map(r => (
+              <article key={r.code} className={`region-card ${selected && r.code === selected.code ? "is-selected" : ""}`}>
+                <div className="region-head">
+                  <span className="region-code">{r.code}</span>
+                  <strong>{r.name}</strong>
+                  <span className="region-cur">{r.currency}</span>
+                </div>
+                <div className="region-denom">{r.denom}</div>
+                <a className="region-buy" href={dGiftBuyHref(slug, r.code)} data-aff={`${slug}-${r.code}`}>选择 {r.code} 区码</a>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="k-section">
+        <div className="wrap">
+          <div className="buy-note">
+            <div className="ca-kicker ca-kicker--brand">下单前确认</div>
+            <h2 className="ca-h2">区码必须和账号地区一致</h2>
+            <p>Apple、Steam、Google Play 这类礼品卡通常不支持跨区兑换。下单前先确认账号地区，再选对应区码和面额。</p>
           </div>
         </div>
       </section>
@@ -301,7 +390,7 @@ function NotFound() {
         <div className="wrap" style={{ textAlign: "center", padding: "80px 0" }}>
           <h1 className="ca-h2">未找到该产品</h1>
           <p style={{ marginTop: 14 }}>
-            <a className="link-jade" href="#/">返回首页</a>
+            <a className="link-jade" href="/">返回首页</a>
           </p>
         </div>
       </section>
@@ -309,4 +398,4 @@ function NotFound() {
   );
 }
 
-Object.assign(window, { CardDetail, GiftDetail, NotFound, Dot });
+Object.assign(window, { CardDetail, GiftDetail, GiftBuy, NotFound, Dot });

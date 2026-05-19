@@ -8,6 +8,10 @@ const CARDS = window.CARDS;
 const GIFT_CARDS = window.GIFT_CARDS;
 const FAQS = window.FAQS;
 
+const homeHref = (section = "") => section ? `/#${section}` : "/";
+const cardHref = slug => `/cards/${slug}`;
+const giftHref = slug => `/shop/${slug}`;
+
 // ── 原子组件 ─────────────────────────────────────────────
 
 const Kicker = ({ children, tone, className = "" }) => {
@@ -81,7 +85,7 @@ function PromoBar() {
       <div className="wrap promo-inner">
         <span className="promo-tag">本周</span>
         <span>Bybit 欧洲卡新户体验金调整为 <strong>10 USDC</strong>，活动至 06-30。</span>
-        <a href="#card-bybit-eu-card" className="promo-link">查看</a>
+        <a href="/#card-bybit-eu-card" className="promo-link">查看</a>
       </div>
     </div>
   );
@@ -98,7 +102,7 @@ function Header({ section, setSection }) {
   return (
     <header className="hdr">
       <div className="hdr-inner">
-        <a href="#top" className="brand">
+        <a href="/" className="brand">
           <span className="ca-brand-mark">卡</span>
           <span className="brand-word">
             <span className="brand-zh">卡研所</span>
@@ -107,7 +111,7 @@ function Header({ section, setSection }) {
         </a>
         <nav className="hdr-nav" aria-label="主导航">
           {tabs.map(t => (
-            <a key={t.id} href={`#${t.id}`}
+            <a key={t.id} href={homeHref(t.id)}
               className={`hdr-tab ${section === t.id ? "is-active" : ""}`}
               onClick={() => setSection(t.id)}>
               {t.label}
@@ -115,8 +119,8 @@ function Header({ section, setSection }) {
           ))}
         </nav>
         <div className="hdr-right">
-          <a className="hdr-link" href="#contact">加入社群</a>
-          <a className="ca-button ca-button--primary" href="#cards">立即开卡</a>
+          <a className="hdr-link" href="/#contact">加入社群</a>
+          <a className="ca-button ca-button--primary" href="/#cards">立即开卡</a>
         </div>
       </div>
     </header>
@@ -136,8 +140,8 @@ function Hero({ featured }) {
             <span className="hero-h1-line"><span className="hero-h1-jade">海外银行卡</span>，一站买齐。</span>
           </h1>
           <div className="hero-cta">
-            <a className="ca-button ca-button--primary ca-button--lg" href="#cards">浏览银行卡</a>
-            <a className="ca-button ca-button--outline ca-button--lg" href="#gifts">礼品卡商店</a>
+            <a className="ca-button ca-button--primary ca-button--lg" href="/#cards">浏览银行卡</a>
+            <a className="ca-button ca-button--outline ca-button--lg" href="/#gifts">礼品卡商店</a>
           </div>
         </div>
 
@@ -146,7 +150,7 @@ function Hero({ featured }) {
             <Kicker tone="brand">本期主打</Kicker>
             <div className="hero-feature-card">
               <a
-                href={`#/cards/${featured.slug}`}
+                href={cardHref(featured.slug)}
                 className={window.cardArtFrameClass(featured, "hero-feature-art")}
                 style={window.cardArtFrameStyle(featured)}
               >
@@ -179,7 +183,7 @@ function ProductCard({ card }) {
 
   return (
     <article className="pc" id={`card-${card.slug}`}>
-      <a href={`#/cards/${card.slug}`} className="pc-cardface-link" aria-label={`${card.name} 详情`}>
+      <a href={cardHref(card.slug)} className="pc-cardface-link" aria-label={`${card.name} 详情`}>
         <span className={window.cardArtFrameClass(card)} style={window.cardArtFrameStyle(card)}>
           <img src={window.cardArt(card)} alt="" className="art" />
         </span>
@@ -209,7 +213,7 @@ function ProductCard({ card }) {
         </div>
 
         <div className="pc-foot">
-          <a className="pc-tutorial" href={`#/cards/${card.slug}`}>开卡教程</a>
+          <a className="pc-tutorial" href={cardHref(card.slug)}>开卡教程</a>
           <a className="ca-button ca-button--primary pc-apply"
              href={applyUrl}
              target={applyTarget}
@@ -250,11 +254,11 @@ function GiftCardStrip() {
       <div className="wrap">
         <div className="grid-head">
           <h2 className="ca-h2">礼品卡</h2>
-          <a href="#gifts" className="ca-button ca-button--outline">进入商店</a>
+          <a href="/#gifts" className="ca-button ca-button--outline">进入商店</a>
         </div>
         <div className="ggrid">
           {GIFT_CARDS.map(g => (
-            <a key={g.slug} href={`/#/shop/${g.slug}`} className="gc">
+            <a key={g.slug} href={giftHref(g.slug)} className="gc">
               <div className="gc-face">
                 <span className={window.giftArtFrameClass(g)} style={window.giftArtFrameStyle(g)}>
                   <img src={window.giftArt(g)} alt="" className="art" />
@@ -309,7 +313,7 @@ function Contact() {
           <a className="ca-button ca-button--primary contact-btn" href="https://t.me/Whohaoe" target="_blank" rel="noopener">
             Telegram 群
           </a>
-          <a className="ca-button ca-button--outline contact-btn" href="#wechat">
+          <a className="ca-button ca-button--outline contact-btn" href="/#wechat">
             微信扫码
           </a>
         </div>
@@ -330,20 +334,20 @@ function Footer() {
         <div className="ftr-cols">
           <div>
             <h4>银行卡</h4>
-            {CARDS.slice(0, 4).map(c => <a key={c.slug} href={`#card-${c.slug}`}>{c.name}</a>)}
-            <a href="#cards">查看全部</a>
+            {CARDS.slice(0, 4).map(c => <a key={c.slug} href={`/#card-${c.slug}`}>{c.name}</a>)}
+            <a href="/#cards">查看全部</a>
           </div>
           <div>
             <h4>礼品卡</h4>
-            <a href="#gifts">应用商店</a>
-            <a href="#gifts">流媒体</a>
-            <a href="#gifts">游戏</a>
-            <a href="#gifts">订阅</a>
+            <a href="/#gifts">应用商店</a>
+            <a href="/#gifts">流媒体</a>
+            <a href="/#gifts">游戏</a>
+            <a href="/#gifts">订阅</a>
           </div>
           <div>
             <h4>联系</h4>
             <a href="https://t.me/Whohaoe">Telegram</a>
-            <a href="#wechat">微信</a>
+            <a href="/#wechat">微信</a>
             <a href="mailto:hi@kayanso.com">hi@kayanso.com</a>
           </div>
         </div>
@@ -357,24 +361,47 @@ function Footer() {
 }
 
 // ── 路由 ────────────────────────────────────────────────
-function useHashRoute() {
-  const [hash, setHash] = useState(() => window.location.hash || "#/");
-  React.useEffect(() => {
-    const handler = () => setHash(window.location.hash || "#/");
-    window.addEventListener("hashchange", handler);
-    return () => window.removeEventListener("hashchange", handler);
-  }, []);
-  // 形态：#/cards/<slug>  /  #/shop/<slug>  /  #/
-  const clean = hash.replace(/^#\//, "");
+function normalizeLegacyHashRoute() {
+  const legacy = window.location.hash.match(/^#\/(.+)/);
+  if (!legacy) return false;
+
+  const cleanPath = `/${legacy[1].replace(/^\/+/, "")}`;
+  window.history.replaceState(null, "", cleanPath);
+  return true;
+}
+
+function readRoute() {
+  normalizeLegacyHashRoute();
+
+  const clean = window.location.pathname.replace(/\/+$/, "").replace(/^\/+/, "");
   const parts = clean.split("/").filter(Boolean);
-  if (parts[0] === "cards" && parts[1]) return { scene: "card",  slug: parts[1] };
-  if (parts[0] === "shop"  && parts[1]) return { scene: "gift",  slug: parts[1] };
+
+  if (parts[0] === "cards" && parts[1]) return { scene: "card", slug: parts[1] };
+  if (parts[0] === "shop" && parts[1] && parts[2] === "buy") {
+    return { scene: "giftBuy", slug: parts[1], region: parts[3] || null };
+  }
+  if (parts[0] === "shop" && parts[1]) return { scene: "gift", slug: parts[1] };
   return { scene: "home" };
+}
+
+function useRoute() {
+  const [route, setRoute] = useState(readRoute);
+  React.useEffect(() => {
+    const handler = () => setRoute(readRoute());
+    handler();
+    window.addEventListener("popstate", handler);
+    window.addEventListener("hashchange", handler);
+    return () => {
+      window.removeEventListener("popstate", handler);
+      window.removeEventListener("hashchange", handler);
+    };
+  }, []);
+  return route;
 }
 
 // ── App ────────────────────────────────────────────────
 function App() {
-  const route = useHashRoute();
+  const route = useRoute();
   const [section, setSection] = useState("cards");
 
   // Tweaks
@@ -402,6 +429,8 @@ function App() {
     scene = <window.CardDetail slug={route.slug} />;
   } else if (route.scene === "gift" && window.GiftDetail) {
     scene = <window.GiftDetail slug={route.slug} />;
+  } else if (route.scene === "giftBuy" && window.GiftBuy) {
+    scene = <window.GiftBuy slug={route.slug} region={route.region} />;
   } else {
     scene = (
       <React.Fragment>
