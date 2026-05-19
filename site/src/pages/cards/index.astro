@@ -1,0 +1,563 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { cards } from '../../data/cards';
+
+const idCards = cards.filter(c => c.idType === '身份证');
+const passportCards = cards.filter(c => c.idType === '护照');
+---
+
+<Layout title="银行卡推荐" description="5张主流海外虚拟卡深度测评，身份证/护照分区对比，Bybit、SafePal、Pokepay、Roogoo、Kraken 完整教程">
+
+  <div class="cards-page-wrap">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="tag" style="margin-bottom:14px;">完整测评</div>
+      <h1 class="page-title">银行卡推荐</h1>
+      <p class="page-desc">{cards.length} 张主流海外虚拟卡亲测对比，按开卡所需证件分区，快速找到适合自己的方案。</p>
+    </div>
+
+    <!-- Tab / pill navigation -->
+    <div class="tab-nav" role="tablist" aria-label="证件类型">
+      <a href="#id-card" class="tab-pill tab-id" role="tab">
+        <span class="tab-icon">🪪</span>
+        身份证可开
+        <span class="tab-count">{idCards.length}</span>
+      </a>
+      <a href="#passport" class="tab-pill tab-passport" role="tab">
+        <span class="tab-icon">📘</span>
+        护照开卡
+        <span class="tab-count">{passportCards.length}</span>
+      </a>
+    </div>
+
+    <!-- ===== 身份证开卡区 ===== -->
+    <section id="id-card" class="card-section">
+      <div class="section-heading">
+        <div class="section-accent-bar" style="--bar-color:#00D4FF;"></div>
+        <div>
+          <h2 class="section-title">身份证开卡</h2>
+          <p class="section-subtitle">中国大陆身份证即可完成 KYC，大陆用户首选</p>
+        </div>
+        <span class="section-badge" style="--badge-color:#00D4FF;">🪪 身份证</span>
+      </div>
+
+      <!-- Comparison table -->
+      <div class="table-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr class="table-head-id">
+              <th>卡片</th>
+              <th>评分</th>
+              <th>适用地区</th>
+              <th>费用</th>
+              <th>返现</th>
+              <th>网络</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {idCards.map((card, i) => (
+              <tr class={i % 2 === 1 ? 'row-alt' : ''}>
+                <td>
+                  <div class="table-card-name">
+                    <div class="color-dot" style={`background:${card.color}; box-shadow:0 0 6px ${card.color}60;`}></div>
+                    <div>
+                      <div style="font-weight:700; color:var(--color-ink);">{card.name}</div>
+                      {card.tag && <span class="tag" style="font-size:0.64rem;">{card.tag}</span>}
+                    </div>
+                  </div>
+                </td>
+                <td class="td-rating">{card.rating} ⭐</td>
+                <td class="td-muted">{card.regions}</td>
+                <td class="td-muted">{card.fee}</td>
+                <td class="td-muted">{card.cashback}</td>
+                <td class="td-muted">{card.network}</td>
+                <td>
+                  <div class="td-actions">
+                    <a href={`/cards/${card.slug}`} class="td-link">教程</a>
+                    <a href={card.affLink} target="_blank" class="btn-cta" style="font-size:0.74rem; padding:5px 12px;">申请</a>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Detail cards -->
+      <div class="detail-list">
+        {idCards.map(card => (
+          <div class="detail-card card" style={`--card-color:${card.color};`}>
+            <div class="detail-card-inner">
+              <div class="detail-left">
+                <div class="detail-header">
+                  <div class="color-dot-lg" style={`background:${card.color}; box-shadow:0 0 10px ${card.color}50;`}></div>
+                  <h3 class="detail-name">{card.name}</h3>
+                  {card.tag && <span class="tag">{card.tag}</span>}
+                  <span class="id-badge id-badge-id">🪪 身份证</span>
+                </div>
+                <p class="detail-tagline">{card.tagline}</p>
+
+                <div class="pros-list">
+                  {card.pros.slice(0,3).map(p => (
+                    <span class="pro-chip">✓ {p}</span>
+                  ))}
+                </div>
+
+                <div class="ai-badges">
+                  {[
+                    { name: 'ChatGPT',    s: card.ai.chatgpt },
+                    { name: 'Claude',     s: card.ai.claude },
+                    { name: 'Midjourney', s: card.ai.midjourney },
+                  ].map(a => (
+                    <span class={`ai-badge ai-badge-${a.s === '✅' ? 'ok' : a.s === '⚠️' ? 'warn' : 'no'}`}>
+                      {a.s} {a.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div class="detail-right">
+                <div class="rating-box">
+                  <div class="rating-num">{card.rating}</div>
+                  <div class="rating-label">综合评分</div>
+                </div>
+                <div class="detail-ctas">
+                  <a href={`/cards/${card.slug}`} class="detail-tutorial-link">查看完整教程 →</a>
+                  <a href={card.affLink} target="_blank" class="btn-cta" style="font-size:0.82rem; padding:10px 20px; text-align:center;">立即申请</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <hr class="section-divider" style="margin: 64px 0;" />
+
+    <!-- ===== 护照开卡区 ===== -->
+    <section id="passport" class="card-section">
+      <div class="section-heading">
+        <div class="section-accent-bar" style="--bar-color:#7B2FFF;"></div>
+        <div>
+          <h2 class="section-title">护照开卡</h2>
+          <p class="section-subtitle">需要护照完成 KYC，适合有护照的大陆用户及海外华人</p>
+        </div>
+        <span class="section-badge" style="--badge-color:#7B2FFF;">📘 护照</span>
+      </div>
+
+      <!-- Comparison table -->
+      <div class="table-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr class="table-head-passport">
+              <th>卡片</th>
+              <th>评分</th>
+              <th>适用地区</th>
+              <th>费用</th>
+              <th>返现</th>
+              <th>网络</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {passportCards.map((card, i) => (
+              <tr class={i % 2 === 1 ? 'row-alt' : ''}>
+                <td>
+                  <div class="table-card-name">
+                    <div class="color-dot" style={`background:${card.color}; box-shadow:0 0 6px ${card.color}60;`}></div>
+                    <div>
+                      <div style="font-weight:700; color:var(--color-ink);">{card.name}</div>
+                      {card.tag && <span class="tag" style="font-size:0.64rem;">{card.tag}</span>}
+                    </div>
+                  </div>
+                </td>
+                <td class="td-rating">{card.rating} ⭐</td>
+                <td class="td-muted">{card.regions}</td>
+                <td class="td-muted">{card.fee}</td>
+                <td class="td-muted">{card.cashback}</td>
+                <td class="td-muted">{card.network}</td>
+                <td>
+                  <div class="td-actions">
+                    <a href={`/cards/${card.slug}`} class="td-link">教程</a>
+                    <a href={card.affLink} target="_blank" class="btn-cta" style="font-size:0.74rem; padding:5px 12px;">申请</a>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Detail cards -->
+      <div class="detail-list">
+        {passportCards.map(card => (
+          <div class="detail-card card" style={`--card-color:${card.color};`}>
+            <div class="detail-card-inner">
+              <div class="detail-left">
+                <div class="detail-header">
+                  <div class="color-dot-lg" style={`background:${card.color}; box-shadow:0 0 10px ${card.color}50;`}></div>
+                  <h3 class="detail-name">{card.name}</h3>
+                  {card.tag && <span class="tag">{card.tag}</span>}
+                  <span class="id-badge id-badge-passport">📘 护照</span>
+                </div>
+                <p class="detail-tagline">{card.tagline}</p>
+
+                <div class="pros-list">
+                  {card.pros.slice(0,3).map(p => (
+                    <span class="pro-chip">✓ {p}</span>
+                  ))}
+                </div>
+
+                <div class="ai-badges">
+                  {[
+                    { name: 'ChatGPT',    s: card.ai.chatgpt },
+                    { name: 'Claude',     s: card.ai.claude },
+                    { name: 'Midjourney', s: card.ai.midjourney },
+                  ].map(a => (
+                    <span class={`ai-badge ai-badge-${a.s === '✅' ? 'ok' : a.s === '⚠️' ? 'warn' : 'no'}`}>
+                      {a.s} {a.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div class="detail-right">
+                <div class="rating-box">
+                  <div class="rating-num">{card.rating}</div>
+                  <div class="rating-label">综合评分</div>
+                </div>
+                <div class="detail-ctas">
+                  <a href={`/cards/${card.slug}`} class="detail-tutorial-link">查看完整教程 →</a>
+                  <a href={card.affLink} target="_blank" class="btn-cta" style="font-size:0.82rem; padding:10px 20px; text-align:center;">立即申请</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+  </div>
+
+  <style>
+    .cards-page-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 64px 24px 80px;
+    }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom: 40px; }
+    .page-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+    .page-desc {
+      color: var(--color-ink-2);
+      max-width: 560px;
+      margin: 0;
+    }
+
+    /* ── Tab pills ── */
+    .tab-nav {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 52px;
+      flex-wrap: wrap;
+    }
+    .tab-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      min-width: 160px;
+      border-radius: 100px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.88rem;
+      text-decoration: none;
+      border: 1.5px solid transparent;
+      transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+    }
+    .tab-id {
+      background: rgba(0, 212, 255, 0.08);
+      border-color: rgba(0, 212, 255, 0.3);
+      color: #00D4FF;
+    }
+    .tab-id:hover {
+      background: rgba(0, 212, 255, 0.14);
+      border-color: #00D4FF;
+      box-shadow: 0 0 16px rgba(0, 212, 255, 0.2);
+    }
+    .tab-passport {
+      background: rgba(123, 47, 255, 0.08);
+      border-color: rgba(123, 47, 255, 0.3);
+      color: #9B6FFF;
+    }
+    .tab-passport:hover {
+      background: rgba(123, 47, 255, 0.14);
+      border-color: #7B2FFF;
+      box-shadow: 0 0 16px rgba(123, 47, 255, 0.2);
+    }
+    .tab-icon { font-size: 1rem; }
+    .tab-count {
+      background: rgba(255,255,255,0.1);
+      padding: 1px 8px;
+      border-radius: 100px;
+      font-size: 0.72rem;
+    }
+
+    /* ── Section ── */
+    .card-section { margin-bottom: 0; }
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .section-accent-bar {
+      --bar-color: #00D4FF;
+      width: 4px;
+      height: 40px;
+      background: var(--bar-color);
+      border-radius: 2px;
+      box-shadow: 0 0 10px var(--bar-color);
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    .section-subtitle {
+      margin: 4px 0 0;
+      font-size: 0.85rem;
+      color: var(--color-ink-2);
+    }
+    .section-badge {
+      --badge-color: #00D4FF;
+      margin-left: auto;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 100px;
+      background: color-mix(in srgb, var(--badge-color) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--badge-color) 35%, transparent);
+      color: var(--badge-color);
+      font-family: var(--font-display);
+    }
+
+    /* ── Comparison table ── */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 0 0 32px;
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+    }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .compare-table thead tr th {
+      padding: 12px 16px;
+      text-align: left;
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
+    .table-head-id th {
+      background: rgba(0, 212, 255, 0.05);
+      color: #00D4FF;
+    }
+    .table-head-passport th {
+      background: rgba(123, 47, 255, 0.05);
+      color: #9B6FFF;
+    }
+    .compare-table tbody tr {
+      border-bottom: 1px solid var(--color-border);
+      transition: background 0.12s;
+    }
+    .compare-table tbody tr:last-child { border-bottom: none; }
+    .compare-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .row-alt td { background: rgba(255,255,255,0.015); }
+    .compare-table td { padding: 14px 16px; }
+    .td-rating {
+      font-family: var(--font-display);
+      font-weight: 800;
+      color: var(--color-ink);
+      white-space: nowrap;
+    }
+    .td-muted { color: var(--color-ink-2); font-size: 0.85rem; }
+    .td-actions { display: flex; gap: 8px; align-items: center; }
+    .td-link {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .td-link:hover { opacity: 0.75; }
+    .table-card-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .color-dot-lg {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Detail cards ── */
+    .detail-list { display: grid; gap: 16px; }
+    .detail-card {
+      --card-color: #00D4FF;
+      border-left: 3px solid var(--card-color) !important;
+      border-radius: 14px;
+    }
+    .detail-card:hover {
+      border-color: var(--card-color) !important;
+      box-shadow: 0 0 24px color-mix(in srgb, var(--card-color) 15%, transparent), 0 4px 20px rgba(0,0,0,0.4) !important;
+    }
+    .detail-card-inner {
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .detail-left { flex: 1; min-width: 260px; }
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .detail-name {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+    .id-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 100px;
+      border: 1px solid;
+      font-family: var(--font-display);
+    }
+    .id-badge-id {
+      background: rgba(0, 212, 255, 0.08);
+      border-color: rgba(0, 212, 255, 0.3);
+      color: #00D4FF;
+    }
+    .id-badge-passport {
+      background: rgba(123, 47, 255, 0.08);
+      border-color: rgba(123, 47, 255, 0.3);
+      color: #9B6FFF;
+    }
+    .detail-tagline {
+      color: var(--color-ink-2);
+      font-size: 0.88rem;
+      margin-bottom: 14px;
+    }
+    .pros-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .pro-chip {
+      font-size: 0.76rem;
+      background: rgba(16, 185, 129, 0.08);
+      color: #34D399;
+      padding: 3px 10px;
+      border-radius: 100px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .ai-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .ai-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 100px;
+      border: 1px solid;
+    }
+    .ai-badge-ok   { border-color: rgba(16,185,129,0.4);  background: rgba(16,185,129,0.08);  color: #34D399; }
+    .ai-badge-warn { border-color: rgba(245,158,11,0.4);  background: rgba(245,158,11,0.08);  color: #FCD34D; }
+    .ai-badge-no   { border-color: rgba(239,68,68,0.4);   background: rgba(239,68,68,0.08);   color: #F87171; }
+
+    .detail-right {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .rating-box {
+      text-align: center;
+      padding: 12px 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+    }
+    .rating-num {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.8rem;
+      line-height: 1;
+      background: linear-gradient(135deg, #00D4FF, #7B2FFF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .rating-label {
+      font-size: 0.68rem;
+      color: var(--color-ink-3);
+      margin-top: 4px;
+      white-space: nowrap;
+    }
+    .detail-ctas {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .detail-tutorial-link {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .detail-tutorial-link:hover { opacity: 0.75; }
+
+    @media (max-width: 640px) {
+      .cards-page-wrap { padding: 48px 20px 60px; }
+      .section-badge { margin-left: 0; }
+      .detail-right { width: 100%; justify-content: flex-start; }
+    }
+  </style>
+
+</Layout>

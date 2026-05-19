@@ -1,0 +1,131 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { cards } from '../../data/cards';
+import { getCollection, render } from 'astro:content';
+
+export function getStaticPaths() {
+  return cards.map(card => ({ params: { slug: card.slug }, props: { card } }));
+}
+
+const { card } = Astro.props;
+const allTutorials = await getCollection('tutorials');
+const tutorialEntry = allTutorials.find(t => t.id === card.slug || t.data.cardSlug === card.slug);
+const { Content } = tutorialEntry ? await render(tutorialEntry) : { Content: null };
+---
+
+<Layout title={card.name} description={card.tagline}>
+
+  <div style="max-width:900px; margin:0 auto; padding:48px 20px 80px;">
+
+    <!-- Breadcrumb -->
+    <div style="font-size:0.82rem; color:var(--color-ink-2); margin-bottom:32px;">
+      <a href="/" style="color:var(--color-ink-2);">首页</a>
+      <span style="margin:0 8px;">›</span>
+      <a href="/cards" style="color:var(--color-ink-2);">银行卡推荐</a>
+      <span style="margin:0 8px;">›</span>
+      <span style="color:var(--color-ink);">{card.name}</span>
+    </div>
+
+    <!-- Header -->
+    <div style={`background:${card.color}12; border:1px solid ${card.color}30; border-radius:16px; padding:32px; margin-bottom:40px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:24px;`}>
+      <div>
+        {card.tag && <span class="tag" style="margin-bottom:12px; display:inline-block;">{card.tag}</span>}
+        <h1 style="font-size:2rem; font-weight:800; letter-spacing:-0.02em; margin:0 0 8px;">{card.name}</h1>
+        <p style="color:var(--color-ink-2); font-size:1rem; margin:0 0 20px; max-width:480px;">{card.tagline}</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span style="font-size:0.82rem; background:white; border:1px solid var(--color-border); padding:4px 12px; border-radius:100px;">🌍 {card.regions}</span>
+          <span style="font-size:0.82rem; background:white; border:1px solid var(--color-border); padding:4px 12px; border-radius:100px;">💳 {card.network}</span>
+          <span style="font-size:0.82rem; background:white; border:1px solid var(--color-border); padding:4px 12px; border-radius:100px;">💰 {card.fee}</span>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
+        <div style="text-align:center; background:white; border-radius:14px; padding:16px 24px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <div style="font-family:var(--font-display); font-weight:800; font-size:2.4rem; color:var(--color-ink);">{card.rating}</div>
+          <div style="color:#F59E0B; font-size:1rem; margin:4px 0;">{'★'.repeat(Math.floor(card.rating))}{'☆'.repeat(5-Math.floor(card.rating))}</div>
+          <div style="font-size:0.75rem; color:var(--color-ink-2);">综合评分</div>
+        </div>
+        <a href={card.affLink} target="_blank" class="btn-cta" style="width:100%; text-align:center; padding:14px 28px; font-size:0.95rem;">
+          立即申请 →
+        </a>
+      </div>
+    </div>
+
+    <!-- Pros & Cons -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:40px;">
+      <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:12px; padding:20px;">
+        <div style="font-weight:700; color:#166534; margin-bottom:12px; font-size:0.9rem;">✅ 优点</div>
+        <ul style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px;">
+          {card.pros.map(p => <li style="font-size:0.88rem; color:#166534;">{p}</li>)}
+        </ul>
+      </div>
+      <div style="background:#FFF1F2; border:1px solid #FECDD3; border-radius:12px; padding:20px;">
+        <div style="font-weight:700; color:#9F1239; margin-bottom:12px; font-size:0.9rem;">⚠️ 缺点</div>
+        <ul style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px;">
+          {card.cons.map(c => <li style="font-size:0.88rem; color:#9F1239;">{c}</li>)}
+        </ul>
+      </div>
+    </div>
+
+    <!-- AI 订阅兼容 -->
+    <div style="border:1px solid var(--color-border); border-radius:12px; padding:20px 24px; margin-bottom:40px;">
+      <div style="font-weight:700; font-size:0.95rem; margin-bottom:16px;">🤖 AI 服务订阅兼容</div>
+      <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+        {[
+          { name: 'ChatGPT Plus', status: card.ai.chatgpt },
+          { name: 'Claude Pro',   status: card.ai.claude },
+          { name: 'Midjourney',   status: card.ai.midjourney },
+        ].map(item => (
+          <div style={`display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:100px; font-size:0.85rem; font-weight:600; border:1px solid var(--color-border); background:${item.status === '✅' ? '#F0FDF4' : item.status === '⚠️' ? '#FFFBEB' : '#FFF1F2'};`}>
+            <span>{item.status}</span>
+            <span>{item.name}</span>
+          </div>
+        ))}
+      </div>
+      <p style="font-size:0.82rem; color:var(--color-ink-2); margin:0;">
+        ✅ 可直接使用 &nbsp;·&nbsp; ⚠️ 需特定条件 &nbsp;·&nbsp; ❌ 不支持 &nbsp;—&nbsp; {card.ai.note}
+      </p>
+    </div>
+
+    <!-- Tutorial article content -->
+    <div class="prose" style="margin-bottom:48px;">
+      {Content ? <Content /> : (
+        <div>
+          <h2>开卡教程</h2>
+          <p>详细教程即将上线，欢迎加入社群获取最新攻略。</p>
+        </div>
+      )}
+    </div>
+
+    <!-- CTA block -->
+    <div style="background:var(--color-ink); color:white; border-radius:16px; padding:32px; text-align:center;">
+      <h2 style="color:white; font-size:1.3rem; margin-bottom:8px;">准备好开通 {card.name} 了吗？</h2>
+      <p style="color:#94A3B8; margin-bottom:24px; font-size:0.9rem;">有任何问题，加入社群或扫码联系我，开卡全程协助</p>
+      <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <a href={card.affLink} target="_blank" class="btn-cta" style="font-size:0.95rem; padding:13px 28px;">
+          立即申请 {card.name} →
+        </a>
+        <a href="https://t.me/Whohaoe" target="_blank"
+           style="display:inline-flex; align-items:center; gap:8px; padding:13px 24px; background:var(--color-tg); color:white; border-radius:8px; font-weight:700; font-size:0.9rem; text-decoration:none;">
+          TG 群求助
+        </a>
+      </div>
+    </div>
+
+    <!-- Related cards -->
+    <div style="margin-top:48px;">
+      <h2 style="font-size:1.1rem; margin-bottom:20px;">也可以看看</h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px;">
+        {cards.filter(c => c.slug !== card.slug).slice(0,3).map(c => (
+          <a href={`/cards/${c.slug}`} class="card" style="padding:16px; text-decoration:none; display:flex; gap:12px; align-items:center;">
+            <div style={`width:10px; height:10px; border-radius:50%; background:${c.color}; flex-shrink:0;`}></div>
+            <div>
+              <div style="font-weight:700; font-size:0.9rem;">{c.name}</div>
+              <div style="font-size:0.78rem; color:var(--color-ink-2);">{c.rating} ⭐ · {c.fee}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</Layout>

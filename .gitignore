@@ -1,0 +1,15 @@
+.claude/
+.omc/
+
+site/.claude/
+site/.omc/
+site/.astro/
+site/dist/
+site/node_modules/
+site/.pages-manifest.json
+
+**/__pycache__/
+*.py[cod]
+
+.DS_Store
+Thumbs.db

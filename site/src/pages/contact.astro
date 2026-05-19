@@ -1,0 +1,70 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="联系我" description="加入卡研所社群，微信/Telegram 与博主直接交流，获取最新开卡优惠和邀请码">
+
+  <div style="max-width:800px; margin:0 auto; padding:60px 20px;">
+
+    <div style="margin-bottom:48px; text-align:center;">
+      <div class="tag" style="margin-bottom:12px;">私域社群</div>
+      <h1 style="font-size:2.2rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:12px;">联系我 / 加入社群</h1>
+      <p style="color:var(--color-ink-2);">200+ 华人在里面交流开卡经验、分享最新优惠。有问题直接问，我看到必回。</p>
+    </div>
+
+    <!-- Contact cards -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:48px;">
+
+      <!-- Telegram -->
+      <div class="card" style="padding:32px; text-align:center;">
+        <div style="width:64px; height:64px; border-radius:50%; background:var(--color-tg); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8l-1.68 7.93c-.12.56-.45.7-.92.43l-2.54-1.87-1.22 1.18c-.14.14-.26.26-.52.26l.19-2.63 4.8-4.34c.21-.19-.05-.29-.32-.1L7.83 14.8l-2.5-.78c-.54-.17-.55-.54.12-.8l9.77-3.77c.45-.17.85.11.42.35z"/>
+          </svg>
+        </div>
+        <h2 style="font-size:1.15rem; margin-bottom:8px;">Telegram 频道</h2>
+        <p style="font-size:0.85rem; color:var(--color-ink-2); margin-bottom:20px;">最新开卡优惠、平台动态、跑路预警第一时间在群里发</p>
+        <a href="https://t.me/Whohaoe" target="_blank"
+           style="display:block; padding:12px; background:var(--color-tg); color:white; border-radius:8px; font-weight:700; text-decoration:none; font-size:0.9rem;">
+          点击加入 TG 群 →
+        </a>
+      </div>
+
+      <!-- WeChat -->
+      <div class="card" style="padding:32px; text-align:center;">
+        <div style="width:64px; height:64px; border-radius:50%; background:var(--color-wechat); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+            <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.295.295a.328.328 0 0 0 .186-.059l2.114-1.25a.59.59 0 0 1 .522-.025c.89.287 1.855.44 2.855.44 3.197 0 6.01-1.553 7.404-3.846a6.06 6.06 0 0 1-.295-.018c-3.795-.025-6.87-2.87-6.87-6.407 0-.283.022-.562.063-.836A7.453 7.453 0 0 0 8.691 2.188z"/>
+          </svg>
+        </div>
+        <h2 style="font-size:1.15rem; margin-bottom:8px;">微信</h2>
+        <p style="font-size:0.85rem; color:var(--color-ink-2); margin-bottom:20px;">扫描下方二维码添加我微信，一对一答疑，下单购物也在这里</p>
+        <!-- QR code placeholder -->
+        <div style="width:140px; height:140px; background:#F0EEE9; border:2px dashed var(--color-border); border-radius:12px; margin:0 auto 16px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;">
+          <span style="font-size:2rem;">📱</span>
+          <span style="font-size:0.72rem; color:var(--color-ink-2);">替换为你的二维码</span>
+        </div>
+        <p style="font-size:0.78rem; color:var(--color-ink-2);">微信号：<strong>YOUR_WECHAT_ID</strong></p>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <h2 style="font-size:1.3rem; margin-bottom:20px;">常见问题</h2>
+    <div style="display:flex; flex-direction:column; gap:2px;">
+      {[
+        { q:'进群有什么福利？', a:'专属开卡邀请码（省钱）、最新优惠活动第一时间通知、开卡避坑经验交流。' },
+        { q:'群里能买礼品卡/账号吗？', a:'可以，在群里说需求，我私信你报价和下单方式。支持 USDT 和微信支付。' },
+        { q:'开卡过程中遇到问题怎么办？', a:'直接在群里发截图提问，我和群友会帮你解决。常见问题也可以查看对应教程的"常见问题"板块。' },
+        { q:'你们的 Affiliate 链接会影响我的开卡吗？', a:'完全不影响。使用我的链接开卡，你可能还会得到平台的新用户奖励，双赢。' },
+      ].map((item, i) => (
+        <details style={`border:1px solid var(--color-border); border-radius:10px; padding:16px 20px; background:white; ${i > 0 ? 'margin-top:8px;' : ''}`}>
+          <summary style="font-weight:700; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+            {item.q}
+            <span style="color:var(--color-ink-2); font-weight:400;">+</span>
+          </summary>
+          <p style="margin:12px 0 0; color:var(--color-ink-2); font-size:0.9rem;">{item.a}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</Layout>

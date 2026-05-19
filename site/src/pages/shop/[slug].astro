@@ -1,0 +1,215 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { giftCards } from '../../data/giftcards';
+
+export function getStaticPaths() {
+  return giftCards.map(card => ({ params: { slug: card.slug }, props: { card } }));
+}
+
+const { card } = Astro.props;
+---
+
+<Layout title={card.name} description={`${card.name} 礼品卡代购，支持 ${card.countries.map(c => c.name).join('、')} 等地区`}>
+
+  <div class="detail-wrap">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="/">首页</a>
+      <span>›</span>
+      <a href="/shop">商店</a>
+      <span>›</span>
+      <span>{card.name}</span>
+    </div>
+
+    <!-- Header -->
+    <div class="card-header" style={`--accent: ${card.accent};`}>
+      <div class="card-header-icon">{card.icon}</div>
+      <div>
+        <div class="card-header-category">礼品卡代购</div>
+        <h1 class="card-header-name">{card.name}</h1>
+        <p class="card-header-desc">{card.desc}</p>
+      </div>
+      <div class="card-header-price">
+        <div class="price-num">市价 +5%</div>
+        <div class="price-label">USDT / 微信均可</div>
+      </div>
+    </div>
+
+    <!-- Country picker -->
+    <h2 class="section-title">选择地区</h2>
+    <div class="country-grid">
+      {card.countries.map(c => (
+        <div class="country-card" data-country={c.name}>
+          <div class="country-flag-lg">{c.flag}</div>
+          <div class="country-info">
+            <div class="country-name">{c.name}</div>
+            <div class="country-currency">{c.currency}</div>
+          </div>
+          <div class="country-actions">
+            <a href="https://t.me/Whohaoe" target="_blank" class="btn-sm btn-tg">TG 下单</a>
+            <a href="/contact" class="btn-sm btn-wechat">微信</a>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- Notice -->
+    <div class="notice-box">
+      <span>📌</span>
+      <p>下单时请注明：<strong>礼品卡类型 + 地区 + 面值</strong>，例如「Apple 美区 $50」。付款后即时发送卡密。</p>
+    </div>
+
+  </div>
+
+</Layout>
+
+<style>
+  .detail-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--color-ink-2);
+    margin-bottom: 32px;
+  }
+  .breadcrumb a { color: var(--color-ink-2); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--color-primary); }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 32px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    margin-bottom: 48px;
+    position: relative;
+    overflow: hidden;
+    flex-wrap: wrap;
+  }
+  .card-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 40%, #7B2FFF));
+  }
+  .card-header-icon {
+    font-size: 3rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .card-header-category {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-3);
+    margin-bottom: 6px;
+  }
+  .card-header-name {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .card-header-desc {
+    color: var(--color-ink-2);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+  .card-header-price {
+    margin-left: auto;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .price-num {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.4rem;
+    background: linear-gradient(135deg, #00D4FF, #7B2FFF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .price-label {
+    font-size: 0.75rem;
+    color: var(--color-ink-3);
+    margin-top: 4px;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  .country-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+
+  .country-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .country-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 16px rgba(0, 212, 255, 0.12);
+  }
+  .country-flag-lg { font-size: 1.8rem; flex-shrink: 0; }
+  .country-info { flex: 1; }
+  .country-name { font-weight: 700; font-size: 0.95rem; }
+  .country-currency { font-size: 0.75rem; color: var(--color-ink-3); margin-top: 2px; }
+
+  .country-actions { display: flex; gap: 8px; }
+  .btn-sm {
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .btn-sm:hover { opacity: 0.85; }
+  .btn-tg { background: var(--color-tg); color: white; }
+  .btn-wechat { background: var(--color-wechat); color: white; }
+
+  .notice-box {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 18px 22px;
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 12px;
+    font-size: 0.86rem;
+    color: var(--color-ink-2);
+    line-height: 1.7;
+  }
+  .notice-box p { margin: 0; }
+  .notice-box strong { color: var(--color-primary); }
+
+  @media (max-width: 600px) {
+    .card-header { flex-direction: column; }
+    .card-header-price { margin-left: 0; text-align: left; }
+    .country-grid { grid-template-columns: 1fr; }
+  }
+</style>

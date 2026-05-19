@@ -1,0 +1,455 @@
+﻿---
+import Layout from '../layouts/Layout.astro';
+import { giftCards, subscriptions, giftCardCategories, aiTopups, accounts } from '../data/giftcards';
+
+
+const steps = [
+  { n:'01', title:'选好商品', desc:'确认类型和面值' },
+  { n:'02', title:'联系我',   desc:'微信或 TG 私信下单' },
+  { n:'03', title:'付款',     desc:'USDT / 微信支付' },
+  { n:'04', title:'发货',     desc:'礼品卡即时发送，账号当天交付' },
+];
+---
+
+<Layout title="商店" description="礼品卡代购、订阅账号，Amazon、Apple、Steam、Netflix，微信/TG下单">
+
+  <div class="shop-wrap">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="tag" style="margin-bottom:14px;">私域成交</div>
+      <h1 class="page-title">商店</h1>
+      <p class="page-desc">礼品卡代购、订阅账号合租。所有订单通过微信或 Telegram 私信下单，USDT / 微信支付均可。</p>
+    </div>
+
+    <!-- Steps timeline -->
+    <div class="steps-block">
+      <div class="steps-label">下单流程</div>
+      <div class="steps-grid">
+        {steps.map((s, i) => (
+          <div class="step-item">
+            <div class="step-connector" aria-hidden="true">
+              <div class="step-line" style={i === steps.length - 1 ? 'opacity:0' : ''}></div>
+            </div>
+            <div class="step-dot">
+              <div class="step-dot-inner"></div>
+            </div>
+            <div class="step-content">
+              <div class="step-num">{s.n}</div>
+              <div class="step-title">{s.title}</div>
+              <div class="step-desc">{s.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Gift cards by category -->
+    {giftCardCategories.map(cat => (
+      <div>
+        <div class="section-label">{cat}</div>
+        <div class="products-grid" style="margin-bottom:40px;">
+          {giftCards.filter(p => p.category === cat).map(p => (
+        <a href={`/shop/${p.slug}`} class="product-card card" style={`--accent: ${p.accent};`}>
+          <div class="product-icon-wrap">
+            <div class="product-icon-bg"></div>
+            <div class="product-icon">{p.icon}</div>
+            {p.badge && <span class="tag product-badge">{p.badge}</span>}
+          </div>
+          <div class="product-body">
+            <div class="product-category">礼品卡 · {p.countries.length} 个地区</div>
+            <h3 class="product-name">{p.name}</h3>
+            <p class="product-desc">{p.desc}</p>
+            <div class="country-preview">
+              {p.countries.slice(0, 4).map(c => (
+                <span class="country-flag">{c.flag} {c.name}</span>
+              ))}
+              {p.countries.length > 4 && <span class="country-more">+{p.countries.length - 4}</span>}
+            </div>
+          </div>
+          <div class="product-footer">
+            <span class="product-price">市价 +5%</span>
+            <span class="product-cta">选择地区 →</span>
+          </div>
+          </a>
+          ))}
+        </div>
+      </div>
+    ))}
+
+    <!-- Subscriptions section -->
+    <div class="section-label" style="margin-top:48px;">订阅账号</div>
+    <div class="products-grid">
+      {subscriptions.map(p => (
+        <div class="product-card card" style={`--accent: ${p.accent};`}>
+          <div class="product-icon-wrap">
+            <div class="product-icon-bg"></div>
+            <div class="product-icon">{p.icon}</div>
+            {p.badge && <span class="tag product-badge">{p.badge}</span>}
+          </div>
+          <div class="product-body">
+            <div class="product-category">订阅账号</div>
+            <h3 class="product-name">{p.name}</h3>
+            <p class="product-desc">{p.desc}</p>
+          </div>
+          <div class="product-actions">
+            <a href="https://t.me/Whohaoe" target="_blank" class="product-btn product-btn-tg">TG 下单</a>
+            <a href="/contact" class="product-btn product-btn-wechat">微信下单</a>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- AI 充值 -->
+    <div class="section-label" style="margin-top:48px;">AI 充值</div>
+    <div class="products-grid" style="margin-bottom:48px;">
+      {aiTopups.map(p => (
+        <div class="product-card card" style={`--accent: ${p.accent};`}>
+          <div class="product-icon-wrap">
+            <div class="product-icon-bg"></div>
+            <div class="product-icon">{p.icon}</div>
+            {p.badge && <span class="tag product-badge">{p.badge}</span>}
+          </div>
+          <div class="product-body">
+            <div class="product-category">AI 充值</div>
+            <h3 class="product-name">{p.name}</h3>
+            <p class="product-desc">{p.desc}</p>
+            <div class="product-price">{p.price}</div>
+          </div>
+          <div class="product-actions">
+            <a href="https://t.me/Whohaoe" target="_blank" class="product-btn product-btn-tg">TG 下单</a>
+            <a href="/contact" class="product-btn product-btn-wechat">微信下单</a>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- 账号售卖 -->
+    <div class="section-label">账号售卖</div>
+    <div class="products-grid" style="margin-bottom:48px;">
+      {accounts.map(p => (
+        <div class="product-card card" style={`--accent: ${p.accent};`}>
+          <div class="product-icon-wrap">
+            <div class="product-icon-bg"></div>
+            <div class="product-icon">{p.icon}</div>
+            {p.badge && <span class="tag product-badge">{p.badge}</span>}
+          </div>
+          <div class="product-body">
+            <div class="product-category">账号售卖</div>
+            <h3 class="product-name">{p.name}</h3>
+            <p class="product-desc">{p.desc}</p>
+            <div class="product-price">{p.price}</div>
+          </div>
+          <div class="product-actions">
+            <a href="https://t.me/Whohaoe" target="_blank" class="product-btn product-btn-tg">TG 下单</a>
+            <a href="/contact" class="product-btn product-btn-wechat">微信下单</a>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- Notice -->
+    <div class="notice-box">
+      <span class="notice-icon">📌</span>
+      <p class="notice-text"><strong>说明：</strong>所有商品均为个人代购，非官方渠道。礼品卡为正规来源，账号类商品请在下单前确认平台条款。付款前请在社群内核实，谨防冒充本人的诈骗账号。</p>
+    </div>
+
+  </div>
+
+  <style>
+    .shop-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 64px 24px 80px;
+    }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom: 52px; }
+    .page-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+    .page-desc {
+      color: var(--color-ink-2);
+      max-width: 560px;
+      margin: 0;
+    }
+
+    /* ── Steps timeline ── */
+    .steps-block {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 52px;
+      position: relative;
+      overflow: hidden;
+    }
+    .steps-block::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #00D4FF, #7B2FFF);
+    }
+    .steps-label {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+      margin-bottom: 24px;
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      position: relative;
+    }
+    @media (max-width: 640px) {
+      .steps-grid { grid-template-columns: 1fr 1fr; gap: 24px 0; }
+    }
+    @media (max-width: 400px) {
+      .steps-grid { grid-template-columns: 1fr; }
+    }
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      position: relative;
+      padding-right: 20px;
+    }
+    .step-connector {
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      right: 0;
+      height: 1px;
+      z-index: 0;
+    }
+    .step-line {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-violet));
+      opacity: 0.3;
+    }
+    .step-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--color-surface-2);
+      border: 1.5px solid var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      margin-bottom: 14px;
+      box-shadow: 0 0 10px rgba(0,212,255,0.25);
+    }
+    .step-dot-inner {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-primary);
+    }
+    .step-num {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.5rem;
+      line-height: 1;
+      background: linear-gradient(135deg, #00D4FF, #7B2FFF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+    .step-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--color-ink);
+      margin-bottom: 4px;
+    }
+    .step-desc {
+      font-size: 0.8rem;
+      color: var(--color-ink-2);
+    }
+
+    /* ── Products grid ── */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .product-card {
+      --accent: #00D4FF;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .product-card:hover {
+      border-color: color-mix(in srgb, var(--accent) 40%, transparent) !important;
+      box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 12%, transparent), 0 4px 20px rgba(0,0,0,0.4) !important;
+    }
+    .product-icon-wrap {
+      position: relative;
+      padding: 24px 24px 20px;
+      overflow: hidden;
+    }
+    .product-icon-bg {
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      filter: blur(20px);
+      pointer-events: none;
+    }
+    .product-icon {
+      font-size: 2.2rem;
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+    }
+    .product-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 2;
+    }
+    .product-body {
+      padding: 0 24px 0;
+      flex: 1;
+    }
+    .product-category {
+      font-size: 0.72rem;
+      color: var(--color-ink-3);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .product-name {
+      font-size: 1.05rem;
+      margin: 0 0 8px;
+    }
+    .product-desc {
+      font-size: 0.85rem;
+      color: var(--color-ink-2);
+      margin: 0 0 14px;
+      line-height: 1.6;
+    }
+    .section-label {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+      margin-bottom: 20px;
+    }
+    .country-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .country-flag {
+      font-size: 0.74rem;
+      padding: 2px 8px;
+      border-radius: 100px;
+      border: 1px solid var(--color-border);
+      color: var(--color-ink-2);
+      background: var(--color-surface);
+      white-space: nowrap;
+    }
+    .country-more {
+      font-size: 0.74rem;
+      padding: 2px 8px;
+      border-radius: 100px;
+      border: 1px solid var(--color-border);
+      color: var(--color-primary);
+      background: var(--color-surface);
+    }
+    .product-footer {
+      padding: 0 24px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .product-cta {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+    .product-card { text-decoration: none; color: inherit; }
+
+    .product-price {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1rem;
+      background: linear-gradient(135deg, #00D4FF, #7B2FFF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+    .product-actions {
+      padding: 0 24px 20px;
+      display: flex;
+      gap: 8px;
+    }
+    .product-btn {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .product-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .product-btn-tg {
+      background: var(--color-tg);
+      color: white;
+    }
+    .product-btn-wechat {
+      background: var(--color-wechat);
+      color: white;
+    }
+
+    /* ── Notice ── */
+    .notice-box {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 20px 24px;
+      background: rgba(0, 212, 255, 0.05);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      border-radius: 12px;
+      font-size: 0.88rem;
+    }
+    .notice-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .notice-text {
+      color: var(--color-ink-2);
+      margin: 0;
+      line-height: 1.7;
+    }
+    .notice-text strong { color: var(--color-primary); }
+
+    @media (max-width: 640px) {
+      .shop-wrap { padding: 48px 20px 60px; }
+      .steps-block { padding: 24px 20px; }
+      .products-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+
+</Layout>
