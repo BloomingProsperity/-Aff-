@@ -340,43 +340,43 @@ window.TUTORIALS = {
   "bybit-card": [
     {
       n: "01",
-      t: "准备环境并安装 Bybit App",
+      t: "准备 VPN 环境并安装 Bybit App",
       img: "/images/tutorials/bybit-card/step-01.jpg",
-      caption: "第一屏不是开卡，而是先把 App、注册入口、验证码和后续 KYC 材料准备好。",
-      b: "先点本页“立即申请”进入 Bybit，再回 App 完成注册、KYC、开卡和绑卡。后续开卡入口、身份识别、查看卡号和 3DS 验证都在 App 里做。",
+      caption: "开始前先确认 IP 地区——台湾或澳洲节点最稳，香港/美国/新加坡/欧洲节点可能被限制注册。",
+      b: "Bybit 对注册 IP 有要求。大陆用户请切换 VPN 到台湾或澳洲节点再注册，不要用香港、美国、新加坡或欧洲节点。同一张身份证只能注册一个 Bybit 账户；如需第二个账户，可换用护照或驾照。",
       actions: [
-        "先点击本页上方“立即申请”，使用我的邀请链接：https://www.bybit.com/cards/?ref=RZDGOXK&source=applet_invite。",
-        "iPhone 先在 App Store 搜 Bybit；如果当前商店搜不到，就按教程改用可下载 Bybit 的 Apple ID 地区后再安装。",
-        "Android 优先从 Google Play 或 Bybit 官方下载页安装，安装后确认图标、开发者和官网一致。",
-        "准备一个长期可用邮箱，一个能收短信的手机号，以及身份证或护照。",
-        "把手机相机权限、相册权限、通知权限打开，后面拍证件、做人脸、收交易通知都会用到。",
-        "如果你已经有 Bybit 老账户，先确认能正常登录，再进入 App 首页；不要先点 Card，先看 KYC 状态。",
-        "如果你之前开过旧卡，先记下旧卡余额和交易记录，后面会单独处理换卡。"
+        "切换 VPN 至台湾或澳洲节点，在浏览器搜索「我的 IP」，确认显示台湾或澳洲地址。",
+        "不要使用香港、美国、新加坡、欧洲节点，这些地区注册后往往无法开卡。",
+        "iPhone 用户在 App Store 搜索并下载 Bybit；如搜不到，切换 Apple ID 地区（如美区或台区）后再安装。",
+        "Android 用户从 Google Play 或 Bybit 官方下载页安装。",
+        "打开 App，确认图标和开发者信息与官网一致。",
+        "提前准备好：海外邮箱（Gmail / Outlook）、境外手机号、身份证或护照。",
+        "开启 App 相机权限、相册权限和通知权限，后面拍证件、做人脸、收交易通知都会用到。"
       ],
       checks: [
-        "已经通过我的邀请链接打开 Bybit。",
-        "邮箱、手机号、证件都在手边。",
-        "App 通知已开启，后续审核和交易消息能收到。"
+        "浏览器「我的 IP」显示台湾或澳洲。",
+        "Bybit App 已安装并能正常打开。",
+        "邮箱、手机号、证件都在手边。"
       ],
       warnings: [
-        "我的邀请码是 RZDGOXK，注册页或后续 Referral Code 页面出现邀请码时就填这个。",
-        "App 版本太旧会看不到 Card 入口，先更新到最新版。"
+        "香港 IP 注册后往往无法开卡，一定要换台湾或澳洲节点再操作。",
+        "同一身份证只能注册一个 Bybit 账户，切勿重复注册。"
       ]
     },
     {
       n: "02",
-      t: "注册账号：邮箱/手机号、居住地、邀请码、验证码",
+      t: "注册账号：邮箱/手机号、居住地选海外、邀请码",
       img: "/images/tutorials/bybit-card/step-01.jpg",
-      caption: "注册页截图：创建账号后依次完成居住地、邮箱/手机号、验证码、密码。",
-      b: "注册入口从本页进入，邀请码填写 RZDGOXK。注册页如果没有邀请码框，后面进入 Referral Code 页面继续填写 RZDGOXK。",
+      caption: "注册页截图：居住地选台湾或澳洲，邀请码填 RZDGOXK，再完成验证码和密码。",
+      b: "通过本页邀请链接进入 Bybit，邀请码 RZDGOXK 已自动带入。注册时居住地（Country of Residence）选海外（台湾或澳洲），不要选中国大陆，否则后续开卡会受限。",
       actions: [
-        "打开 Bybit App，点击 Create Account / 创建账号。",
-        "在 Country/Region of Residence 或居住地页面按注册页提示完成选择，先把账号注册出来。",
-        "选择邮箱注册或手机号注册；手机号注册通常支持中国 +86，邮箱注册后后面会补手机号。",
-        "邀请码输入框填 RZDGOXK；如果注册页没有邀请码框，后面 Referral Code 页面也填 RZDGOXK。",
+        "点击本页上方「立即申请」，使用邀请链接进入注册页（链接已带 ref=RZDGOXK）。",
+        "Country/Region of Residence（居住地）选择台湾（Taiwan）或澳洲（Australia），不选中国大陆。",
+        "选择邮箱注册或手机号注册均可。",
+        "邀请码栏显示 RZDGOXK 时不要删除；空白时手动填写 RZDGOXK。",
         "输入邮箱验证码或短信验证码。",
         "设置登录密码，完成注册。",
-        "页面提示 Face ID / Touch ID / 指纹登录时可以开启，后面查看卡号时会方便。"
+        "如已有老账户，直接登录后跳到步骤 03。"
       ],
       checks: [
         "能进入 Bybit 首页。",
@@ -384,8 +384,8 @@ window.TUTORIALS = {
         "邮箱或手机号至少有一个已验证。"
       ],
       warnings: [
-        "注册链接已经带 ref=RZDGOXK，页面自动填邀请码时不要删除。",
-        "验证码过期就重新发送，不要连续多次输错。"
+        "居住地不要选中国大陆，否则后续开卡会受限。",
+        "邀请码 RZDGOXK 已带入链接，注意不要手动删除。"
       ]
     },
     {
@@ -396,72 +396,71 @@ window.TUTORIALS = {
       b: "Bybit Card 查看卡号、修改限额、提现和部分交易确认都会触发安全验证。开卡前先把 2FA、反钓鱼码和通知打开，后面不会卡在验证环节。",
       actions: [
         "点击头像或 Profile，进入 Security / 安全。",
-        "绑定 Google Authenticator 或平台推荐的 2FA。",
-        "保存 2FA 恢复码。",
+        "绑定 Google Authenticator 或平台推荐的 2FA 应用。",
+        "保存 2FA 恢复码，截图备份妥善保管。",
         "设置 Anti-Phishing Code / 反钓鱼码。",
         "开启登录通知、交易通知、提现通知。",
-        "确认登录设备列表里只有你自己的设备。",
-        "如果有 Passkey / 生物识别选项，按自己习惯开启。"
+        "确认登录设备列表里只有自己的设备。"
       ],
       checks: [
         "邮箱、手机号、2FA 至少两项可用。",
         "能收到 Bybit 安全邮件或 App 推送。",
-        "查看卡片信息前不需要临时补安全项。"
+        "安全设置页面没有红色警告。"
       ],
       warnings: [
-        "后面卡号页通常要二次验证，提前做完会少卡很多。",
-        "反钓鱼码可以帮助识别 Bybit 邮件，审核邮件和补件邮件会更好判断。"
+        "后面查看卡号需要二次验证，提前设好会少卡很多。",
+        "反钓鱼码能帮助识别真实 Bybit 邮件，审核和补件邮件看一眼就知道真假。"
       ]
     },
     {
       n: "04",
-      t: "完成 KYC1：选择证件签发国、拍身份证、人脸识别",
+      t: "完成 KYC1：居住国家选海外、证件签发国选中国、人脸识别",
       img: "/images/tutorials/bybit-card/step-02.jpg",
-      caption: "KYC 截图：证件签发国家、证件类型、正反面、人脸识别是核心。",
-      b: "大陆用户通常先做一级认证，证件签发国家选择中国，证件类型选择身份证，再完成正反面和人脸识别。",
+      caption: "KYC 截图：居住国家（Country of Residence）选台湾/澳洲；证件签发国（Document Issuing Country）选中国，用大陆身份证没问题。",
+      b: "KYC 时注意区分两个字段：居住国家（Country of Residence）选海外（台湾或澳洲）；证件签发国（Document Issuing Country）选中国——用大陆身份证完全可以通过。",
       actions: [
-        "在 Profile / Account 里点 Identity Verification / 身份认证。",
-        "选择个人认证，不选企业认证。",
-        "证件签发国家按证件选择；大陆身份证通常选择 China / 中国。",
-        "证件类型选择 ID Card / 身份证；如果你实际用护照，就选 Passport。",
-        "拍身份证人像面，确保四角完整、姓名和证件号清楚。",
-        "拍身份证国徽面，确保有效期和签发机关清楚。",
-        "进入人脸识别，按页面要求眨眼、转头或保持正脸。",
-        "如果页面出现身份认证问卷，逐项回答后提交。"
+        "在 Profile / Account 里点 Identity Verification / 身份认证，选择个人认证。",
+        "Country of Residence（居住国家）选台湾（Taiwan）或澳洲（Australia），不选中国大陆。",
+        "Document Issuing Country（证件签发国）选 China / 中国——大陆身份证没问题。",
+        "证件类型选择 ID Card / 身份证；用护照就选 Passport。",
+        "拍摄身份证人像面，确保四角完整、姓名和证件号清晰。",
+        "拍摄身份证国徽面，确保有效期和签发机关清晰。",
+        "进入人脸识别，按页面要求保持正脸或按提示动作。",
+        "提交后等待审核，通常 10 分钟到 24 小时内完成。"
       ],
       checks: [
         "KYC 页面显示 Approved / 已通过。",
-        "姓名、生日、证件签发国与证件一致。",
-        "如果提示预计 3 个工作日，先等审核或看邮件补件。"
+        "居住国家显示台湾或澳洲，不是中国大陆。",
+        "证件签发国显示 China，与证件一致。"
       ],
       warnings: [
-        "KYC 通过后再进入开卡页，没通过就先等审核结果。",
-        "模糊、反光、边角缺失会导致返工。"
+        "居住国家和证件签发国是两个不同字段，不要混淆——居住国家选海外，证件签发国选中国。",
+        "照片模糊、反光、边角缺失会导致返工，重拍一次比反复提交快。"
       ]
     },
     {
       n: "05",
       t: "找到 Card 入口：资产页激活或 More / Finance / Card",
       img: "/images/tutorials/bybit-card/step-03.jpg",
-      caption: "Card 入口截图：先找资产页激活按钮，再找 More / Finance / Card。",
-      b: "按这两个入口找：先看资产页有没有“激活 Bybit Card”，没有就去首页 More / 更多，再进 Finance / 金融找到 Card。",
+      caption: "Card 入口截图：先找资产页激活按钮，没有就去 More / Finance / Card。",
+      b: "KYC 通过后回到 Bybit 首页，按以下两个入口找 Card：先看资产页有没有「激活 Bybit Card」，没有就去首页 More / Finance / Card。",
       actions: [
         "KYC 通过后回到 Bybit 首页。",
         "先点底部 Assets / 资产，看中间是否有 Activate my Bybit Card / 激活 Bybit Card。",
         "如果资产页没有，点首页 More / 更多。",
-        "在 Finance / 金融或 Earn/Finance 分类里找 Card。",
-        "进入 Bybit Card 页面后，点 Activate Bybit Card / Apply Now / Get Your Card。",
-        "如果页面问虚拟卡还是实体卡，先选 Virtual Card / 虚拟卡。",
-        "如果页面只显示 waitlist 或不可申请，先更新 App 并重新登录再看。"
+        "在 Finance / 金融分类里找到 Card。",
+        "进入 Bybit Card 页面，点 Activate Bybit Card / Apply Now / Get Your Card。",
+        "如果询问虚拟卡还是实体卡，先选 Virtual Card / 虚拟卡。",
+        "如果显示 waitlist 或不可申请，先更新 App 并重新登录再看。"
       ],
       checks: [
         "能进入 Bybit Card 申请流程。",
-        "页面显示的是 Mastercard / Bybit Card，而不是普通资产活动页。",
+        "页面显示 Mastercard / Bybit Card，不是普通资产活动页。",
         "虚拟卡入口优先出现。"
       ],
       warnings: [
-        "Card 入口会随账号地区、KYC 状态、卡段开放情况变化。",
-        "旧版 App 菜单名字不一样时，先用资产页激活按钮进入。"
+        "Card 入口会随 KYC 状态、账号地区和卡段开放情况变化。",
+        "旧版 App 菜单名字不同时，先用资产页激活按钮进入。"
       ]
     },
     {
@@ -469,119 +468,115 @@ window.TUTORIALS = {
       t: "老用户换亚洲新卡：先处理旧卡再重新申请",
       img: "/images/tutorials/bybit-card/step-03.jpg",
       caption: "老用户流程截图：我的卡片 / 更多 / 注销旧卡 / 重新申请。",
-      b: "老用户不能直接再开一张。先从旧澳洲卡、旧欧元卡等旧卡段进入“我的卡片”，处理旧卡后重新申请亚洲卡。",
+      b: "老用户不能直接再开一张，先进入「我的卡片」处理旧卡，再重新申请哈萨克斯坦卡。新用户跳过此步，直接到步骤 07。",
       actions: [
         "进入 Bybit Card 页面，点 My Card / 我的卡片。",
         "查看旧卡地区和币种，例如 Australia、EU、Kazakhstan 等。",
-        "确认旧卡里没有未完成交易、退款或争议订单。",
-        "如果要换新卡，进入旧卡详情，点 More / 更多。",
-        "按页面流程选择 Cancel / Close / 注销卡片。",
+        "确认旧卡没有未完成交易、退款或争议订单。",
+        "进入旧卡详情，点 More / 更多，选择 Cancel / Close / 注销卡片。",
         "注销后回到 Card 首页，重新点击 Activate / Apply Now。",
-        "重新申请时再进入地区选择页。"
+        "重新进入地区选择页，准备选择 Kazakhstan。"
       ],
       checks: [
         "旧卡页面不再显示 Active。",
-        "旧卡余额仍在 Bybit 账户或资金账户里。",
-        "重新申请按钮重新出现。"
+        "旧卡余额已回到 Bybit 账户。",
+        "重新申请按钮已出现。"
       ],
       warnings: [
-        "旧卡资金属于 Bybit 账户，不是卡片本身。",
-        "如果有退款在路上，先等退款入账再注销更清楚。"
+        "旧卡资金在 Bybit 账户里，注销卡片不会丢失余额。",
+        "如有退款在路上，先等退款入账再注销更稳。"
       ]
     },
     {
       n: "07",
       t: "选择开卡地区：固定选 Kazakhstan / 哈萨克斯坦",
       img: "/images/tutorials/bybit-card/step-04.jpg",
-      caption: "地区选择截图：固定选 Kazakhstan，不在这里分散写其它地区。",
-      b: "Bybit 亚洲虚拟卡开卡地区固定选 Kazakhstan / 哈萨克斯坦。不要让用户自己猜其它地区。",
+      caption: "地区选择截图：大陆身份证用户固定选 Kazakhstan，不选其它地区。",
+      b: "进入申请流程后，地区固定选 Kazakhstan / 哈萨克斯坦——这是大陆身份证用户目前可申请的亚洲卡路线。",
       actions: [
-        "进入申请流程后，先看系统当前显示的 Country/Region of Residence。",
-        "如果页面默认不是 Kazakhstan，点 Change country/region / 切换国家地区。",
-        "在国家列表里搜索 Kazakhstan。",
-        "点选 Kazakhstan / 哈萨克斯坦。",
-        "确认国家字段已经显示 Kazakhstan 后再继续。",
+        "进入申请流程后查看 Country/Region of Residence 字段。",
+        "如果默认不是 Kazakhstan，点 Change country/region / 切换国家地区。",
+        "在国家列表里搜索并点选 Kazakhstan / 哈萨克斯坦。",
+        "确认字段显示 Kazakhstan 后继续。",
         "如果页面出现 Eligibility Check / 资格检查，点 Start Now / 立即开始。",
-        "通过资格检查后进入地址填写页。"
+        "资格检查通过后进入地址填写页。"
       ],
       checks: [
         "页面显示 eligible / 符合资格。",
-        "进入下一页后地区字段显示 Kazakhstan。",
-        "卡片类型仍是 Virtual Card / Mastercard。"
+        "地区字段显示 Kazakhstan。",
+        "卡片类型显示 Virtual Card / Mastercard。"
       ],
       warnings: [
-        "本页教程只讲 Kazakhstan 路线，不再混写其它地区。",
-        "选完地区后再填地址，顺序不要反。"
+        "本教程只讲 Kazakhstan 路线，不要选其它地区。",
+        "地区选完后再填地址，顺序不要搞反。"
       ]
     },
     {
       n: "08",
-      t: "填写地址页：Street、Building、City、Province、Postal Code",
+      t: "填写地址：用地址生成器 / Street / City / Postal Code",
       img: "/images/tutorials/bybit-card/step-04.jpg",
-      caption: "地址页截图：国家锁定 Kazakhstan 后，再按 Street、Building、City、Province、Postal Code 填。",
-      b: "国家选 Kazakhstan 后，地址页按字段逐项复制你准备好的哈萨克斯坦地址资料。",
+      caption: "地址页截图：国家锁定 Kazakhstan 后，谷歌搜「哈萨克斯坦地址生成器」生成一个随机地址逐字段填入。",
+      b: "没有真实哈萨克斯坦地址？在谷歌搜索「哈萨克斯坦地址生成器」，复制生成的随机地址，按字段逐项填入即可。",
       actions: [
-        "先看 Country / 国家字段是否已经显示 Kazakhstan。",
-        "Street / Street Address 填街道名。",
-        "Building Number / Building No. 填楼号或门牌号。",
-        "Apartment or Unit No. 如果页面标 Optional，可以不填；如果必填，就按地址资料填写。",
-        "City 填哈萨克斯坦地址资料里的城市名，例如 Almaty 或 Astana。",
-        "Province / State 如果页面标 Optional，可按地址所属省州填写或留空。",
-        "Postal Code / ZIP 填邮编；如果页面标 Optional，也建议按地址资料补上。",
-        "如果地址栏支持搜索，下拉框出现匹配地址时优先点选下拉结果。",
+        "在谷歌搜索「哈萨克斯坦地址生成器」，打开第一个结果，生成一个随机地址并复制。",
+        "确认 Country / 国家字段已显示 Kazakhstan。",
+        "Street / Street Address 填街道名（从生成地址里复制）。",
+        "Building Number 填楼号或门牌号。",
+        "City 填城市名，例如 Almaty（阿拉木图）或 Astana（阿斯塔纳）。",
+        "Province / State 按所属省州填写或留空（通常标 Optional）。",
+        "Postal Code 填邮编（从生成地址里复制）。",
+        "如果地址栏支持下拉搜索，优先点选下拉匹配结果。",
         "填完后点 Confirm / Continue。"
       ],
       checks: [
         "地址页没有红字报错。",
-        "城市、邮编和 Kazakhstan 对应。",
-        "提交后能进入 Additional Info / 联系方式页。"
+        "城市和邮编与 Kazakhstan 对应。",
+        "提交后能进入 Additional Info 页面。"
       ],
       warnings: [
-        "这里不是泛泛写“填地址”，而是让用户照字段复制。",
-        "实体卡后续收件地址通常会沿用这一页，申请实体卡前要再核对。"
+        "用地址生成器的随机地址即可，不需要准备真实的哈萨克斯坦地址。",
+        "申请实体卡时收件地址会重新填写，这里的地址只用于虚拟卡申请。"
       ]
     },
     {
       n: "09",
-      t: "填写 Additional Info：收入、用途、联系方式、推荐码",
+      t: "填写 Additional Info：收入、用途、手机号、推荐码 RZDGOXK",
       img: "/images/tutorials/bybit-card/step-05.jpg",
-      caption: "补充资料截图：收入信息、联系方式、邀请码和协议勾选在这一段完成。",
-      b: "Additional Info 不是 KYC 证件页，而是收入来源、职业、资金用途、手机号/邮箱补全、推荐码和协议。",
+      caption: "补充资料截图：收入来源、卡片用途、手机号补绑和推荐码在这里一起完成。",
+      b: "Additional Info 页面填写收入来源、卡片用途，补绑手机号，最后填推荐码 RZDGOXK。每项都要完整填写，不要跳过。",
       actions: [
-        "进入 Additional Info 页面后，先填写 Occupation / 职业。",
-        "填写 Source of Funds / 资金来源。",
+        "填写 Occupation / 职业（可选 Employee / 受雇 或 Self-Employed / 自雇）。",
+        "填写 Source of Funds / 资金来源（可选 Salary / 薪资 或 Investment / 投资收益）。",
         "填写 Annual Income / 年收入范围。",
-        "填写 Expected Monthly Spend / 预计月消费或卡片用途。",
-        "如果你用邮箱注册，这里补手机号；如果你用手机号注册，这里补邮箱。",
-        "补手机号或邮箱时输入验证码完成绑定。",
+        "填写 Purpose of Card / 卡片用途（可选 Online Shopping / 网购 或 Daily Expenses / 日常消费）。",
+        "如果用邮箱注册，这里补绑手机号并输入短信验证码完成绑定。",
         "Referral Code / 推荐码填 RZDGOXK。",
-        "勾选 Card Terms / 发卡协议 / I agree，然后提交。"
+        "勾选 Card Terms / 发卡协议，点 Submit / 提交。"
       ],
       checks: [
-        "联系方式没有显示 pending。",
+        "所有必填字段已完成，没有红字提示。",
         "推荐码字段显示 RZDGOXK。",
-        "提交后进入审核中或补充信息页。"
+        "提交后进入审核中状态。"
       ],
       warnings: [
-        "手机号和邮箱会根据注册方式互补。",
-        "Additional Info 是单独一步，不要漏掉。"
+        "推荐码 RZDGOXK 一定要填，不填就拿不到开卡奖励。",
+        "手机号补绑后，后续查看卡号和 3DS 验证都会用到。"
       ]
     },
     {
       n: "10",
-      t: "处理补充审核：问卷、I hereby、邮件补件",
+      t: "处理补充审核：问卷、I hereby 声明、邮件补件",
       img: "/images/tutorials/bybit-card/step-05.jpg",
-      caption: "补充审核截图：提交后检查“需补充信息”，点进去完成问卷。",
-      b: "提交后要检查“需要补充信息”入口，里面是 yes/no 背景问卷和底部确认声明。这一步不一定每个账号都有，但出现时必须单独完成。",
+      caption: "补充审核截图：提交后检查「需补充信息」提示，点进去完成背景问卷。",
+      b: "提交后留意页面是否出现「需要补充信息」入口，里面是背景问卷和底部确认声明。不是每个账号都有，但出现时必须完成，否则申请一直卡在等待中。",
       actions: [
         "提交开卡申请后留在 Bybit Card 页面，不要马上退出。",
         "如果页面提示 Need additional information / 需补充信息，点 Go submit / 去提交。",
-        "进入问卷后逐项阅读，例如犯罪记录、制裁名单、政治公众人物、税务相关问题等。",
-        "按你的实际情况选择 Yes 或 No；没有对应事项就选 No。",
+        "进入问卷，逐项回答（犯罪记录、制裁名单、政治公众人物、税务等），没有对应情况就选 No。",
         "滑到底部勾选 I hereby / 本人声明 类确认框。",
         "再次点击 Submit / 提交。",
-        "如果没有弹窗，去邮箱看是否有 Bybit Card 补件邮件。",
-        "审核中页面显示几分钟、30 分钟、24 小时或最多 7 个工作日时，按页面状态等结果。"
+        "如果 App 没有弹窗，去邮箱查看是否有 Bybit Card 补件邮件。",
+        "等待审核，通常几分钟到 24 小时，最多 7 个工作日。"
       ],
       checks: [
         "问卷已提交，没有红字未完成项。",
@@ -589,8 +584,8 @@ window.TUTORIALS = {
         "邮箱没有未处理的补件邮件。"
       ],
       warnings: [
-        "补充审核出现时不要跳过。",
-        "如果超过一天还没通过，先查邮箱，比反复提交更有用。"
+        "出现补充审核时不要跳过，否则申请一直卡在等待中。",
+        "审核超过一天没通过，先查邮箱——补件邮件比反复提交更有用。"
       ]
     },
     {
@@ -598,74 +593,94 @@ window.TUTORIALS = {
       t: "审核通过后查看虚拟卡：小眼睛、2FA、卡号、限额",
       img: "/images/tutorials/bybit-card/step-06.jpg",
       caption: "卡片页截图：审核通过后点小眼睛查看卡号、有效期和 CVV。",
-      b: "审核通过后即可在 App 内看到虚拟卡，点小眼睛查看卡号。这一步还要顺手把卡片设置和限额看一遍。",
+      b: "审核通过即可在 App 里看到虚拟卡。点小眼睛查看卡号，顺手把卡片设置和限额检查一遍，再进行下一步报名返现活动。",
       actions: [
-        "回到 Bybit Card 首页，确认卡片状态为 Active / 已激活。",
+        "回到 Bybit Card 首页，确认状态为 Active / 已激活。",
         "点击小眼睛或 View Card Details。",
-        "按页面要求输入短信验证码、邮箱验证码或 Google 2FA。",
-        "查看卡号、有效期、CVV、卡片币种和账单地址。",
-        "进入 Card Settings / 卡片设置。",
-        "打开或确认 Online Payment / 网络支付。",
-        "确认 International Payment / 海外交易、Transaction Notification / 交易通知、Spending Limit / 限额。",
-        "找到 Freeze / Lock Card 的入口，知道不用时在哪里冻结。"
+        "按页面要求完成二次验证（短信、邮箱或 Google 2FA）。",
+        "记下卡号、有效期、CVV、卡片币种。",
+        "进入 Card Settings / 卡片设置，确认 Online Payment / 网络支付 已开启。",
+        "确认 International Payment、Transaction Notification、Spending Limit 都正常。",
+        "找到 Freeze / Lock Card 入口，知道不用时在哪里冻结。"
       ],
       checks: [
         "卡号、有效期、CVV 能正常显示。",
         "在线支付开关已开启。",
-        "限额和通知能看到。"
+        "限额和通知已确认。"
       ],
       warnings: [
-        "卡号页不要公开截图，页面上显示的信息足够完成线上支付。",
-        "如果页面只显示审核中，先等审核结果，不要重复申请。"
+        "卡号截图不要公开分享，包含卡号、有效期和 CVV 的截图足够被盗刷。",
+        "如果显示审核中，先等结果，不要重复提交申请。"
       ]
     },
     {
       n: "12",
-      t: "入金充值：Card Deposit / USDT / 网络一致 / 到账",
+      t: "报名返现活动：首月消费 10% 返现、最高 $150",
       img: "/images/tutorials/bybit-card/step-06.jpg",
-      caption: "入金截图：在 Card 或资产页选择 Deposit，币种和网络必须和提币端一致。",
-      b: "从欧易或币安买 USDT，再提现到 Bybit。默认用 APTOS 网络演示；如果你实际页面没有 APTOS，再用 BSC，但两边必须同一条网络。",
+      caption: "返现活动截图：卡激活后先去 Card 活动页报名，否则首月返现拿不到。",
+      b: "Bybit Card 开卡首月有 10% 消费返现（最高 $150）活动，但需主动报名且账户存入 ≥100 USDT 才能激活资格。激活卡后第一件事就是去活动页报名，再充值，顺序不要搞反。",
       actions: [
-        "在 Bybit Card 页面点 Deposit / 充值；如果 Card 页没有，就去 Assets / Deposit。",
-        "选择 Deposit Crypto / 存入加密货币。",
-        "选择 USDT。",
-        "网络优先选择 APTOS。",
-        "复制 Bybit 充值地址；如果页面显示 Memo / Tag，一起复制。",
-        "打开欧易、币安或你的钱包，进入 Withdraw / 提币。",
-        "币种同样选择 USDT。",
-        "提现网络选择 APTOS，和 Bybit 充值页保持一致。",
-        "粘贴地址，核对前后几位，再输入金额提交。",
-        "等链上确认后回 Bybit 资产页或 Card 页查看到账。",
-        "如果资产在 Spot Account，进入 Transfer，把资产转到 Funding Account 或 Card 可用账户。",
-        "回 Card 页面查看余额，部分页面会显示已折算成 USD 或卡片主币种。"
+        "卡片激活后，在 Bybit Card 首页找到 Cashback / 返现活动 或 Promotions / 优惠活动入口。",
+        "点击进入，找到首月 10% 返现活动，点 Join / 报名参加。",
+        "活动页会显示需持有 ≥100 USDT 才能激活返现资格。",
+        "先充值 ≥100 USDT 到 Bybit 账户（充值方法见下一步）。",
+        "充值完成后回活动页确认资格已激活（状态变为 Active 或 Eligible）。",
+        "首月消费越多返现越多，上限 $150（约消费 1500 USDT）。",
+        "记下活动截止日期，在首月内完成消费。"
       ],
       checks: [
-        "Bybit 端和提币端网络一致。",
-        "到账后 Funding / Card 可用余额有数字。",
-        "交易记录里能看到入金或转账记录。"
+        "活动页面显示已报名或 Eligible。",
+        "账户余额 ≥100 USDT。",
+        "活动截止日期已记录。"
       ],
       warnings: [
-        "本页默认按 APTOS 路线写，用户不需要自己在多个网络之间猜。",
-        "先用小额测试，到账后再转正式金额。"
+        "不报名直接消费，首月返现不会自动发放，必须先报名。",
+        "活动规则和时间以 Bybit App 内活动页显示为准，随时可能调整。"
       ]
     },
     {
       n: "13",
+      t: "入金充值：币安 BEP20 零手续费转 USDT 到 Bybit",
+      img: "/images/tutorials/bybit-card/step-06.jpg",
+      caption: "入金截图：推荐从币安用 BEP20（BSC）网络提 USDT 到 Bybit，手续费接近零。",
+      b: "推荐从币安提 USDT 到 Bybit，使用 BEP20（BSC）网络，手续费接近零。务必两端网络保持一致，先小额测试再转大额，至少充 100 USDT 以激活返现资格。",
+      actions: [
+        "在 Bybit Card 页面或 Assets / 资产页点 Deposit / 充值。",
+        "币种选择 USDT。",
+        "网络选择 BEP20（BSC）。",
+        "复制 Bybit 充值地址。",
+        "打开币安（Binance），进入 Withdraw / 提币。",
+        "币种选 USDT，网络同样选 BEP20（BSC）——两端必须一致。",
+        "粘贴 Bybit 地址，核对前后几位无误，填入金额后提交。",
+        "等链上确认（BEP20 通常几分钟到账）。",
+        "到账后如资产在 Spot Account，进入 Transfer 转到 Funding Account 或 Card 可用账户。",
+        "回 Card 页确认余额 ≥100 USDT，再回活动页激活返现资格。"
+      ],
+      checks: [
+        "Bybit 端和币安端网络均为 BEP20（BSC）。",
+        "到账后 Card / Funding 余额显示 ≥100 USDT。",
+        "交易记录里能看到入金记录。"
+      ],
+      warnings: [
+        "两端网络必须一致，网络选错会导致资金丢失且难以找回。",
+        "先用小额（如 10 USDT）测试到账，确认无误再转大额。"
+      ]
+    },
+    {
+      n: "14",
       t: "绑定微信/支付宝/Apple Pay/Google Pay 并小额试刷",
       img: "/images/tutorials/bybit-card/step-07.jpg",
-      caption: "绑卡截图：支付工具里添加银行卡，输入卡号、有效期、CVV 后先小额测试。",
-      b: "最后一步才是消费。绑定微信、支付宝、Apple Pay、Google Pay 后，先做小额试刷，确认扣款、3DS 和通知都正常。",
+      caption: "绑卡截图：在支付工具里添加 Bybit Card，输入卡号、有效期、CVV 后先小额消费测试。",
+      b: "最后一步绑定支付工具并小额试刷。支持微信、支付宝、Apple Pay、Google Pay、美团等，先刷一笔小额确认扣款、3DS 和返现计入都正常，再用于正式消费。",
       actions: [
-        "打开微信、支付宝、Apple Pay、Google Pay 或目标订阅平台。",
-        "选择添加银行卡。",
-        "输入 Bybit Card 卡号、有效期、CVV。",
-        "持卡人姓名按 Bybit Card 页面显示填写。",
-        "账单地址按开卡时提交的地址或平台要求填写。",
-        "如果触发 3DS / OTP，回 Bybit App、短信或邮箱完成确认。",
-        "先做一笔小额消费，例如 1-5 USD 或小额人民币等值。",
-        "回 Bybit Card 交易记录确认商户名、扣款金额、手续费和汇率。",
-        "如果要拿返现，回 Card 活动页看是否需要先报名或完成活动门槛。",
-        "确认支付稳定后，再用于订阅、海外电商或日常消费。"
+        "打开微信 / 支付宝 / Apple Pay / Google Pay，选择添加银行卡。",
+        "输入 Bybit Card 卡号、有效期、CVV 和持卡人姓名。",
+        "账单地址按开卡时填写的哈萨克斯坦地址填入，或按平台要求填写。",
+        "如果触发 3DS / OTP，回 Bybit App、短信或邮箱完成验证。",
+        "先做一笔 1–5 USD 小额消费，确认扣款正常。",
+        "回 Bybit Card 交易记录确认商户名、扣款金额和手续费。",
+        "回返现活动页确认这笔消费已被计入。",
+        "支付稳定后再用于订阅、海外电商或日常消费。"
       ],
       checks: [
         "支付工具显示绑卡成功。",
@@ -673,8 +688,8 @@ window.TUTORIALS = {
         "交易通知能正常推送。"
       ],
       warnings: [
-        "微信/支付宝绑定后实际以支付工具当时结果为准。",
-        "亚洲卡更偏微信/支付宝和小额日常，海外订阅则看商户接受度。"
+        "微信/支付宝绑定成功率以实际结果为准，不同账号有差异。",
+        "不用时可在 Bybit App 里临时冻结卡，防止盗刷。"
       ]
     }
   ],
@@ -686,7 +701,7 @@ window.TUTORIALS = {
       caption: "账户体系截图：Bybit EU 与普通 Bybit 是独立账户体系，入口相似。",
       b: "Bybit EU 卡走欧洲路线：德国地址选 Germany / 德国；法区地址选 France / 法国；同类欧盟用户再按 Spain、Italy、Netherlands、Austria、Belgium、Ireland 这类欧盟国家走。",
       actions: [
-        "先点击本页“立即申请”，进入 Bybit EU 注册入口。",
+        "先点击本页「立即申请」，进入 Bybit EU 注册入口。",
         "打开 bybit.eu 注册或登录，确认页面主体是 Bybit EU。",
         "使用本人长期可控邮箱和手机号。",
         "邀请码输入框填 1NNDZ0W；如果链接已经自动带出邀请码，不要删除。",

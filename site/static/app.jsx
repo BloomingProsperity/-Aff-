@@ -97,6 +97,7 @@ function Header({ section, setSection }) {
     { id: "cards",    label: "银行卡" },
     { id: "gifts",    label: "礼品卡" },
     { id: "tutorial", label: "开卡教程" },
+    { id: "sms",      label: "接码", href: "/sms" },
     { id: "faq",      label: "常见问题" },
   ];
   return (
@@ -111,7 +112,7 @@ function Header({ section, setSection }) {
         </a>
         <nav className="hdr-nav" aria-label="主导航">
           {tabs.map(t => (
-            <a key={t.id} href={homeHref(t.id)}
+            <a key={t.id} href={t.href || homeHref(t.id)}
               className={`hdr-tab ${section === t.id ? "is-active" : ""}`}
               onClick={() => setSection(t.id)}>
               {t.label}
@@ -381,6 +382,7 @@ function readRoute() {
     return { scene: "giftBuy", slug: parts[1], region: parts[3] || null };
   }
   if (parts[0] === "shop" && parts[1]) return { scene: "gift", slug: parts[1] };
+  if (parts[0] === "sms") return { scene: "sms" };
   return { scene: "home" };
 }
 
@@ -431,6 +433,8 @@ function App() {
     scene = <window.GiftDetail slug={route.slug} />;
   } else if (route.scene === "giftBuy" && window.GiftBuy) {
     scene = <window.GiftBuy slug={route.slug} region={route.region} />;
+  } else if (route.scene === "sms" && window.SmsDesk) {
+    scene = <window.SmsDesk />;
   } else {
     scene = (
       <React.Fragment>

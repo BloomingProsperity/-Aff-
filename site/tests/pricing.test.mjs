@@ -1,0 +1,23 @@
+import assert from "node:assert/strict";
+import { quoteCharge } from "../functions/_lib/common.js";
+
+const defaultQuote = quoteCharge({}, 0.74);
+assert.equal(defaultQuote.cost, 0.74);
+assert.equal(defaultQuote.costCurrency, "USD");
+assert.equal(defaultQuote.costCny, 5.33);
+assert.equal(defaultQuote.margin, 10);
+assert.equal(defaultQuote.charge, 15.33);
+assert.equal(defaultQuote.chargeCents, 1533);
+assert.equal(defaultQuote.currency, "CNY");
+
+const liveRateQuote = quoteCharge({ SMS_USD_CNY_RATE: "6.8", SMS_MARGIN_CNY: "10" }, 3.99);
+assert.equal(liveRateQuote.costCny, 27.14);
+assert.equal(liveRateQuote.charge, 37.14);
+assert.equal(liveRateQuote.chargeCents, 3714);
+
+const customMarginQuote = quoteCharge({ SMS_USD_CNY_RATE: "7.25", SMS_MARGIN_CNY: "12" }, 0.15);
+assert.equal(customMarginQuote.costCny, 1.09);
+assert.equal(customMarginQuote.margin, 12);
+assert.equal(customMarginQuote.charge, 13.09);
+
+console.log("pricing tests passed");
