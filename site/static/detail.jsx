@@ -328,6 +328,12 @@ function CardDetail({ slug }) {
           <ol className="steps">
             {steps.map(s => <TutorialStep key={s.n} step={s} anchorId={tutorialAnchor(s)} />)}
           </ol>
+          {card.promoNote && (
+            <div className="tutorial-promo-note">
+              <span className="promo-note-icon">💬</span>
+              <span>{card.promoNote}</span>
+            </div>
+          )}
         </div>
       </section>
 

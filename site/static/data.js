@@ -67,6 +67,7 @@ window.CARDS = [
     officialArt: "/images/cards/official/bybit-card.png",
     applyUrl: "https://www.bybit.com/cards/?ref=RZDGOXK&source=applet_invite",
     inviteCode: "RZDGOXK",
+    promoNote: "不想折腾可找我购买成品卡，如需个人指导 89元/张。",
     pros: [
       "无开卡费、无年费",
       "大陆身份证即可开",
@@ -98,6 +99,7 @@ window.CARDS = [
     officialArt: "/images/cards/official/bybit-eu-card.png",
     applyUrl: "https://www.bybit.eu/cards/?ref=1NNDZ0W&source=applet_invite",
     inviteCode: "1NNDZ0W",
+    promoNote: "不想折腾可找我购买成品卡，如需个人指导 89元/张。",
     pros: [
       "0 开卡费、0 年费",
       "欧洲护照 / 欧盟居民可开",
@@ -128,6 +130,7 @@ window.CARDS = [
     bin: "瑞士",
     officialArt: "/images/cards/official/safepal-card.png",
     applyUrl: "https://t.me/Whohaoe",
+    promoNote: "不想折腾可找我购买成品卡，如需个人指导 89元/张。",
     pros: [
       "完全免费",
       "附赠瑞士 IBAN",
@@ -161,6 +164,7 @@ window.CARDS = [
     artRatio: "287 / 414",
     applyUrl: "https://app.pokepay.cc/pages/invitation/regist?r=447963",
     inviteCode: "447963",
+    promoNote: "不想折腾可找我购买成品卡，如需个人指导 89元/张。",
     pros: [
       "支持线上消费 / 订阅",
       "支持 3DS 和自助锁卡",
@@ -191,6 +195,7 @@ window.CARDS = [
     bin: "美国",
     officialArt: "/images/cards/official/roogoo-card.svg",
     applyUrl: "https://wap.roogoo.cloud/register?inviteCode=0eq357",
+    promoNote: "不想折腾可找我购买成品卡，如需个人指导 89元/张。",
     pros: [
       "持币可终身 0 费率",
       "7 天试用期 0 费率",
@@ -221,6 +226,7 @@ window.CARDS = [
     bin: "英国 / 欧盟",
     officialArt: "/images/cards/official/kraken-card.png",
     applyUrl: "https://t.me/Whohaoe",
+    promoNote: "不想折腾可找我购买成品卡，如需个人指导 89元/张。",
     pros: [
       "0 月费 / 年费 / 外汇费",
       "支持现金和 400+ 加密资产消费",

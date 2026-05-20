@@ -17,7 +17,7 @@
         [
           "点击本页上方的立即申请，打开 Bybit 注册页。",
           "确认注册链接里带有 ref=RZDGOXK；如果页面没有自动带入，注册时手动填写 RZDGOXK。",
-          "iPhone 从 App Store 下载 Bybit；如果当前商店搜不到，先换到能下载 Bybit 的 Apple ID 地区再安装。",
+          "iPhone 从 App Store 下载 Bybit；如果当前商店搜不到，先换到能下载 Bybit 的 Apple ID 地区再安装。（如果没有外区ID，可找我免费领取一个）",
           "Android 优先从 Google Play 或 Bybit 官方下载页安装，不要从不认识的网盘安装。",
           "准备邮箱、手机号、身份证或护照，证件要在有效期内，拍照时不能有反光。",
           "把手机相机权限、通知权限、短信权限打开，后面 KYC、人脸和交易验证都会用到。",
