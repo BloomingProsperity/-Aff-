@@ -1,4 +1,4 @@
-# 卡研所 · Card Atlas — 首页 + 二级页面（原型）
+# 花开SHOP — 首页 + 产品详情
 
 China Atlas 设计系统下的商品站重做。**单文件 + 数据驱动**——纯 HTML/JS，不需要构建。
 
@@ -43,7 +43,6 @@ image-slot.js       拖拽上传图槽（保留备用，当前未使用）
   bin: "美国",
   color: "#1f4ea8",          // SVG 卡面背景色（品牌色）
   officialArt: null,         // 设为官方卡面 URL 可覆盖 SVG mock
-  youtubeId: "xxxxx",        // YouTube ID，可省
   pros: ["..."],
   cons: ["..."],
   ai: { chatgpt: "ok", claude: "warn", midjourney: "ok",
@@ -107,7 +106,7 @@ image-slot.js       拖拽上传图槽（保留备用，当前未使用）
 - [ ] **Tweaks 持久化到磁盘**：当前只在浏览器存储，刷新后重置
 - [ ] **后端 SEO**：单页 hash 路由对 SEO 不友好。如需 SEO 优化建议接回 Astro 多页结构
 
-## 怎么接回 Astro 源码
+## 怎么接回 Astro 项目
 
 如果你要把这个原型接到原 Astro 工程（`银行卡Aff项目/site/`）：
 

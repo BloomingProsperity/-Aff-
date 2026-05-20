@@ -1,4 +1,4 @@
-/* 卡研所 — 商品站样式
+/* 花开SHOP — 商品站样式
    设计 token 来自 tokens.css（China Atlas 系统）。本文件只做组合。 */
 
 @import url("tokens.css");
@@ -489,12 +489,79 @@ a { color: inherit; text-decoration: none; }
 .buy-note .ca-h2 { margin: 6px 0 8px; }
 .buy-note p { margin: 0; max-width: 68ch; color: var(--fg-2); line-height: 1.75; }
 
+/* Detail table of contents */
+.toc-section {
+  padding: 28px 0 34px;
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-card);
+}
+.toc-box {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-page);
+  padding: 24px;
+}
+.toc-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.toc-title {
+  margin: 4px 0 0;
+  color: var(--color-ink);
+  font-size: 22px;
+  line-height: 1.2;
+}
+.toc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, .9fr);
+  gap: 22px;
+}
+.toc-group {
+  min-width: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-default);
+}
+.toc-group-title {
+  margin: 0 0 12px;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.toc-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  margin: 0;
+  padding: 0;
+}
+.toc-group:last-child .toc-list { grid-template-columns: 1fr; }
+.toc-link {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  color: var(--fg-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.toc-link:hover { color: var(--fg-brand); }
+.toc-num {
+  color: var(--fg-brand);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Steps */
 .steps { list-style: none; padding: 0; margin: 0; }
 .step {
   display: grid; grid-template-columns: 80px 1fr; gap: 28px;
   padding: 28px 0;
   border-top: 1px solid var(--border-default);
+  scroll-margin-top: 96px;
 }
 .step:last-child { border-bottom: 1px solid var(--border-default); }
 .step-num {
@@ -504,6 +571,79 @@ a { color: inherit; text-decoration: none; }
 }
 .step-title { margin: 0 0 6px; font-size: 18px; font-weight: 700; color: var(--color-ink); }
 .step-text { margin: 0; font-size: 14px; line-height: 1.75; color: var(--fg-2); max-width: 64ch; }
+.step-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+  gap: 28px;
+  align-items: start;
+}
+.step-copy { min-width: 0; }
+.step-actions {
+  margin: 14px 0 0;
+  padding-left: 20px;
+  color: var(--color-ink);
+}
+.step-actions li {
+  margin: 7px 0;
+  padding-left: 4px;
+  font-size: 14px;
+  line-height: 1.75;
+}
+.step-callout {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--color-jade);
+  background: var(--bg-brand-soft, rgba(23,112,97,.08));
+}
+.step-callout--warn {
+  border-left-color: var(--color-amber-300);
+  background: rgba(212, 146, 33, .1);
+}
+.step-callout strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-ink);
+  font-size: 13px;
+}
+.step-callout ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.step-callout li {
+  margin: 4px 0;
+  color: var(--fg-2);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.funding-section { background: var(--bg-card); border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
+.funding-list { display: grid; gap: 16px; }
+.funding-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  padding: 22px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-page);
+  scroll-margin-top: 96px;
+}
+.funding-title { margin: 0 0 8px; color: var(--color-ink); font-size: 18px; font-weight: 700; }
+.funding-text { margin: 0; color: var(--fg-2); font-size: 14px; line-height: 1.75; max-width: 66ch; }
+.funding-actions { margin: 14px 0 0; padding-left: 20px; color: var(--color-ink); }
+.funding-actions li { margin: 7px 0; padding-left: 4px; font-size: 14px; line-height: 1.7; }
+.funding-note {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--color-jade);
+  background: rgba(23,112,97,.08);
+}
+.funding-note--warn {
+  border-left-color: var(--color-amber-300);
+  background: rgba(212,146,33,.1);
+}
+.funding-note strong { display: block; margin-bottom: 6px; color: var(--color-ink); font-size: 13px; }
+.funding-note ul { margin: 0; padding-left: 18px; }
+.funding-note li { margin: 4px 0; color: var(--fg-2); font-size: 13px; line-height: 1.6; }
 
 /* Pros / cons block on detail */
 .d-procon-section { background: var(--bg-card); border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
@@ -536,13 +676,6 @@ a { color: inherit; text-decoration: none; }
 .ai-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; }
 .ai-block-note { margin: 0; font-size: 14px; line-height: 1.7; color: var(--fg-2); max-width: 70ch; }
 
-/* Video embed */
-.d-video {
-  position: relative; aspect-ratio: 16 / 9; width: 100%; max-width: 880px;
-  background: var(--color-ink); border-radius: var(--radius-lg); overflow: hidden;
-}
-.d-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-
 /* Cross-promo grid */
 .cross { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .cross-item {
@@ -561,7 +694,7 @@ a { color: inherit; text-decoration: none; }
 .cross-cta { font-size: 12px; font-weight: 700; color: var(--fg-brand); margin-top: 4px; }
 
 /* Region card (gift detail) */
-.region-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.region-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 .region-card {
   background: var(--bg-card); border: 1px solid var(--border-default);
   border-radius: var(--radius-lg); padding: 22px;
@@ -587,6 +720,12 @@ a { color: inherit; text-decoration: none; }
   font-size: 13px; color: var(--fg-1); font-variant-numeric: tabular-nums;
   font-weight: 700; letter-spacing: .02em;
 }
+.region-note {
+  margin: -4px 0 0;
+  color: var(--fg-3);
+  font-size: 12px;
+  line-height: 1.55;
+}
 .region-buy {
   margin-top: auto; align-self: flex-start;
   font-size: 13px; font-weight: 700; color: var(--color-ink);
@@ -594,6 +733,257 @@ a { color: inherit; text-decoration: none; }
   white-space: nowrap;
 }
 .region-buy:hover { color: var(--fg-brand); border-color: var(--fg-brand); }
+
+/* Gift directory and order form */
+.gift-directory { padding-top: 12px; }
+.gift-directory-card,
+.gift-order-panel,
+.order-receipt {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+.gift-directory-card { padding: 24px; }
+.gift-directory-head,
+.gift-order-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px dashed var(--border-default);
+}
+.gift-directory-head .ca-h2,
+.gift-order-head .ca-h2 { margin: 6px 0 0; }
+.gift-directory-nav {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 18px;
+}
+.gift-route-card {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 4px 12px;
+  align-items: center;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  background: rgb(255 255 255 / .42);
+}
+.gift-route-card:hover {
+  border-color: var(--color-ink);
+}
+.gift-route-card span {
+  grid-row: span 2;
+  color: var(--fg-brand);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.gift-route-card strong {
+  color: var(--color-ink);
+  font-size: 15px;
+  line-height: 1.2;
+}
+.gift-route-card em {
+  color: var(--fg-3);
+  font-style: normal;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.gift-route-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.gift-route-pills a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 700;
+  background: rgb(255 255 255 / .55);
+}
+.gift-route-pills a:hover {
+  border-color: var(--fg-brand);
+  color: var(--fg-brand);
+}
+.gift-order-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+  gap: 20px;
+  align-items: start;
+}
+.gift-order-panel { padding: 24px; }
+.gift-buy-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 18px 0;
+}
+.gift-buy-steps span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--fg-3);
+  font-size: 12px;
+  font-weight: 700;
+  background: rgb(255 255 255 / .52);
+}
+.gift-buy-steps span.is-active {
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+.order-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.order-field select,
+.amount-control input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--color-ink);
+  font: inherit;
+  outline: none;
+}
+.order-field select {
+  padding: 0 42px 0 14px;
+}
+.amount-control {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: #fff;
+  overflow: hidden;
+}
+.amount-control:focus-within,
+.order-field select:focus {
+  border-color: var(--color-ink);
+}
+.amount-control strong {
+  padding-left: 14px;
+  min-width: 42px;
+  color: var(--fg-brand);
+  font-size: 16px;
+}
+.amount-control input {
+  border: 0;
+  border-radius: 0;
+  min-height: 46px;
+  padding: 0 10px;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.amount-control em {
+  padding-right: 14px;
+  color: var(--fg-3);
+  font-style: normal;
+  font-size: 12px;
+}
+.amount-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.amount-presets button {
+  border: 1px solid var(--border-default);
+  background: rgb(255 255 255 / .55);
+  color: var(--color-ink);
+  border-radius: var(--radius-sm);
+  min-height: 36px;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.amount-presets button:hover,
+.amount-presets button.is-active {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: #fff;
+}
+.official-denom {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / .42);
+}
+.official-denom strong {
+  color: var(--color-ink);
+  font-size: 13px;
+}
+.official-denom span {
+  color: var(--fg-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.order-status {
+  margin: 12px 0 18px;
+  color: var(--fg-3);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.order-receipt {
+  padding: 18px;
+  position: sticky;
+  top: 88px;
+}
+.order-receipt .gift-art-frame {
+  margin-bottom: 16px;
+}
+.receipt-row,
+.receipt-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px dashed var(--border-default);
+}
+.receipt-row span,
+.receipt-total span {
+  color: var(--fg-3);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.receipt-row strong {
+  color: var(--color-ink);
+  font-size: 14px;
+  text-align: right;
+}
+.receipt-total strong {
+  color: var(--fg-brand);
+  font-size: 24px;
+  line-height: 1.1;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 
 /* Use cases */
 .use-list { list-style: none; padding: 0; margin: 0;
@@ -617,9 +1007,21 @@ a { color: inherit; text-decoration: none; }
   .d-procon { grid-template-columns: 1fr; gap: 24px; }
   .cross { grid-template-columns: 1fr; }
   .region-grid { grid-template-columns: 1fr; }
+  .gift-directory-head,
+  .gift-order-head { flex-direction: column; }
+  .gift-directory-nav,
+  .gift-order-grid,
+  .gift-buy-steps { grid-template-columns: 1fr; }
+  .order-receipt { position: static; }
+  .receipt-total strong { font-size: 20px; }
   .use-list { grid-template-columns: 1fr; }
   .buy-summary { grid-template-columns: 1fr; }
+  .toc-head { align-items: flex-start; flex-direction: column; }
+  .toc-grid { grid-template-columns: 1fr; }
+  .toc-list { grid-template-columns: 1fr; }
   .step { grid-template-columns: 56px 1fr; gap: 16px; }
+  .step-body { grid-template-columns: 1fr; gap: 18px; }
+  .funding-card { grid-template-columns: 1fr; gap: 18px; }
   .step-num { font-size: 32px; }
 }
 @media (max-width: 1080px) {

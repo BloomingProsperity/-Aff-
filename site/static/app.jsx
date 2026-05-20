@@ -1,4 +1,4 @@
-/* 卡研所 — 商品型首页
+/* 花开SHOP — 商品型首页
    设计语言：China Atlas 编辑克制（纸 / 墨 / 玉 / 琥珀，无渐变、无 emoji、无暗底荧光）。
    信息结构：电商导购（产品网格 + 卡面 visual + 申请 CTA + 礼品卡分类）。   */
 
@@ -103,10 +103,10 @@ function Header({ section, setSection }) {
     <header className="hdr">
       <div className="hdr-inner">
         <a href="/" className="brand">
-          <span className="ca-brand-mark">卡</span>
+          <span className="ca-brand-mark">花</span>
           <span className="brand-word">
-            <span className="brand-zh">卡研所</span>
-            <span className="brand-en">CARD ATLAS</span>
+            <span className="brand-zh">花开SHOP</span>
+            <span className="brand-en">HKAI SHOP</span>
           </span>
         </a>
         <nav className="hdr-nav" aria-label="主导航">
@@ -328,8 +328,8 @@ function Footer() {
     <footer className="ftr" id="disclosure">
       <div className="wrap ftr-inner">
         <div className="ftr-brand">
-          <span className="ca-brand-mark ftr-mark">卡</span>
-          <strong>卡研所 · CARD ATLAS</strong>
+          <span className="ca-brand-mark ftr-mark">花</span>
+          <strong>花开SHOP</strong>
         </div>
         <div className="ftr-cols">
           <div>
@@ -353,7 +353,7 @@ function Footer() {
         </div>
       </div>
       <div className="wrap ftr-bottom">
-        <span>© 2026 卡研所</span>
+        <span>© 2026 花开SHOP</span>
         <span>部分链接为推广链接</span>
       </div>
     </footer>
