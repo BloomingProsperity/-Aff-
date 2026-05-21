@@ -6,13 +6,5 @@
   "vars": {
     "SMS_USD_CNY_RATE": "7.2",
     "SMS_MARGIN_CNY": "10"
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "hkai-shop-db",
-      "database_id": "ad7170bf-f5a2-42c8-92a1-dbf900caaf35",
-      "migrations_dir": "migrations"
-    }
-  ]
+  }
 }

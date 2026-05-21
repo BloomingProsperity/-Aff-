@@ -1,0 +1,114 @@
+import { createHash, pbkdf2Sync, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { cleanEmail, centsToAmount, toIso } from "./common.js";
+import { exec, one } from "./db.js";
+
+const SESSION_DAYS = 14;
+
+function sha256Base64(value) {
+  return createHash("sha256").update(value).digest("base64url");
+}
+
+export function publicUser(user) {
+  if (!user) return null;
+  return {
+    id: Number(user.id),
+    email: user.email,
+    role: user.role,
+    balance: centsToAmount(user.balance_cents),
+    createdAt: toIso(user.created_at),
+  };
+}
+
+export function hashPassword(password, saltBase64) {
+  const salt = saltBase64 ? Buffer.from(saltBase64, "base64") : randomBytes(16);
+  const hash = pbkdf2Sync(String(password), salt, 120000, 32, "sha256");
+  return {
+    salt: salt.toString("base64"),
+    hash: hash.toString("base64"),
+  };
+}
+
+export function verifyPassword(password, salt, expectedHash) {
+  const next = hashPassword(password, salt).hash;
+  const left = Buffer.from(next);
+  const right = Buffer.from(String(expectedHash || ""));
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
+export function sessionCookie(value, config, maxAgeSeconds) {
+  const pieces = [
+    `hkai_session=${encodeURIComponent(value)}`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    `Max-Age=${maxAgeSeconds}`,
+  ];
+  if (config.cookieSecure) pieces.push("Secure");
+  if (config.cookieDomain) pieces.push(`Domain=${config.cookieDomain}`);
+  return pieces.join("; ");
+}
+
+export function clearSessionCookie(config) {
+  return sessionCookie("", config, 0);
+}
+
+export async function createSession(db, userId, config) {
+  const raw = `${randomUUID()}.${randomBytes(24).toString("base64url")}`;
+  const tokenHash = sha256Base64(raw);
+  await exec(
+    db,
+    "INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ($1, $2, now() + ($3 || ' days')::interval)",
+    [tokenHash, userId, SESSION_DAYS],
+  );
+  return {
+    token: raw,
+    header: sessionCookie(raw, config, 60 * 60 * 24 * SESSION_DAYS),
+  };
+}
+
+export async function destroySession(db, request) {
+  const token = request.cookies?.hkai_session || "";
+  if (!token) return;
+  await exec(db, "DELETE FROM sessions WHERE token_hash = $1", [sha256Base64(token)]);
+}
+
+export async function currentUser(db, request) {
+  const token = request.cookies?.hkai_session || "";
+  if (!token) return null;
+  return one(
+    db,
+    `SELECT users.*
+       FROM sessions
+       JOIN users ON users.id = sessions.user_id
+      WHERE sessions.token_hash = $1
+        AND sessions.expires_at > now()`,
+    [sha256Base64(token)],
+  );
+}
+
+export async function requireUser(db, request, reply) {
+  const user = await currentUser(db, request);
+  if (!user) {
+    reply.code(401);
+    return { response: { error: "请先登录。" } };
+  }
+  return { user };
+}
+
+export async function requireAdmin(db, request, reply) {
+  const auth = await requireUser(db, request, reply);
+  if (auth.response) return auth;
+  if (auth.user.role !== "admin") {
+    reply.code(403);
+    return { response: { error: "没有管理员权限。" } };
+  }
+  return auth;
+}
+
+export async function adminRoleForNewUser(db, config, email) {
+  const normalized = cleanEmail(email);
+  if (config.adminEmail && cleanEmail(config.adminEmail) === normalized) return "admin";
+  if (config.fivesimApiKey) return "user";
+  const row = await one(db, "SELECT COUNT(*)::int AS count FROM users");
+  return Number(row?.count || 0) === 0 ? "admin" : "user";
+}

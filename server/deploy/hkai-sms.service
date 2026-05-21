@@ -1,0 +1,16 @@
+[Unit]
+Description=Hkai Shop SMS API
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/hkai-shop/server
+EnvironmentFile=/opt/hkai-shop/server/.env
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=5
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target

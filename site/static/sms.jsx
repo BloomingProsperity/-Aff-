@@ -52,6 +52,14 @@ function productLabel(code) {
   return SMS_PRODUCT_LABELS[code] || code.replace(/[-_]/g, " ").replace(/\b\w/g, x => x.toUpperCase());
 }
 
+function smsApiBase() {
+  return String(window.HKAI_SMS_API_BASE || window.localStorage?.getItem("HKAI_SMS_API_BASE") || "").replace(/\/+$/, "");
+}
+
+function smsApiUrl(path) {
+  return `${smsApiBase()}${path}`;
+}
+
 function SmsPriceBox({ currentProduct }) {
   return (
     <div className="sms-price-box sms-price-box--single">
@@ -164,8 +172,9 @@ function SmsDesk() {
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const api = async (path, options = {}) => {
-    const res = await fetch(path, {
+    const res = await fetch(smsApiUrl(path), {
       ...options,
+      credentials: "include",
       headers: {
         ...(options.body ? { "content-type": "application/json" } : {}),
         ...(options.headers || {}),
