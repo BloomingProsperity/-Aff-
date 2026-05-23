@@ -29,5 +29,17 @@ await mkdir(distDir, { recursive: true });
 
 const publicCount = await copyDir(publicDir, distDir);
 const staticCount = await copyDir(staticDir, distDir);
+const distEntries = await readdir(distDir);
+
+await Promise.all(
+  distEntries
+    .filter(name => (
+      name.startsWith('.') ||
+      name === 'README.md' ||
+      name === 'blogs.html' ||
+      /^compare(?:-[a-z0-9]+)?\.html$/i.test(name)
+    ))
+    .map(name => rm(join(distDir, name), { recursive: true, force: true }))
+);
 
 console.log(`Static build complete: copied ${publicCount} public entries and ${staticCount} static entries to dist.`);

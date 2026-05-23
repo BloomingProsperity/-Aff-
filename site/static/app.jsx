@@ -8,7 +8,15 @@ const CARDS = window.CARDS;
 const GIFT_CARDS = window.GIFT_CARDS;
 const FAQS = window.FAQS;
 
-const homeHref = (section = "") => section ? `/#${section}` : "/";
+const homeHref = (section = "") => {
+  if (!section) return "/";
+  if (section === "cards") return "/cards";
+  if (section === "gifts") return "/shop";
+  if (section === "faq") return "/faq";
+  if (section === "contact") return "/contact";
+  if (section === "wechat") return "/contact";
+  return "/";
+};
 const cardHref = slug => `/cards/${slug}`;
 const giftHref = slug => `/shop/${slug}`;
 
@@ -21,9 +29,9 @@ const Kicker = ({ children, tone, className = "" }) => {
 };
 
 const StatusDot = ({ s }) => {
-  if (s === "ok")   return <span className="dot dot-ok"   title="通过">●</span>;
-  if (s === "warn") return <span className="dot dot-warn" title="受限">◐</span>;
-  return                   <span className="dot dot-no"   title="不通过">○</span>;
+  if (s === "ok")   return <span className="sd sd-ok"   title="支持" />;
+  if (s === "warn") return <span className="sd sd-warn" title="受限" />;
+  return                   <span className="sd sd-no"   title="不支持" />;
 };
 
 // ── 卡面（产品级 visual） ─────────────────────────────────
@@ -85,7 +93,7 @@ function PromoBar() {
       <div className="wrap promo-inner">
         <span className="promo-tag">本周</span>
         <span>Bybit 欧洲卡新户体验金调整为 <strong>10 USDC</strong>，活动至 06-30。</span>
-        <a href="/#card-bybit-eu-card" className="promo-link">查看</a>
+        <a href="/cards/bybit-eu-card" className="promo-link">查看</a>
       </div>
     </div>
   );
@@ -96,7 +104,6 @@ function Header({ section, setSection }) {
   const tabs = [
     { id: "cards",    label: "银行卡" },
     { id: "gifts",    label: "礼品卡" },
-    { id: "tutorial", label: "开卡教程" },
     { id: "sms",      label: "接码", href: "/sms" },
     { id: "faq",      label: "常见问题" },
   ];
@@ -120,56 +127,23 @@ function Header({ section, setSection }) {
           ))}
         </nav>
         <div className="hdr-right">
-          <a className="hdr-link" href="/#contact">加入社群</a>
-          <a className="ca-button ca-button--primary" href="/#cards">立即开卡</a>
+          <a className="hdr-link" href="/contact">加入社群</a>
+          <a className="ca-button ca-button--primary" href="/cards">立即开卡</a>
         </div>
       </div>
     </header>
   );
 }
 
-// ── Hero：价值主张 + 主打卡 ─────────────────────────────
-function Hero({ featured }) {
-  const applyUrl = featured.applyUrl || "https://t.me/Whohaoe";
-  const applyTarget = applyUrl.startsWith("http") ? "_blank" : undefined;
-
+// ── Hero：价值主张 ────────────────────────────────────────
+function Hero() {
   return (
     <section className="hero">
       <div className="wrap hero-inner">
         <div className="hero-text">
-          <h1 className="hero-h1">
-            <span className="hero-h1-line"><span className="hero-h1-jade">海外银行卡</span>，一站买齐。</span>
-          </h1>
           <div className="hero-cta">
-            <a className="ca-button ca-button--primary ca-button--lg" href="/#cards">浏览银行卡</a>
-            <a className="ca-button ca-button--outline ca-button--lg" href="/#gifts">礼品卡商店</a>
-          </div>
-        </div>
-
-        <div className="hero-product">
-          <div className="hero-product-frame">
-            <Kicker tone="brand">本期主打</Kicker>
-            <div className="hero-feature-card">
-              <a
-                href={cardHref(featured.slug)}
-                className={window.cardArtFrameClass(featured, "hero-feature-art")}
-                style={window.cardArtFrameStyle(featured)}
-              >
-                <img src={window.cardArt(featured)} alt="" className="art" />
-              </a>
-              <div className="hero-feature-text">
-                <div className="hero-feature-name">{featured.name}</div>
-                <dl className="hero-feature-specs">
-                  <div><dt>费用</dt><dd>{featured.fee}</dd></div>
-                  <div><dt>返现</dt><dd>{featured.cashback}</dd></div>
-                  <div><dt>身份</dt><dd>{featured.idType}</dd></div>
-                </dl>
-                <a className="ca-button ca-button--primary hero-feature-cta"
-                   href={applyUrl}
-                   target={applyTarget}
-                   rel={applyTarget ? "noopener" : undefined}>立即申请</a>
-              </div>
-            </div>
+            <a className="ca-button ca-button--primary ca-button--lg" href="/cards">浏览银行卡</a>
+            <a className="ca-button ca-button--outline ca-button--lg" href="/shop">礼品卡商店</a>
           </div>
         </div>
       </div>
@@ -188,7 +162,6 @@ function ProductCard({ card }) {
         <span className={window.cardArtFrameClass(card)} style={window.cardArtFrameStyle(card)}>
           <img src={window.cardArt(card)} alt="" className="art" />
         </span>
-        {card.tag && <span className="pc-badge">{card.tag}</span>}
       </a>
       <div className="pc-body">
         <header className="pc-head">
@@ -205,21 +178,33 @@ function ProductCard({ card }) {
         </dl>
 
         <div className="pc-ai">
-          <span className="pc-ai-label">AI 订阅</span>
-          <span className="pc-ai-row">
-            <span className="pc-ai-item"><StatusDot s={card.ai.chatgpt}/> ChatGPT</span>
-            <span className="pc-ai-item"><StatusDot s={card.ai.claude}/> Claude</span>
-            <span className="pc-ai-item"><StatusDot s={card.ai.midjourney}/> MJ</span>
-          </span>
+          <span className="pc-ai-label">适用服务</span>
+          <div className="pc-ai-rows">
+            <span className="pc-ai-row">
+              <span className="pc-ai-item"><StatusDot s={card.ai.chatgpt}/> ChatGPT</span>
+              <span className="pc-ai-item"><StatusDot s={card.ai.claude}/> Claude</span>
+              <span className="pc-ai-item"><StatusDot s={card.ai.midjourney}/> MJ</span>
+              <span className="pc-ai-item"><StatusDot s={card.ai.cursor}/> Cursor</span>
+            </span>
+            <span className="pc-ai-row">
+              <span className="pc-ai-item"><StatusDot s={card.ai.netflix}/> Netflix</span>
+              <span className="pc-ai-item"><StatusDot s={card.ai.steam}/> Steam</span>
+              <span className="pc-ai-item"><StatusDot s={card.ai.appstore}/> App Store</span>
+            </span>
+            <span className="pc-ai-row">
+              <span className="pc-ai-item"><StatusDot s={card.ai.aws}/> AWS</span>
+              <span className="pc-ai-item"><StatusDot s={card.ai.gcp}/> GCP</span>
+            </span>
+            <span className="pc-ai-legend"><span className="sd sd-ok"/>支持 &nbsp;<span className="sd sd-warn"/>受限 &nbsp;<span className="sd sd-no"/>不支持</span>
+          </div>
         </div>
 
         <div className="pc-foot">
-          <a className="pc-tutorial" href={cardHref(card.slug)}>开卡教程</a>
           <a className="ca-button ca-button--primary pc-apply"
              href={applyUrl}
              target={applyTarget}
              rel={applyTarget ? "noopener" : undefined}
-             data-card={card.slug}>立即申请</a>
+             data-card={card.slug}>查看攻略</a>
         </div>
       </div>
     </article>
@@ -234,10 +219,6 @@ function ProductGrid({ cards }) {
           <h2 className="ca-h2">银行卡</h2>
           <div className="grid-filters">
             <button className="ca-tab is-active">全部</button>
-            <button className="ca-tab">大陆可办</button>
-            <button className="ca-tab">护照办</button>
-            <button className="ca-tab">欧洲</button>
-            <button className="ca-tab">AI 订阅友好</button>
           </div>
         </div>
         <div className="pgrid">
@@ -255,7 +236,7 @@ function GiftCardStrip() {
       <div className="wrap">
         <div className="grid-head">
           <h2 className="ca-h2">礼品卡</h2>
-          <a href="/#gifts" className="ca-button ca-button--outline">进入商店</a>
+          <a href="/shop" className="ca-button ca-button--outline">进入商店</a>
         </div>
         <div className="ggrid">
           {GIFT_CARDS.map(g => (
@@ -278,6 +259,58 @@ function GiftCardStrip() {
         </div>
       </div>
     </section>
+  );
+}
+
+function GiftStore() {
+  return (
+    <React.Fragment>
+      <section className="gift-store-hero">
+        <div className="wrap gift-store-hero-inner">
+          <div>
+            <Kicker tone="brand">礼品卡商店</Kicker>
+            <h1 className="gift-store-title">选择商品，再选国家和币种</h1>
+            <p className="gift-store-lead">Apple、Steam、Netflix、Google Play、PlayStation、Battle.net 都按对应国家/地区下单，付款前先确认账号地区和本地币种。</p>
+          </div>
+          <a className="ca-button ca-button--primary ca-button--lg" href="/contact">联系下单</a>
+        </div>
+      </section>
+
+      <section className="k-section gift-store-section">
+        <div className="wrap">
+          <div className="gift-store-grid">
+            {GIFT_CARDS.map(g => {
+              const detail = window.GIFT_DETAILS?.[g.slug] || {};
+              const regions = detail.regions || [];
+              return (
+                <article key={g.slug} className="gift-store-card">
+                  <a href={giftHref(g.slug)} className={window.giftArtFrameClass(g, "gift-store-art")} style={window.giftArtFrameStyle(g)}>
+                    <img src={window.giftArt(g)} alt={`${g.name} 礼品卡`} className="art" />
+                  </a>
+                  <div className="gift-store-body">
+                    <div className="gift-store-meta">
+                      <span>{g.scope}</span>
+                      <span>{regions.length ? `${regions.length} 个地区` : g.price}</span>
+                    </div>
+                    <h2>{g.name}</h2>
+                    <p>{detail.desc || "按账号国家、兑换币种和官方面额选择。"}</p>
+                    <div className="gift-store-regions">
+                      {regions.slice(0, 8).map(r => (
+                        <a key={r.code} href={`/shop/${g.slug}/buy/${r.code}`}>{r.code} · {r.currency}</a>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="gift-store-actions">
+                    <a className="ca-button ca-button--outline" href={giftHref(g.slug)}>查看区码</a>
+                    {regions[0] && <a className="ca-button ca-button--primary" href={`/shop/${g.slug}/buy/${regions[0].code}`}>填写金额</a>}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </React.Fragment>
   );
 }
 
@@ -304,24 +337,79 @@ function FAQ() {
   );
 }
 
-// ── 社群 CTA ────────────────────────────────────────────
-function Contact() {
+// ── 联系弹窗 ─────────────────────────────────────────────
+function ContactModal() {
+  const [open, setOpen] = React.useState(() => {
+    const path = window.location.pathname.replace(/\/+$/, "").replace(/^\/+/, "");
+    return path === "contact" || path === "wechat";
+  });
+  React.useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener('openContactModal', show);
+    return () => window.removeEventListener('openContactModal', show);
+  }, []);
+  if (!open) return null;
   return (
-    <section className="k-section k-section--ink" id="contact">
-      <div className="wrap contact-wrap">
-        <h2 className="ca-h2 contact-h2">加入社群</h2>
-        <div className="contact-cta">
-          <a className="ca-button ca-button--primary contact-btn" href="https://t.me/Whohaoe" target="_blank" rel="noopener">
-            Telegram 群
+    <div className="cmodal-overlay" onClick={() => setOpen(false)}>
+      <div className="cmodal" onClick={e => e.stopPropagation()}>
+        <div className="cmodal-header">
+          <div>
+            <div className="cmodal-title">联系我</div>
+            <div className="cmodal-sub">开卡 · 入金 · 选卡，随时可问</div>
+          </div>
+          <button className="cmodal-close" onClick={() => setOpen(false)}>×</button>
+        </div>
+        <div className="cmodal-list">
+          <a className="cmodal-item" href="https://t.me/whohaoe" target="_blank" rel="noopener">
+            <span className="cmodal-badge cmodal-badge--tg">TG</span>
+            <div className="cmodal-info">
+              <div className="cmodal-platform">Telegram</div>
+              <div className="cmodal-id">@whohaoe</div>
+            </div>
+            <span className="cmodal-action">打开</span>
           </a>
-          <a className="ca-button ca-button--outline contact-btn" href="/#wechat">
-            微信扫码
-          </a>
+          <div className="cmodal-item">
+            <span className="cmodal-badge cmodal-badge--wx">微</span>
+            <div className="cmodal-info">
+              <div className="cmodal-platform">微信</div>
+              <div className="cmodal-id">HKFG0512</div>
+            </div>
+            <span className="cmodal-action">长按复制</span>
+          </div>
+          <div className="cmodal-item">
+            <span className="cmodal-badge cmodal-badge--qq">QQ</span>
+            <div className="cmodal-info">
+              <div className="cmodal-platform">QQ</div>
+              <div className="cmodal-id">2393155725</div>
+            </div>
+            <span className="cmodal-action">长按复制</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── 有疑问触发块 ──────────────────────────────────────────
+function ContactTrigger() {
+  return (
+    <section className="k-section ctrigger-section" id="contact">
+      <div className="wrap">
+        <div className="ctrigger" onClick={() => window.dispatchEvent(new CustomEvent('openContactModal'))}>
+          <span className="ctrigger-q">?</span>
+          <div className="ctrigger-text">
+            <div className="ctrigger-title">有疑问？</div>
+            <div className="ctrigger-sub">TG · 微信 · QQ 均可，开卡 / 入金 / 选卡都能问</div>
+          </div>
+          <span className="ctrigger-cta">联系我</span>
         </div>
       </div>
     </section>
   );
 }
+
+// Keep Contact as alias so any remaining references don't break
+const Contact = ContactTrigger;
 
 // ── 页脚 ────────────────────────────────────────────────
 function Footer() {
@@ -335,21 +423,21 @@ function Footer() {
         <div className="ftr-cols">
           <div>
             <h4>银行卡</h4>
-            {CARDS.slice(0, 4).map(c => <a key={c.slug} href={`/#card-${c.slug}`}>{c.name}</a>)}
-            <a href="/#cards">查看全部</a>
+            {CARDS.slice(0, 4).map(c => <a key={c.slug} href={`/cards/${c.slug}`}>{c.name}</a>)}
+            <a href="/cards">查看全部</a>
           </div>
           <div>
             <h4>礼品卡</h4>
-            <a href="/#gifts">应用商店</a>
-            <a href="/#gifts">流媒体</a>
-            <a href="/#gifts">游戏</a>
-            <a href="/#gifts">订阅</a>
+            <a href="/shop">应用商店</a>
+            <a href="/shop">流媒体</a>
+            <a href="/shop">游戏</a>
+            <a href="/shop">订阅</a>
           </div>
           <div>
             <h4>联系</h4>
-            <a href="https://t.me/Whohaoe">Telegram</a>
-            <a href="/#wechat">微信</a>
-            <a href="mailto:hi@kayanso.com">hi@kayanso.com</a>
+            <a href="https://t.me/whohaoe" target="_blank" rel="noopener">TG @whohaoe</a>
+            <a href="/contact">微信 HKFG0512</a>
+            <a href="/contact">QQ 2393155725</a>
           </div>
         </div>
       </div>
@@ -362,28 +450,23 @@ function Footer() {
 }
 
 // ── 路由 ────────────────────────────────────────────────
-function normalizeLegacyHashRoute() {
-  const legacy = window.location.hash.match(/^#\/(.+)/);
-  if (!legacy) return false;
-
-  const cleanPath = `/${legacy[1].replace(/^\/+/, "")}`;
-  window.history.replaceState(null, "", cleanPath);
-  return true;
-}
-
 function readRoute() {
-  normalizeLegacyHashRoute();
 
   const clean = window.location.pathname.replace(/\/+$/, "").replace(/^\/+/, "");
   const parts = clean.split("/").filter(Boolean);
 
+  if (parts[0] === "cards" && !parts[1]) return { scene: "home", section: "cards" };
   if (parts[0] === "cards" && parts[1]) return { scene: "card", slug: parts[1] };
+  if (parts[0] === "shop" && !parts[1]) return { scene: "giftStore", section: "gifts" };
   if (parts[0] === "shop" && parts[1] && parts[2] === "buy") {
     return { scene: "giftBuy", slug: parts[1], region: parts[3] || null };
   }
   if (parts[0] === "shop" && parts[1]) return { scene: "gift", slug: parts[1] };
+  if (parts[0] === "faq" && !parts[1]) return { scene: "home", section: "faq" };
+  if (parts[0] === "contact" && !parts[1]) return { scene: "home", section: "contact" };
+  if (parts[0] === "wechat" && !parts[1]) return { scene: "home", section: "contact" };
   if (parts[0] === "sms") return { scene: "sms" };
-  return { scene: "home" };
+  return { scene: "home", section: "cards" };
 }
 
 function useRoute() {
@@ -392,10 +475,8 @@ function useRoute() {
     const handler = () => setRoute(readRoute());
     handler();
     window.addEventListener("popstate", handler);
-    window.addEventListener("hashchange", handler);
     return () => {
       window.removeEventListener("popstate", handler);
-      window.removeEventListener("hashchange", handler);
     };
   }, []);
   return route;
@@ -405,6 +486,24 @@ function useRoute() {
 function App() {
   const route = useRoute();
   const [section, setSection] = useState("cards");
+
+  React.useEffect(() => {
+    if (route.scene !== "home" && route.scene !== "giftStore") return;
+
+    const nextSection = route.section || "cards";
+    setSection(nextSection);
+
+    window.requestAnimationFrame(() => {
+      if (nextSection === "contact") {
+        window.dispatchEvent(new CustomEvent("openContactModal"));
+        document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      const targetId = nextSection === "gifts" ? "gifts" : nextSection;
+      document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [route.scene, route.section]);
 
   // Tweaks
   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
@@ -433,6 +532,17 @@ function App() {
     scene = <window.GiftDetail slug={route.slug} />;
   } else if (route.scene === "giftBuy" && window.GiftBuy) {
     scene = <window.GiftBuy slug={route.slug} region={route.region} />;
+  } else if (route.scene === "giftStore") {
+    scene = (
+      <React.Fragment>
+        {tweaks.showPromo && <PromoBar />}
+        <Header section="gifts" setSection={setSection} />
+        <GiftStore />
+        <FAQ />
+        <Contact />
+        <Footer />
+      </React.Fragment>
+    );
   } else if (route.scene === "sms" && window.SmsDesk) {
     scene = <window.SmsDesk />;
   } else {
@@ -440,7 +550,7 @@ function App() {
       <React.Fragment>
         {tweaks.showPromo && <PromoBar />}
         <Header section={section} setSection={setSection} />
-        <Hero featured={featured} />
+        <Hero />
         <ProductGrid cards={CARDS} />
         <GiftCardStrip />
         <FAQ />
@@ -454,6 +564,7 @@ function App() {
     <div className={`shell cols-${tweaks.gridCols}`} id="top"
          style={{ "--color-jade": acc.jade, "--bg-brand-soft": acc.soft, "--fg-brand": acc.jade }}>
       {scene}
+      <ContactModal />
 
       {window.TweaksPanel && (
         <window.TweaksPanel title="Tweaks">
@@ -491,4 +602,4 @@ function App() {
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 
 // 把首页通用块暴露给 detail.jsx
-Object.assign(window, { Footer, Contact, Header });
+Object.assign(window, { Footer, Contact, ContactTrigger, ContactModal, Header });

@@ -19,7 +19,7 @@ image-slot.js       拖拽上传图槽（保留备用，当前未使用）
 
 直接把整个目录上传到任何静态托管（Cloudflare Pages、Netlify、Vercel、Nginx 静态目录均可）。无构建步骤、无 npm install。
 
-入口：`index.html`。路由：URL hash（`#/`、`#/cards/<slug>`、`#/shop/<slug>`）。
+入口：`index.html`。路由：URL path（`/`、`/cards`、`/shop`、`/shop/<slug>`、`/cards/<slug>`）。
 
 ## 改东西
 

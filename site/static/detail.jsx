@@ -9,10 +9,20 @@ const GIFT_DETAILS = window.GIFT_DETAILS;
 const cardArt = window.cardArt;
 const giftArt = window.giftArt;
 
-const dHomeHref = (section = "") => section ? `/#${section}` : "/";
+const dHomeHref = (section = "") => {
+  if (!section) return "/";
+  if (section === "faq") return "/faq";
+  if (section === "cards") return "/cards";
+  if (section === "gifts") return "/shop";
+  return "/";
+};
 const dCardHref = slug => `/cards/${slug}`;
 const dGiftHref = slug => `/shop/${slug}`;
 const dGiftBuyHref = (slug, region) => region ? `/shop/${slug}/buy/${region}` : `/shop/${slug}/buy`;
+const scrollToAnchor = id => {
+  const target = document.getElementById(id);
+  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+};
 const asArray = value => Array.isArray(value) ? value : (value ? [value] : []);
 const tutorialAnchor = step => `tutorial-step-${step.n}`;
 const fundingAnchor = index => `funding-item-${String(index + 1).padStart(2, "0")}`;
@@ -213,12 +223,16 @@ function DetailToc({ steps, funding }) {
               <h3 className="toc-group-title">开卡教程</h3>
               <ol className="toc-list">
                 {steps.map(step => (
-                  <li key={step.n}>
-                    <a className="toc-link" href={`#${tutorialAnchor(step)}`}>
-                      <span className="toc-num">{step.n}</span>
-                      <span>{step.t}</span>
-                    </a>
-                  </li>
+                <li key={step.n}>
+                  <button
+                    className="toc-link"
+                    type="button"
+                    onClick={() => scrollToAnchor(tutorialAnchor(step))}
+                  >
+                    <span className="toc-num">{step.n}</span>
+                    <span>{step.t}</span>
+                  </button>
+                </li>
                 ))}
               </ol>
             </div>
@@ -228,10 +242,14 @@ function DetailToc({ steps, funding }) {
                 <ol className="toc-list">
                   {funding.map((item, i) => (
                     <li key={item.t || i}>
-                      <a className="toc-link" href={`#${fundingAnchor(i)}`}>
+                      <button
+                        className="toc-link"
+                        type="button"
+                        onClick={() => scrollToAnchor(fundingAnchor(i))}
+                      >
                         <span className="toc-num">{String(i + 1).padStart(2, "0")}</span>
                         <span>{item.t}</span>
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ol>
@@ -311,7 +329,7 @@ function CardDetail({ slug }) {
                  href={applyUrl}
                  target={applyTarget}
                  rel={applyTarget ? "noopener" : undefined}
-                 data-aff={slug}>立即申请</a>
+                 data-aff={slug}>查看攻略</a>
             </div>
           </div>
         </div>
@@ -326,6 +344,7 @@ function CardDetail({ slug }) {
             <h2 className="ca-h2">开卡教程 · {steps.length} 章</h2>
             <span className="ca-meta">含 {actionCount || steps.length} 个实操动作</span>
           </div>
+          <div className="tutorial-warning">⚠ 禁止存放大量资金，即用即充</div>
           <ol className="steps">
             {steps.map(s => <TutorialStep key={s.n} step={s} anchorId={tutorialAnchor(s)} />)}
           </ol>
@@ -415,6 +434,7 @@ function CardDetail({ slug }) {
         </div>
       </section>
 
+      <window.ContactTrigger />
       <window.Footer />
     </div>
   );
@@ -436,21 +456,29 @@ function GiftDirectory({ slug, detail }) {
             <span className="ca-meta">区码 / 金额 / 下单</span>
           </div>
           <div className="gift-directory-nav">
-            <a href="#regions" className="gift-route-card">
+            <button type="button" className="gift-route-card" onClick={() => scrollToAnchor("regions")}>
               <span>01</span>
               <strong>区码与币种</strong>
               <em>国家、货币、官方面额</em>
-            </a>
-            <a href={firstRegion ? dGiftBuyHref(slug, firstRegion.code) : "#regions"} className="gift-route-card">
-              <span>02</span>
-              <strong>金额填写</strong>
-              <em>输入需要多少本地币</em>
-            </a>
-            <a href="#use" className="gift-route-card">
+            </button>
+            {firstRegion ? (
+              <a href={dGiftBuyHref(slug, firstRegion.code)} className="gift-route-card">
+                <span>02</span>
+                <strong>金额填写</strong>
+                <em>输入需要多少本地币</em>
+              </a>
+            ) : (
+              <button type="button" className="gift-route-card" onClick={() => scrollToAnchor("regions")}>
+                <span>02</span>
+                <strong>金额填写</strong>
+                <em>输入需要多少本地币</em>
+              </button>
+            )}
+            <button type="button" className="gift-route-card" onClick={() => scrollToAnchor("use")}>
               <span>03</span>
               <strong>使用说明</strong>
               <em>兑换用途和注意点</em>
-            </a>
+            </button>
           </div>
           <div className="gift-route-pills" aria-label="热门区码">
             {primaryRegions.map(r => (
@@ -474,7 +502,7 @@ function GiftOrderForm({ slug, detail, selected, regions }) {
   }, [slug, selected.code]);
 
   const goRegion = code => {
-    window.location.href = `${dGiftBuyHref(slug, code)}#amount`;
+    window.location.assign(dGiftBuyHref(slug, code));
   };
 
   return (
@@ -550,7 +578,13 @@ function GiftOrderForm({ slug, detail, selected, regions }) {
             >
               联系下单
             </a>
-            <a className="ca-button ca-button--outline ca-button--lg" href="#regions">换区码</a>
+            <button
+              className="ca-button ca-button--outline ca-button--lg"
+              type="button"
+              onClick={() => scrollToAnchor("regions")}
+            >
+              换区码
+            </button>
           </div>
         </div>
 
@@ -602,8 +636,21 @@ function GiftDetail({ slug }) {
             <h1 className="d-h1">{d.name}</h1>
             <p className="d-lead">{d.desc}</p>
             <div className="d-cta">
-              <a className="ca-button ca-button--primary ca-button--lg" href="#regions" data-aff={slug}>选择区码</a>
-              <a className="ca-button ca-button--outline ca-button--lg" href="#use">使用说明</a>
+              <button
+                className="ca-button ca-button--primary ca-button--lg"
+                type="button"
+                onClick={() => scrollToAnchor("regions")}
+                data-aff={slug}
+              >
+                选择区码
+              </button>
+              <button
+                className="ca-button ca-button--outline ca-button--lg"
+                type="button"
+                onClick={() => scrollToAnchor("use")}
+              >
+                使用说明
+              </button>
             </div>
           </div>
         </div>
@@ -711,8 +758,21 @@ function GiftBuy({ slug, region }) {
               <div><span>起选金额</span><strong>{formatGiftAmount(starterAmount, selected.currency)}</strong></div>
             </div>
             <div className="d-cta">
-              <a className="ca-button ca-button--primary ca-button--lg" href="#amount" data-aff={`${slug}-${selected.code}`}>填写金额</a>
-              <a className="ca-button ca-button--outline ca-button--lg" href="#regions">换区码</a>
+              <button
+                className="ca-button ca-button--primary ca-button--lg"
+                type="button"
+                onClick={() => scrollToAnchor("amount")}
+                data-aff={`${slug}-${selected.code}`}
+              >
+                填写金额
+              </button>
+              <button
+                className="ca-button ca-button--outline ca-button--lg"
+                type="button"
+                onClick={() => scrollToAnchor("regions")}
+              >
+                换区码
+              </button>
             </div>
           </div>
         </div>
@@ -736,7 +796,7 @@ function GiftBuy({ slug, region }) {
                 </div>
                 <div className="region-denom">{r.denom}</div>
                 {r.note && <p className="region-note">{r.note}</p>}
-                <a className="region-buy" href={`${dGiftBuyHref(slug, r.code)}#amount`} data-aff={`${slug}-${r.code}`}>选择 {r.code} 区码</a>
+                <a className="region-buy" href={dGiftBuyHref(slug, r.code)} data-aff={`${slug}-${r.code}`}>选择 {r.code} 区码</a>
               </article>
             ))}
           </div>

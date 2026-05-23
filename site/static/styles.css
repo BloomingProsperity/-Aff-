@@ -289,9 +289,16 @@ a { color: inherit; text-decoration: none; }
   align-items: center; gap: 8px; font-size: 12px;
 }
 .pc-ai-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--fg-3); font-weight: 700; }
+.pc-ai-rows { display: flex; flex-direction: column; gap: 6px; }
 .pc-ai-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .pc-ai-item { display: inline-flex; align-items: center; gap: 4px; color: var(--fg-1); font-weight: 700; }
+.pc-ai-legend { font-size: 10px; color: var(--fg-3); letter-spacing: .03em; }
 
+.pc-warn {
+  font-size: 11px; color: #92400e; background: #fffbeb;
+  border: 1px solid #fde68a; border-radius: 6px;
+  padding: 5px 10px; margin-bottom: 10px;
+}
 .pc-foot {
   display: flex; align-items: center; justify-content: space-between;
   gap: 10px; margin-top: auto; padding-top: 6px;
@@ -303,11 +310,19 @@ a { color: inherit; text-decoration: none; }
 .pc-tutorial:hover { color: var(--fg-brand); border-color: var(--fg-brand); }
 .pc-apply { padding: 8px 16px; font-size: 12px; }
 
-/* Status dots */
-.dot { display: inline-block; font-size: 13px; line-height: 1; transform: translateY(1px); }
-.dot-ok   { color: var(--color-jade); }
-.dot-warn { color: var(--color-amber-300); }
-.dot-no   { color: var(--fg-3); }
+/* Status icons — filled circle with symbol */
+.sd {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; border-radius: 50%;
+  font-size: 9px; font-weight: 800; flex-shrink: 0;
+  vertical-align: middle; line-height: 1;
+}
+.sd-ok   { background: #16a34a; color: #fff; }
+.sd-ok::after   { content: '✓'; }
+.sd-warn { background: #d97706; color: #fff; }
+.sd-warn::after { content: '〜'; font-size: 8px; }
+.sd-no   { background: #e5e7eb; color: #9ca3af; }
+.sd-no::after   { content: '–'; font-size: 11px; font-weight: 400; }
 
 /* ============================================================
    Gift card strip
@@ -340,6 +355,113 @@ a { color: inherit; text-decoration: none; }
 .gc-scope { font-size: 11px; color: var(--fg-3); margin-bottom: 6px; }
 .gc-row { display: flex; justify-content: space-between; align-items: baseline; }
 .gc-price { font-size: 13px; font-weight: 700; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Gift store
+   ============================================================ */
+.gift-store-hero {
+  padding: 70px 0 32px;
+  background: linear-gradient(180deg, var(--bg-brand-soft), #fff);
+  border-bottom: 1px solid var(--border-default);
+}
+.gift-store-hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 28px;
+  align-items: end;
+}
+.gift-store-title {
+  margin: 14px 0 10px;
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.08;
+  letter-spacing: 0;
+  color: var(--fg-1);
+}
+.gift-store-lead {
+  max-width: 720px;
+  margin: 0;
+  color: var(--fg-2);
+  font-size: 16px;
+  line-height: 1.8;
+}
+.gift-store-section { padding-top: 34px; }
+.gift-store-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.gift-store-card {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  background: #fff;
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  padding: 14px;
+  min-height: 250px;
+}
+.gift-store-art {
+  width: 100%;
+  min-height: 190px;
+  align-self: stretch;
+}
+.gift-store-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gift-store-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gift-store-meta span {
+  font-size: 11px;
+  color: var(--fg-2);
+  background: var(--bg-soft);
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  padding: 4px 9px;
+}
+.gift-store-card h2 {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.25;
+  color: var(--fg-1);
+}
+.gift-store-card p {
+  margin: 0;
+  color: var(--fg-2);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.gift-store-regions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: auto;
+}
+.gift-store-regions a {
+  font-size: 11px;
+  color: var(--fg-2);
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  padding: 5px 8px;
+}
+.gift-store-regions a:hover {
+  color: var(--fg-brand);
+  border-color: var(--fg-brand);
+}
+.gift-store-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border-default);
+  padding-top: 12px;
+}
 /* ============================================================
    Trust
    ============================================================ */
@@ -388,18 +510,75 @@ a { color: inherit; text-decoration: none; }
 /* ============================================================
    Contact + Footer (same as before)
    ============================================================ */
-.contact-wrap {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 40px; flex-wrap: wrap;
+/* ── 联系弹窗 ──────────────────────────────────────────── */
+.cmodal-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgb(0 0 0 / .45); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
 }
-.contact-h2 { margin: 0; }
-.contact-cta { display: flex; gap: 10px; flex-wrap: wrap; }
-.k-section--ink .ca-button--primary { background: #fff; color: var(--color-ink); }
-.k-section--ink .ca-button--primary:hover { background: rgb(255 255 255 / .9); }
-.k-section--ink .ca-button--outline {
-  background: transparent; color: #fff; border: 1px solid rgb(255 255 255 / .35);
+.cmodal {
+  background: #fff; border-radius: 18px;
+  width: 100%; max-width: 390px;
+  box-shadow: 0 24px 64px rgb(0 0 0 / .18);
+  overflow: hidden;
 }
-.k-section--ink .ca-button--outline:hover { border-color: #fff; color: #fff; }
+.cmodal-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 24px 24px 12px;
+}
+.cmodal-title { font-size: 18px; font-weight: 700; color: var(--fg-1); }
+.cmodal-sub { font-size: 13px; color: var(--fg-3); margin-top: 4px; }
+.cmodal-close {
+  background: #f3f4f6; border: none; cursor: pointer;
+  width: 28px; height: 28px; border-radius: 50%;
+  font-size: 16px; color: var(--fg-2); line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-left: 12px; margin-top: 2px;
+}
+.cmodal-close:hover { background: #e5e7eb; }
+.cmodal-list { padding: 8px 16px 20px; display: flex; flex-direction: column; gap: 8px; }
+.cmodal-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 12px; border-radius: 12px;
+  background: #f9fafb; text-decoration: none; color: inherit;
+  transition: background .12s; cursor: default;
+}
+a.cmodal-item { cursor: pointer; }
+a.cmodal-item:hover { background: #f0f0f0; }
+.cmodal-badge {
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #fff;
+}
+.cmodal-badge--tg { background: #229ed9; }
+.cmodal-badge--wx { background: #07c160; }
+.cmodal-badge--qq { background: #1289d8; }
+.cmodal-info { flex: 1; }
+.cmodal-platform { font-size: 11px; color: var(--fg-3); text-transform: uppercase; letter-spacing: .05em; }
+.cmodal-id { font-size: 17px; font-weight: 700; color: var(--fg-1); margin-top: 2px; }
+.cmodal-action { font-size: 11px; color: var(--fg-3); white-space: nowrap; margin-left: auto; }
+a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
+
+/* ── 有疑问触发块 ─────────────────────────────────────── */
+.ctrigger-section { padding-top: 0; border-top: 0; }
+.ctrigger {
+  display: flex; align-items: center; gap: 16px;
+  border: 1.5px solid var(--border-default); border-radius: 14px;
+  padding: 18px 22px; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.ctrigger:hover { border-color: var(--fg-brand); background: var(--bg-brand-soft); }
+.ctrigger-q {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  background: var(--bg-brand-soft); color: var(--fg-brand);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 800;
+}
+.ctrigger:hover .ctrigger-q { background: var(--fg-brand); color: #fff; }
+.ctrigger-text { flex: 1; }
+.ctrigger-title { font-size: 15px; font-weight: 700; color: var(--fg-1); }
+.ctrigger-sub { font-size: 12px; color: var(--fg-3); margin-top: 3px; }
+.ctrigger-cta { font-size: 14px; font-weight: 600; color: var(--fg-brand); white-space: nowrap; }
 
 .ftr { background: var(--color-ink); color: rgb(255 255 255 / .7); padding: 56px 0 28px; }
 .ftr-inner {
@@ -544,7 +723,14 @@ a { color: inherit; text-decoration: none; }
   grid-template-columns: 34px minmax(0, 1fr);
   gap: 8px;
   align-items: start;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
   color: var(--fg-2);
+  text-align: left;
+  width: 100%;
   font-size: 13px;
   line-height: 1.55;
 }
@@ -614,6 +800,12 @@ a { color: inherit; text-decoration: none; }
   color: var(--fg-2);
   font-size: 13px;
   line-height: 1.65;
+}
+.tutorial-warning {
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-left: 4px solid #d97706; border-radius: 6px;
+  color: #92400e; font-size: 13px; font-weight: 600;
+  padding: 10px 16px; margin-bottom: 24px;
 }
 .tutorial-promo-note {
   display: flex;
@@ -784,6 +976,10 @@ a { color: inherit; text-decoration: none; }
   border-radius: var(--radius-md);
   padding: 16px;
   background: rgb(255 255 255 / .42);
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+  font: inherit;
 }
 .gift-route-card:hover {
   border-color: var(--color-ink);
@@ -1405,6 +1601,13 @@ a { color: inherit; text-decoration: none; }
   .region-grid { grid-template-columns: 1fr; }
   .gift-directory-head,
   .gift-order-head { flex-direction: column; }
+  .gift-store-hero-inner,
+  .gift-store-grid,
+  .gift-store-card {
+    grid-template-columns: 1fr;
+  }
+  .gift-store-hero-inner { align-items: start; }
+  .gift-store-art { min-height: 160px; }
   .gift-directory-nav,
   .gift-order-grid,
   .gift-buy-steps { grid-template-columns: 1fr; }
@@ -1453,4 +1656,8 @@ a { color: inherit; text-decoration: none; }
   .hero-trust { gap: 20px; }
   .grid-head { flex-direction: column; align-items: flex-start; }
   .grid-filters { overflow-x: auto; flex-wrap: nowrap; width: 100%; padding-bottom: 4px; }
+  .gift-store-hero { padding-top: 42px; }
+  .gift-store-title { font-size: 30px; }
+  .gift-store-actions { justify-content: stretch; flex-direction: column; }
+  .gift-store-actions .ca-button { width: 100%; }
 }

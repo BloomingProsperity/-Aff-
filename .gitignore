@@ -1,5 +1,6 @@
 .claude/
 .omc/
+.omcscientistvenv/
 .playwright-mcp/
 
 site/.claude/
@@ -14,3 +15,8 @@ site/.pages-manifest.json
 
 .DS_Store
 Thumbs.db
+
+# Local research/reference captures. Keep them on disk, but do not ship or commit.
+site/static/blogs.html
+site/static/compare*.html
+sms-layout-*.png
