@@ -139,8 +139,27 @@ function PromoBar() {
   );
 }
 
+// ── 全局 Auth ────────────────────────────────────────────
+function useAuth() {
+  const [user, setUser] = React.useState(null);
+  React.useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(r => r.json())
+      .then(d => setUser(d.user || null))
+      .catch(() => {});
+  }, []);
+  return [user, setUser];
+}
+
 // ── 顶栏 ────────────────────────────────────────────────
-function Header({ section, setSection }) {
+function Header({ section, setSection, user: userProp, onLogout: onLogoutProp }) {
+  // 如果父级没传 user，Header 自己维护 auth 状态（供 detail.jsx 复用）
+  const [selfUser, setSelfUser] = useAuth();
+  const user = userProp !== undefined ? userProp : selfUser;
+  const onLogout = onLogoutProp || (() => {
+    fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+      .finally(() => setSelfUser(null));
+  });
   const tabs = [
     { id: "cards",    label: "银行卡" },
     { id: "gifts",    label: "礼品卡" },
@@ -169,6 +188,14 @@ function Header({ section, setSection }) {
         </nav>
         <div className="hdr-right">
           <a className="hdr-link" href="/contact">加入社群</a>
+          {user ? (
+            <div className="hdr-user">
+              <span className="hdr-user-email">{user.email}</span>
+              <button className="ca-button ca-button--outline hdr-logout" onClick={onLogout}>退出</button>
+            </div>
+          ) : (
+            <a className="ca-button ca-button--outline" href={"/login?next=" + encodeURIComponent(window.location.pathname)}>登录</a>
+          )}
           <a className="ca-button ca-button--primary" href="/cards">立即开卡</a>
         </div>
       </div>
@@ -737,6 +764,11 @@ function useRoute() {
 function App() {
   const route = useRoute();
   const [section, setSection] = useState("cards");
+  const [authUser, setAuthUser] = useAuth();
+  const handleLogout = () => {
+    fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+      .finally(() => setAuthUser(null));
+  };
 
   React.useEffect(() => {
     if (route.scene !== "home" && route.scene !== "giftStore") return;
@@ -792,7 +824,7 @@ function App() {
     scene = (
       <React.Fragment>
         {tweaks.showPromo && <PromoBar />}
-        <Header section="gifts" setSection={setSection} />
+        <Header section="gifts" setSection={setSection} user={authUser} onLogout={handleLogout} />
         <GiftStore />
         <FAQ />
         <Contact />
@@ -803,7 +835,7 @@ function App() {
     scene = (
       <React.Fragment>
         {tweaks.showPromo && <PromoBar />}
-        <Header section="accounts" setSection={setSection} />
+        <Header section="accounts" setSection={setSection} user={authUser} onLogout={handleLogout} />
         <AccountStore />
         <FAQ />
         <Contact />
@@ -818,7 +850,7 @@ function App() {
     scene = (
       <React.Fragment>
         {tweaks.showPromo && <PromoBar />}
-        <Header section={section} setSection={setSection} />
+        <Header section={section} setSection={setSection} user={authUser} onLogout={handleLogout} />
         <Hero featured={featured} />
         <HomeBoard cards={CARDS} />
         <Footer />
