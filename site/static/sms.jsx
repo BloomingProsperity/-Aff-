@@ -407,6 +407,35 @@ function SmsDesk() {
       </section>
 
 
+      {/* 始终可见：库存预览 */}
+      {!user && (
+        <section className="k-section">
+          <div className="wrap sms-auth-layout">
+            <div className="sms-panel sms-lookup">
+              <div className="grid-head">
+                <h2 className="ca-h2">实时库存</h2>
+                <span className="ca-meta">浏览无需登录</span>
+              </div>
+              <div className="sms-field-row">
+                <label className="sms-field">
+                  <span>国家</span>
+                  <select value={country} onChange={e => setCountry(e.target.value)}>
+                    {countries.map(c => <option key={c.code} value={c.code}>{c.name} {c.dial}</option>)}
+                  </select>
+                </label>
+              </div>
+              <SmsServiceBoard
+                products={products}
+                product={product}
+                setProduct={setProduct}
+                serviceQuery={serviceQuery}
+                setServiceQuery={setServiceQuery}
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
       {user && (
         <React.Fragment>
           <section className="k-section">
