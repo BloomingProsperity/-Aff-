@@ -698,6 +698,16 @@ a { color: inherit; text-decoration: none; }
   color: #66708f;
   line-height: 1.6;
 }
+.acct-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #66708f;
+  margin: 0 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e4eaf5;
+}
 
 /* ============================================================
    Gift store

@@ -51,7 +51,6 @@ const homeHref = (section = "") => {
   if (!section) return "/";
   if (section === "cards") return "/cards";
   if (section === "gifts") return "/shop";
-  if (section === "mail") return "/mail";
   if (section === "accounts") return "/accounts";
   if (section === "faq") return "/faq";
   if (section === "contact") return "/contact";
@@ -146,7 +145,6 @@ function Header({ section, setSection }) {
     { id: "cards",    label: "银行卡" },
     { id: "gifts",    label: "礼品卡" },
     { id: "sms",      label: "接码",   href: "/sms" },
-    { id: "mail",     label: "邮箱",   href: "/mail" },
     { id: "accounts", label: "账号",   href: "/accounts" },
     { id: "faq",      label: "常见问题" },
   ];
@@ -230,9 +228,6 @@ function HomeBoard({ cards }) {
         </div>
         <div className="home-panel home-panel--gifts">
           <GiftCardStrip />
-        </div>
-        <div className="home-panel home-panel--mail">
-          <MailServiceStrip />
         </div>
         <div className="home-panel home-panel--accounts">
           <AccountStrip />
@@ -423,15 +418,19 @@ function MailStore() {
 }
 
 function AccountStrip() {
+  const preview = [
+    ...ACCOUNT_ITEMS,
+    ...MAIL_SERVICES.map(m => ({ slug: m.name, icon: m.name.slice(0, 1), name: m.name, scope: m.scope, tag: m.tag })),
+  ];
   return (
     <section className="k-section mail-section" id="accounts">
       <div className="wrap">
         <div className="grid-head">
-          <h2 className="ca-h2">账号出售</h2>
+          <h2 className="ca-h2">账号 &amp; 邮箱</h2>
           <a href="/accounts" className="ca-button ca-button--outline">进入商店</a>
         </div>
         <div className="mail-grid">
-          {ACCOUNT_ITEMS.map(item => (
+          {preview.map(item => (
             <a key={item.slug} href="/accounts" className="mail-card">
               <span className="mail-icon">{item.icon}</span>
               <span className="mail-copy">
@@ -453,16 +452,18 @@ function AccountStore() {
       <section className="gift-store-hero mail-hero">
         <div className="wrap gift-store-hero-inner">
           <div>
-            <Kicker tone="brand">账号出售</Kicker>
-            <h1 className="gift-store-title">Gmail · Outlook · Telegram 账号</h1>
-            <p className="gift-store-lead">手工注册真实账号，海外手机号/独立 IP，交付后请立即修改密码。支持 USDT / 微信付款，TG 私信下单。</p>
+            <Kicker tone="brand">账号 &amp; 邮箱</Kicker>
+            <h1 className="gift-store-title">账号出售 · 邮箱服务</h1>
+            <p className="gift-store-lead">Gmail / Outlook / Telegram 账号出售，以及企业邮箱开通与配置服务。支持 USDT / 微信付款，TG 私信下单。</p>
           </div>
           <a className="ca-button ca-button--primary ca-button--lg" href="https://t.me/Whohaoe" target="_blank" rel="noopener">TG 下单</a>
         </div>
       </section>
 
+      {/* 账号出售 */}
       <section className="k-section mail-store-section">
         <div className="wrap">
+          <h2 className="acct-section-title">账号出售</h2>
           <div className="mail-store-grid">
             {ACCOUNT_ITEMS.map(item => (
               <article key={item.slug} className="mail-store-card">
@@ -477,6 +478,29 @@ function AccountStore() {
                   <a href="https://t.me/Whohaoe" target="_blank" rel="noopener">TG 询价</a>
                 </div>
                 <div className="acct-note">{item.note}</div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 邮箱服务 */}
+      <section className="k-section mail-store-section">
+        <div className="wrap">
+          <h2 className="acct-section-title">邮箱服务</h2>
+          <div className="mail-store-grid">
+            {MAIL_SERVICES.map(item => (
+              <article key={item.name} className="mail-store-card">
+                <div className="mail-store-head">
+                  <span className="mail-icon">{item.name.slice(0, 1)}</span>
+                  <span className="ca-pill ca-pill--brand">{item.tag}</span>
+                </div>
+                <h2>{item.name}</h2>
+                <p>{item.desc}</p>
+                <div className="mail-store-foot">
+                  <span>{item.scope}</span>
+                  <a href="https://t.me/Whohaoe" target="_blank" rel="noopener">联系配置</a>
+                </div>
               </article>
             ))}
           </div>
@@ -686,7 +710,7 @@ function readRoute() {
     return { scene: "giftBuy", slug: parts[1], region: parts[3] || null };
   }
   if (parts[0] === "shop" && parts[1]) return { scene: "gift", slug: parts[1] };
-  if (parts[0] === "mail" && !parts[1]) return { scene: "mail", section: "mail" };
+  if (parts[0] === "mail" && !parts[1]) return { scene: "accounts", section: "accounts" };
   if (parts[0] === "accounts" && !parts[1]) return { scene: "accounts", section: "accounts" };
   if (parts[0] === "faq" && !parts[1]) return { scene: "home", section: "faq" };
   if (parts[0] === "contact" && !parts[1]) return { scene: "home", section: "contact" };
@@ -769,17 +793,6 @@ function App() {
         {tweaks.showPromo && <PromoBar />}
         <Header section="gifts" setSection={setSection} />
         <GiftStore />
-        <FAQ />
-        <Contact />
-        <Footer />
-      </React.Fragment>
-    );
-  } else if (route.scene === "mail") {
-    scene = (
-      <React.Fragment>
-        {tweaks.showPromo && <PromoBar />}
-        <Header section="mail" setSection={setSection} />
-        <MailStore />
         <FAQ />
         <Contact />
         <Footer />
