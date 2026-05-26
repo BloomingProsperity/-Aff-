@@ -1,0 +1,77 @@
+import { many } from "./db.js";
+
+const SETTING_DEFS = {
+  SMS_USD_CNY_RATE: { prop: "smsUsdCnyRate", type: "number" },
+  SMS_MARGIN_CNY: { prop: "smsMarginCny", type: "number" },
+  FIVESIM_API_KEY: { prop: "fivesimApiKey", type: "secret" },
+  TURNSTILE_SITE_KEY: { prop: "turnstileSiteKey", type: "text" },
+  TURNSTILE_SECRET_KEY: { prop: "turnstileSecretKey", type: "secret" },
+};
+
+const SECRET_KEYS = ["FIVESIM_API_KEY", "TURNSTILE_SECRET_KEY"];
+
+function maskSecret(value) {
+  const raw = String(value || "");
+  if (!raw) return "";
+  return `••••${raw.slice(-4)}`;
+}
+
+export function normalizeAdminSetting(key, value) {
+  const def = SETTING_DEFS[key];
+  if (!def) return { ok: false, error: "设置项不存在。" };
+  const raw = String(value ?? "").trim();
+
+  if (def.type === "secret" && !raw) {
+    return { ok: true, skip: true };
+  }
+
+  if (def.type === "number") {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) return { ok: false, error: "设置数值不正确。" };
+    return { ok: true, value: String(n) };
+  }
+
+  return { ok: true, value: raw };
+}
+
+export function applySettingToConfig(config, key, value) {
+  const def = SETTING_DEFS[key];
+  if (!def) return false;
+  const normalized = normalizeAdminSetting(key, value);
+  if (!normalized.ok || normalized.skip) return false;
+
+  if (def.type === "number") {
+    config[def.prop] = Number(normalized.value);
+    return true;
+  }
+
+  config[def.prop] = normalized.value;
+  return true;
+}
+
+export function adminSettingsView(config) {
+  return {
+    settings: {
+      SMS_USD_CNY_RATE: String(config.smsUsdCnyRate || 7.2),
+      SMS_MARGIN_CNY: String(config.smsMarginCny || 10),
+      TURNSTILE_SITE_KEY: String(config.turnstileSiteKey || ""),
+    },
+    secrets: Object.fromEntries(SECRET_KEYS.map(key => {
+      const value = String(config[SETTING_DEFS[key].prop] || "");
+      return [key, { configured: Boolean(value), masked: maskSecret(value) }];
+    })),
+  };
+}
+
+export function settingKeys() {
+  return Object.keys(SETTING_DEFS);
+}
+
+export async function applyRuntimeSettings(db, config) {
+  try {
+    const rows = await many(db, "SELECT key, value FROM app_settings");
+    for (const row of rows) applySettingToConfig(config, row.key, row.value);
+  } catch (error) {
+    if (error.code !== "42P01") throw error;
+  }
+}

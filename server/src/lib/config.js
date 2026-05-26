@@ -1,18 +1,52 @@
+function parseBool(value, fallback = false) {
+  if (value === undefined || value === null || value === "") return fallback;
+  return ["1", "true", "yes", "on"].includes(String(value).trim().toLowerCase());
+}
+
+function normalizeOrigin(value) {
+  if (!value) return "";
+  try {
+    return new URL(value).origin.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+export const DEFAULT_ADMIN_EMAIL = "huakaifugui2.0@gmail.com";
+
 export function loadConfig(env = process.env) {
-  const corsOrigins = String(env.CORS_ORIGIN || "")
+  const publicUrl = env.PUBLIC_URL || "";
+  const explicitCorsOrigins = String(env.CORS_ORIGIN || "")
     .split(",")
-    .map(value => value.trim())
+    .map(normalizeOrigin)
     .filter(Boolean);
+  const corsOrigins = [...new Set([
+    ...explicitCorsOrigins,
+    normalizeOrigin(publicUrl),
+    "https://hkai.shop",
+    "https://www.hkai.shop",
+    "http://localhost:4321",
+    "http://localhost:4323",
+    "http://localhost:4325",
+    "http://localhost:4326",
+    "http://127.0.0.1:4321",
+    "http://127.0.0.1:4323",
+    "http://127.0.0.1:4325",
+    "http://127.0.0.1:4326",
+  ].filter(Boolean))];
+  const cookieSecureDefault = String(env.NODE_ENV || "").toLowerCase() === "production"
+    || normalizeOrigin(publicUrl).startsWith("https://");
 
   return {
     nodeEnv: env.NODE_ENV || "development",
     port: Number(env.PORT || 8788),
     databaseUrl: env.DATABASE_URL || "",
-    publicUrl: env.PUBLIC_URL || "",
+    publicUrl,
     corsOrigins,
     cookieDomain: env.COOKIE_DOMAIN || "",
-    cookieSecure: String(env.COOKIE_SECURE || "").toLowerCase() === "true",
-    adminEmail: env.ADMIN_EMAIL || "",
+    cookieSecure: parseBool(env.COOKIE_SECURE, cookieSecureDefault),
+    trustProxyHeaders: parseBool(env.TRUST_PROXY_HEADERS, false),
+    adminEmail: env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL,
     fivesimApiKey: env.FIVESIM_API_KEY || env.FIVESIM_TOKEN || "",
     smsUsdCnyRate: Number(env.SMS_USD_CNY_RATE || env.SMS_PRICE_RATE || 7.2),
     smsMarginCny: Number(env.SMS_MARGIN_CNY || env.SMS_PRICE_FIXED || 10),

@@ -2,22 +2,68 @@ import { createHash, randomUUID } from "node:crypto";
 import { exec, one } from "./db.js";
 
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 function sha256Hex(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function clientIdentity(request) {
-  const forwarded = request.headers["cf-connecting-ip"]
-    || String(request.headers["x-forwarded-for"] || "").split(",")[0].trim()
-    || request.ip
-    || "unknown-ip";
-  const ua = request.headers["user-agent"] || "unknown-agent";
-  return `${forwarded}|${ua}`;
+function header(request, name) {
+  const headers = request.headers || {};
+  if (typeof headers.get === "function") return headers.get(name) || "";
+  return headers[name] || headers[name.toLowerCase()] || "";
 }
 
-export async function rateLimitKey(request, scope, extra = "") {
-  const fingerprint = sha256Hex(`${clientIdentity(request)}|${extra}`);
+function isLocalAddress(value) {
+  const ip = String(value || "").trim().toLowerCase();
+  return ip === "127.0.0.1"
+    || ip === "::1"
+    || ip.startsWith("::ffff:127.")
+    || ip.startsWith("10.")
+    || ip.startsWith("192.168.")
+    || /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip);
+}
+
+function forwardedIp(request, config = {}) {
+  const remote = request.ip || request.socket?.remoteAddress || "";
+  const trustProxy = Boolean(config.trustProxyHeaders) || isLocalAddress(remote);
+  if (!trustProxy) return "";
+  return header(request, "cf-connecting-ip")
+    || header(request, "x-real-ip")
+    || String(header(request, "x-forwarded-for") || "").split(",")[0].trim();
+}
+
+function clientIdentity(request, config = {}) {
+  const ip = forwardedIp(request, config)
+    || request.ip
+    || request.socket?.remoteAddress
+    || "unknown-ip";
+  const ua = header(request, "user-agent") || "unknown-agent";
+  return `${ip}|${ua}`;
+}
+
+function normalizeOrigin(value) {
+  if (!value) return "";
+  try {
+    return new URL(value).origin.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+export function isAllowedRequestOrigin(origin, config = {}) {
+  const value = normalizeOrigin(origin);
+  if (!value) return true;
+  const allowed = new Set((config.corsOrigins || []).map(normalizeOrigin).filter(Boolean));
+  return allowed.has(value);
+}
+
+export function isMutatingRequest(request) {
+  return !SAFE_METHODS.has(String(request.method || "GET").toUpperCase());
+}
+
+export async function rateLimitKey(request, scope, extra = "", config = {}) {
+  const fingerprint = sha256Hex(`${clientIdentity(request, config)}|${extra}`);
   return `${scope}:${fingerprint}`;
 }
 
@@ -27,7 +73,7 @@ export async function enforceRateLimit(db, request, reply, options) {
   const windowSeconds = Math.max(1, Number(options.windowSeconds || 60));
   const now = Math.floor(Date.now() / 1000);
   const resetAt = now + windowSeconds;
-  const key = await rateLimitKey(request, scope, options.extra || "");
+  const key = await rateLimitKey(request, scope, options.extra || "", options.config || {});
 
   const row = await one(
     db,

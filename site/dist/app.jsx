@@ -190,6 +190,9 @@ function Header({ section, setSection, user: userProp, onLogout: onLogoutProp })
           <a className="hdr-link" href="/contact">加入社群</a>
           {user ? (
             <div className="hdr-user">
+              {user.role === "admin" && (
+                <a className="hdr-tab" href="/admin" style={{ fontSize: "12px", color: "#4d91e9" }}>后台</a>
+              )}
               <span className="hdr-user-email">{user.email}</span>
               <button className="ca-button ca-button--outline hdr-logout" onClick={onLogout}>退出</button>
             </div>
@@ -744,6 +747,7 @@ function readRoute() {
   if (parts[0] === "wechat" && !parts[1]) return { scene: "home", section: "contact" };
   if (parts[0] === "sms") return { scene: "sms" };
   if (parts[0] === "login" && !parts[1]) return { scene: "login" };
+  if (parts[0] === "admin") return { scene: "admin" };
   return { scene: "home" };
 }
 
@@ -769,6 +773,23 @@ function App() {
     fetch("/api/auth/logout", { method: "POST", credentials: "include" })
       .finally(() => setAuthUser(null));
   };
+
+  // 页面浏览量统计
+  React.useEffect(() => {
+    const pageMap = {
+      home: route.section || "home",
+      giftStore: "gifts", gift: "gifts", giftBuy: "gifts",
+      card: "cards", accounts: "accounts",
+      sms: "sms", login: "login", admin: "admin",
+    };
+    const page = pageMap[route.scene] || "home";
+    fetch("/api/stats/pageview", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ page }),
+    }).catch(() => {});
+  }, [route.scene, route.section]);
 
   React.useEffect(() => {
     if (route.scene !== "home" && route.scene !== "giftStore") return;
@@ -844,6 +865,8 @@ function App() {
     );
   } else if (route.scene === "login" && window.LoginDesk) {
     scene = <window.LoginDesk />;
+  } else if (route.scene === "admin" && window.AdminDesk) {
+    scene = <window.AdminDesk />;
   } else if (route.scene === "sms" && window.SmsDesk) {
     scene = <window.SmsDesk />;
   } else {

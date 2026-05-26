@@ -129,6 +129,7 @@ export async function smsRoutes(app) {
       scope: "sms:countries",
       limit: 90,
       windowSeconds: 60,
+      config: app.config,
     });
     if (limited) return limited;
 
@@ -141,6 +142,7 @@ export async function smsRoutes(app) {
       scope: "sms:products",
       limit: 120,
       windowSeconds: 60,
+      config: app.config,
     });
     if (limited) return limited;
 
@@ -181,6 +183,7 @@ export async function smsRoutes(app) {
       extra: `user:${auth.user.id}`,
       limit: 10,
       windowSeconds: 60,
+      config: app.config,
     });
     if (limited) return limited;
 
@@ -219,6 +222,13 @@ export async function smsRoutes(app) {
       return fivesimHttpError(reply, bought);
     }
 
+    const fivesimId = Number(bought.data?.id);
+    if (!Number.isInteger(fivesimId) || fivesimId <= 0) {
+      await refundBalance(app.db, auth.user.id, reservedCents);
+      reply.code(502);
+      return { error: "上游返回的订单编号无效，请稍后重试。" };
+    }
+
     const realQuote = quoteCharge(app.config, bought.data?.price || bought.data?.cost || estimateCost || 0);
     const realCost = realQuote.chargeCents;
 
@@ -226,7 +236,7 @@ export async function smsRoutes(app) {
       const extraCents = realCost - reservedCents;
       const extra = await reserveBalance(app.db, auth.user.id, extraCents);
       if (!extra) {
-        await app.fivesim(`/user/cancel/${bought.data.id}`, app.config.fivesimApiKey);
+        await app.fivesim(`/user/cancel/${fivesimId}`, app.config.fivesimApiKey);
         await refundBalance(app.db, auth.user.id, reservedCents);
         reply.code(402);
         return { error: "余额不足，号码已取消。" };
@@ -238,7 +248,7 @@ export async function smsRoutes(app) {
     }
 
     if (realCost <= 0) {
-      await app.fivesim(`/user/cancel/${bought.data.id}`, app.config.fivesimApiKey);
+      await app.fivesim(`/user/cancel/${fivesimId}`, app.config.fivesimApiKey);
       await refundBalance(app.db, auth.user.id, reservedCents);
       reply.code(402);
       return { error: "余额不足，号码已取消。" };
@@ -252,7 +262,7 @@ export async function smsRoutes(app) {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
         auth.user.id,
-        String(bought.data.id),
+        String(fivesimId),
         country,
         operator,
         product,
@@ -270,7 +280,7 @@ export async function smsRoutes(app) {
       [auth.user.id, -realCost, updatedUser.balance_cents, "sms_order", note],
     );
 
-    const row = await one(app.db, "SELECT * FROM sms_orders WHERE fivesim_id = $1", [String(bought.data.id)]);
+    const row = await one(app.db, "SELECT * FROM sms_orders WHERE fivesim_id = $1", [String(fivesimId)]);
     return { order: normalizeOrder(row), balance: centsToAmount(updatedUser.balance_cents), pricing: realQuote };
   });
 
@@ -292,6 +302,15 @@ export async function smsRoutes(app) {
       reply.code(404);
       return { error: "订单不存在。" };
     }
+
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "sms:check",
+      extra: `user:${auth.user.id}:order:${row.id}`,
+      limit: 30,
+      windowSeconds: 60,
+      config: app.config,
+    });
+    if (limited) return limited;
 
     const checked = await app.fivesim(`/user/check/${row.fivesim_id}`, app.config.fivesimApiKey);
     if (!checked.ok) return fivesimHttpError(reply, checked);
@@ -333,6 +352,15 @@ export async function smsRoutes(app) {
         reply.code(404);
         return { error: "订单不存在。" };
       }
+
+      const limited = await enforceRateLimit(app.db, request, reply, {
+        scope: `sms:${action}`,
+        extra: `user:${auth.user.id}:order:${row.id}`,
+        limit: 20,
+        windowSeconds: 60,
+        config: app.config,
+      });
+      if (limited) return limited;
 
       const changed = await app.fivesim(`/user/${action}/${row.fivesim_id}`, app.config.fivesimApiKey);
       if (!changed.ok) return fivesimHttpError(reply, changed);

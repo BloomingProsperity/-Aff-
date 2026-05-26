@@ -3,6 +3,8 @@ import { cleanEmail, centsToAmount, toIso } from "./common.js";
 import { exec, one } from "./db.js";
 
 const SESSION_DAYS = 14;
+const CURRENT_PASSWORD_ITERATIONS = 600000;
+const LEGACY_PASSWORD_ITERATIONS = [120000];
 
 function sha256Base64(value) {
   return createHash("sha256").update(value).digest("base64url");
@@ -19,20 +21,31 @@ export function publicUser(user) {
   };
 }
 
-export function hashPassword(password, saltBase64) {
+export function hashPassword(password, saltBase64, iterations = CURRENT_PASSWORD_ITERATIONS) {
   const salt = saltBase64 ? Buffer.from(saltBase64, "base64") : randomBytes(16);
-  const hash = pbkdf2Sync(String(password), salt, 120000, 32, "sha256");
+  const safeIterations = Math.max(120000, Number(iterations || CURRENT_PASSWORD_ITERATIONS));
+  const hash = pbkdf2Sync(String(password), salt, safeIterations, 32, "sha256");
   return {
     salt: salt.toString("base64"),
     hash: hash.toString("base64"),
   };
 }
 
-export function verifyPassword(password, salt, expectedHash) {
-  const next = hashPassword(password, salt).hash;
+function hashMatches(password, salt, expectedHash, iterations) {
+  const next = hashPassword(password, salt, iterations).hash;
   const left = Buffer.from(next);
   const right = Buffer.from(String(expectedHash || ""));
   return left.length === right.length && timingSafeEqual(left, right);
+}
+
+export function verifyPassword(password, salt, expectedHash) {
+  return hashMatches(password, salt, expectedHash, CURRENT_PASSWORD_ITERATIONS)
+    || LEGACY_PASSWORD_ITERATIONS.some(iterations => hashMatches(password, salt, expectedHash, iterations));
+}
+
+export function passwordNeedsRehash(password, salt, expectedHash) {
+  return !hashMatches(password, salt, expectedHash, CURRENT_PASSWORD_ITERATIONS)
+    && LEGACY_PASSWORD_ITERATIONS.some(iterations => hashMatches(password, salt, expectedHash, iterations));
 }
 
 export function sessionCookie(value, config, maxAgeSeconds) {
@@ -42,6 +55,7 @@ export function sessionCookie(value, config, maxAgeSeconds) {
     "HttpOnly",
     "SameSite=Lax",
     `Max-Age=${maxAgeSeconds}`,
+    "Priority=High",
   ];
   if (config.cookieSecure) pieces.push("Secure");
   if (config.cookieDomain) pieces.push(`Domain=${config.cookieDomain}`);
@@ -95,20 +109,28 @@ export async function requireUser(db, request, reply) {
   return { user };
 }
 
-export async function requireAdmin(db, request, reply) {
+export async function requireAdmin(db, request, reply, config = request.server?.config || request.config || {}) {
   const auth = await requireUser(db, request, reply);
   if (auth.response) return auth;
-  if (auth.user.role !== "admin") {
+  if (!isConfiguredAdmin(auth.user, config)) {
     reply.code(403);
     return { response: { error: "没有管理员权限。" } };
   }
   return auth;
 }
 
+export function isConfiguredAdmin(user, config) {
+  const configuredEmail = cleanEmail(config?.adminEmail || "");
+  return Boolean(
+    user
+    && user.role === "admin"
+    && configuredEmail
+    && cleanEmail(user.email) === configuredEmail,
+  );
+}
+
 export async function adminRoleForNewUser(db, config, email) {
   const normalized = cleanEmail(email);
   if (config.adminEmail && cleanEmail(config.adminEmail) === normalized) return "admin";
-  if (config.fivesimApiKey) return "user";
-  const row = await one(db, "SELECT COUNT(*)::int AS count FROM users");
-  return Number(row?.count || 0) === 0 ? "admin" : "user";
+  return "user";
 }

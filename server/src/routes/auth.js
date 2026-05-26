@@ -1,4 +1,4 @@
-import { adminRoleForNewUser, clearSessionCookie, createSession, currentUser, destroySession, hashPassword, publicUser, verifyPassword } from "../lib/auth.js";
+import { adminRoleForNewUser, clearSessionCookie, createSession, currentUser, destroySession, hashPassword, passwordNeedsRehash, publicUser, verifyPassword } from "../lib/auth.js";
 import { cleanEmail, isAllowedAuthEmail } from "../lib/common.js";
 import { exec, one } from "../lib/db.js";
 import { enforceRateLimit, verifyTurnstile } from "../lib/security.js";
@@ -20,6 +20,7 @@ export async function authRoutes(app) {
       scope: "auth:register",
       limit: 5,
       windowSeconds: 3600,
+      config: app.config,
     });
     if (limited) return limited;
 
@@ -69,6 +70,7 @@ export async function authRoutes(app) {
       scope: "auth:login",
       limit: 8,
       windowSeconds: 600,
+      config: app.config,
     });
     if (limited) return limited;
 
@@ -83,10 +85,28 @@ export async function authRoutes(app) {
       return { error: "只支持 QQ、163、Gmail 邮箱。" };
     }
 
+    const accountLimited = await enforceRateLimit(app.db, request, reply, {
+      scope: "auth:login-email",
+      extra: email,
+      limit: 20,
+      windowSeconds: 3600,
+      config: app.config,
+    });
+    if (accountLimited) return accountLimited;
+
     const user = await one(app.db, "SELECT * FROM users WHERE email = $1", [email]);
     if (!user || !verifyPassword(password, user.password_salt, user.password_hash)) {
       reply.code(401);
       return { error: "邮箱或密码不正确。" };
+    }
+
+    if (passwordNeedsRehash(password, user.password_salt, user.password_hash)) {
+      const hashed = hashPassword(password);
+      await exec(
+        app.db,
+        "UPDATE users SET password_hash = $1, password_salt = $2, updated_at = now() WHERE id = $3",
+        [hashed.hash, hashed.salt, user.id],
+      );
     }
 
     await exec(app.db, "DELETE FROM sessions WHERE user_id = $1 AND expires_at <= now()", [user.id]);

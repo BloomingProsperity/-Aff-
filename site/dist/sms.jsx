@@ -220,6 +220,10 @@ function TurnstileBox({ siteKey, onToken, resetKey }) {
       if (cancelled || widgetRef.current || !window.turnstile || !boxRef.current) return;
       widgetRef.current = window.turnstile.render(boxRef.current, {
         sitekey: siteKey,
+        theme: "light",
+        size: "normal",
+        appearance: "always",
+        language: "zh-cn",
         callback: token => onToken(token),
         "expired-callback": () => onToken(""),
         "error-callback": () => onToken(""),
@@ -655,6 +659,7 @@ function LoginDesk() {
   const [authMode, setAuthMode] = useState("login");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy]         = useState(false);
   const [message, setMessage]   = useState("");
   const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
@@ -735,10 +740,17 @@ function LoginDesk() {
             </label>
             <label className="sms-field">
               <span>密码</span>
-              <input type="password" value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="至少 8 位"
-                onKeyDown={e => e.key === "Enter" && !busy && submit()} />
+              <div className="sms-password-wrap">
+                <input type={showPassword ? "text" : "password"} value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="至少 8 位"
+                  onKeyDown={e => e.key === "Enter" && !busy && submit()} />
+                <button type="button" className="sms-password-toggle"
+                  aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                  onClick={() => setShowPassword(v => !v)}>
+                  {showPassword ? "隐藏" : "查看"}
+                </button>
+              </div>
             </label>
             <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} />
             <div className="sms-actions">
