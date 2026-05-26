@@ -407,31 +407,29 @@ function SmsDesk() {
       </section>
 
 
-      {/* 始终可见：库存预览 */}
+      {/* 始终可见：库存预览（未登录全宽展示） */}
       {!user && (
         <section className="k-section">
-          <div className="wrap sms-auth-layout">
-            <div className="sms-panel sms-lookup">
-              <div className="grid-head">
-                <h2 className="ca-h2">实时库存</h2>
-                <span className="ca-meta">浏览无需登录</span>
-              </div>
-              <div className="sms-field-row">
-                <label className="sms-field">
-                  <span>国家</span>
+          <div className="wrap">
+            <div className="grid-head">
+              <h2 className="ca-h2">实时库存</h2>
+              <div style={{display:"flex", gap:"10px", alignItems:"center"}}>
+                <label className="sms-field" style={{margin:0, flexDirection:"row", alignItems:"center", gap:"8px"}}>
+                  <span style={{whiteSpace:"nowrap"}}>国家</span>
                   <select value={country} onChange={e => setCountry(e.target.value)}>
                     {countries.map(c => <option key={c.code} value={c.code}>{c.name} {c.dial}</option>)}
                   </select>
                 </label>
+                <a className="ca-button ca-button--primary" href="/login?next=/sms">登录下单</a>
               </div>
-              <SmsServiceBoard
-                products={products}
-                product={product}
-                setProduct={setProduct}
-                serviceQuery={serviceQuery}
-                setServiceQuery={setServiceQuery}
-              />
             </div>
+            <SmsServiceBoard
+              products={products}
+              product={product}
+              setProduct={setProduct}
+              serviceQuery={serviceQuery}
+              setServiceQuery={setServiceQuery}
+            />
           </div>
         </section>
       )}
