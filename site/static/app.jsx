@@ -7,11 +7,18 @@ const { useState } = React;
 const CARDS = window.CARDS;
 const GIFT_CARDS = window.GIFT_CARDS;
 const FAQS = window.FAQS;
+const MAIL_SERVICES = [
+  { name: "域名企业邮箱", scope: "自有域名", desc: "Cloudflare Email Routing、Gmail 发信身份、MX / SPF / DKIM 记录检查。", tag: "推荐" },
+  { name: "Google Workspace", scope: "官方订阅", desc: "绑定域名、创建邮箱用户、配置 Gmail 收发和基础安全设置。", tag: "Google" },
+  { name: "Microsoft 365", scope: "官方订阅", desc: "Outlook 企业邮箱、Exchange Online、域名解析和客户端登录配置。", tag: "Outlook" },
+  { name: "邮箱迁移配置", scope: "收发迁移", desc: "旧邮箱迁移、新邮箱别名、转发、发信身份和常用客户端设置。", tag: "配置" },
+];
 
 const homeHref = (section = "") => {
   if (!section) return "/";
   if (section === "cards") return "/cards";
   if (section === "gifts") return "/shop";
+  if (section === "mail") return "/mail";
   if (section === "faq") return "/faq";
   if (section === "contact") return "/contact";
   if (section === "wechat") return "/contact";
@@ -105,6 +112,7 @@ function Header({ section, setSection }) {
     { id: "cards",    label: "银行卡" },
     { id: "gifts",    label: "礼品卡" },
     { id: "sms",      label: "接码", href: "/sms" },
+    { id: "mail",     label: "邮箱", href: "/mail" },
     { id: "faq",      label: "常见问题" },
   ];
   return (
@@ -136,18 +144,69 @@ function Header({ section, setSection }) {
 }
 
 // ── Hero：价值主张 ────────────────────────────────────────
-function Hero() {
+function Hero({ featured }) {
+  const featuredCards = CARDS.slice(0, 3);
   return (
     <section className="hero">
       <div className="wrap hero-inner">
         <div className="hero-text">
+          <h1 className="hero-h1">
+            <span className="hero-h1-line"><span className="hero-h1-jade">海外银行卡</span>，一站买齐。</span>
+          </h1>
           <div className="hero-cta">
             <a className="ca-button ca-button--primary ca-button--lg" href="/cards">浏览银行卡</a>
             <a className="ca-button ca-button--outline ca-button--lg" href="/shop">礼品卡商店</a>
           </div>
         </div>
+
+        <div className="hero-product">
+          <div className="hero-product-frame">
+            <div className="mini-head">
+              <h2 className="mini-title">本期主打</h2>
+              <a href={cardHref(featured.slug)} className="mini-link">查看攻略</a>
+            </div>
+            <div className="hero-reco-list">
+              {featuredCards.map(card => (
+                <a key={card.slug} href={cardHref(card.slug)} className="hero-reco">
+                  <span className={window.cardArtFrameClass(card, "hero-reco-art")} style={window.cardArtFrameStyle(card)}>
+                    <img src={window.cardArt(card)} alt="" className="art" />
+                  </span>
+                  <span className="hero-reco-body">
+                    <strong>{card.name}</strong>
+                    <span>{card.lead}</span>
+                    <em>{card.fee}</em>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
+  );
+}
+
+function HomeBoard({ cards }) {
+  return (
+    <main className="home-main">
+      <div className="wrap home-board">
+        <div className="home-panel home-panel--cards">
+          <ProductGrid cards={cards} />
+        </div>
+        <div className="home-panel home-panel--gifts">
+          <GiftCardStrip />
+        </div>
+        <div className="home-panel home-panel--mail">
+          <MailServiceStrip />
+        </div>
+        <div className="home-panel home-panel--faq">
+          <FAQ />
+        </div>
+        <div className="home-panel home-panel--contact">
+          <Contact />
+        </div>
+      </div>
+    </main>
   );
 }
 
@@ -259,6 +318,69 @@ function GiftCardStrip() {
         </div>
       </div>
     </section>
+  );
+}
+
+function MailServiceStrip() {
+  return (
+    <section className="k-section mail-section" id="mail">
+      <div className="wrap">
+        <div className="grid-head">
+          <h2 className="ca-h2">邮箱服务</h2>
+          <a href="/mail" className="ca-button ca-button--outline">进入邮箱</a>
+        </div>
+        <div className="mail-grid">
+          {MAIL_SERVICES.map(item => (
+            <a key={item.name} href="/mail" className="mail-card">
+              <span className="mail-icon">{item.name.slice(0, 1)}</span>
+              <span className="mail-copy">
+                <strong>{item.name}</strong>
+                <span>{item.scope}</span>
+                <em>{item.tag}</em>
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MailStore() {
+  return (
+    <React.Fragment>
+      <section className="gift-store-hero mail-hero">
+        <div className="wrap gift-store-hero-inner">
+          <div>
+            <Kicker tone="brand">邮箱服务</Kicker>
+            <h1 className="gift-store-title">企业邮箱和收发配置</h1>
+            <p className="gift-store-lead">按官方渠道开通 Google Workspace / Microsoft 365，或使用自有域名配置 Cloudflare Email Routing、Gmail 发信身份和常用客户端收发。</p>
+          </div>
+          <a className="ca-button ca-button--primary ca-button--lg" href="/contact">联系配置</a>
+        </div>
+      </section>
+
+      <section className="k-section mail-store-section">
+        <div className="wrap">
+          <div className="mail-store-grid">
+            {MAIL_SERVICES.map(item => (
+              <article key={item.name} className="mail-store-card">
+                <div className="mail-store-head">
+                  <span className="mail-icon">{item.name.slice(0, 1)}</span>
+                  <span className="ca-pill ca-pill--brand">{item.tag}</span>
+                </div>
+                <h2>{item.name}</h2>
+                <p>{item.desc}</p>
+                <div className="mail-store-foot">
+                  <span>{item.scope}</span>
+                  <a href="/contact">联系配置</a>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    </React.Fragment>
   );
 }
 
@@ -462,11 +584,12 @@ function readRoute() {
     return { scene: "giftBuy", slug: parts[1], region: parts[3] || null };
   }
   if (parts[0] === "shop" && parts[1]) return { scene: "gift", slug: parts[1] };
+  if (parts[0] === "mail" && !parts[1]) return { scene: "mail", section: "mail" };
   if (parts[0] === "faq" && !parts[1]) return { scene: "home", section: "faq" };
   if (parts[0] === "contact" && !parts[1]) return { scene: "home", section: "contact" };
   if (parts[0] === "wechat" && !parts[1]) return { scene: "home", section: "contact" };
   if (parts[0] === "sms") return { scene: "sms" };
-  return { scene: "home", section: "cards" };
+  return { scene: "home" };
 }
 
 function useRoute() {
@@ -490,7 +613,12 @@ function App() {
   React.useEffect(() => {
     if (route.scene !== "home" && route.scene !== "giftStore") return;
 
-    const nextSection = route.section || "cards";
+    if (!route.section) {
+      setSection("cards");
+      return;
+    }
+
+    const nextSection = route.section;
     setSection(nextSection);
 
     window.requestAnimationFrame(() => {
@@ -517,7 +645,7 @@ function App() {
     : [TWEAK_DEFAULTS, () => {}];
 
   const accents = {
-    jade:   { jade: "#176f62", soft: "rgba(23,112,97,0.08)" },
+    jade:   { jade: "#6aa9ff", soft: "rgba(106,169,255,0.10)" },
     cobalt: { jade: "#1f4ea8", soft: "rgba(31,78,168,0.08)" },
     rust:   { jade: "#a3491f", soft: "rgba(163,73,31,0.08)" },
   };
@@ -543,6 +671,17 @@ function App() {
         <Footer />
       </React.Fragment>
     );
+  } else if (route.scene === "mail") {
+    scene = (
+      <React.Fragment>
+        {tweaks.showPromo && <PromoBar />}
+        <Header section="mail" setSection={setSection} />
+        <MailStore />
+        <FAQ />
+        <Contact />
+        <Footer />
+      </React.Fragment>
+    );
   } else if (route.scene === "sms" && window.SmsDesk) {
     scene = <window.SmsDesk />;
   } else {
@@ -550,11 +689,8 @@ function App() {
       <React.Fragment>
         {tweaks.showPromo && <PromoBar />}
         <Header section={section} setSection={setSection} />
-        <Hero />
-        <ProductGrid cards={CARDS} />
-        <GiftCardStrip />
-        <FAQ />
-        <Contact />
+        <Hero featured={featured} />
+        <HomeBoard cards={CARDS} />
         <Footer />
       </React.Fragment>
     );

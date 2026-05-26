@@ -14,6 +14,7 @@ const dHomeHref = (section = "") => {
   if (section === "faq") return "/faq";
   if (section === "cards") return "/cards";
   if (section === "gifts") return "/shop";
+  if (section === "mail") return "/mail";
   return "/";
 };
 const dCardHref = slug => `/cards/${slug}`;
@@ -279,6 +280,7 @@ function DetailHeader({ back = "/", backLabel = "全部产品" }) {
           <a className="hdr-tab" href={dHomeHref("cards")}>银行卡</a>
           <a className="hdr-tab" href={dHomeHref("gifts")}>礼品卡</a>
           <a className="hdr-tab" href="/sms">接码</a>
+          <a className="hdr-tab" href={dHomeHref("mail")}>邮箱</a>
           <a className="hdr-tab" href={dHomeHref("faq")}>常见问题</a>
         </nav>
         <div className="hdr-right">

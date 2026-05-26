@@ -2266,6 +2266,8 @@ window.GIFT_DETAILS = {
       { code: "HK", name: "中国香港", currency: "HKD", denom: "港币面额 / 零售固定面额", note: "港区 Apple ID 使用。" },
       { code: "SG", name: "新加坡", currency: "SGD", denom: "新加坡元面额", note: "新加坡区账号使用。" },
       { code: "TW", name: "中国台湾", currency: "TWD", denom: "新台币面额", note: "台区 Apple ID 使用。" },
+      { code: "TR", name: "土耳其", currency: "TRY", denom: "土耳其里拉面额", note: "土耳其区 Apple ID / App Store 使用。" },
+      { code: "IN", name: "印度", currency: "INR", denom: "印度卢比面额", note: "印度区 Apple ID、App Store、Apple Account Balance 使用。" },
       { code: "DE", name: "德国", currency: "EUR", denom: "欧元面额 / 自选金额", note: "欧元区账号仍要按具体国家/地区购买。" },
       { code: "FR", name: "法国", currency: "EUR", denom: "欧元面额 / 自选金额", note: "欧元币种相同，但 Apple 仍按购买国家/地区限制。" },
       { code: "IT", name: "意大利", currency: "EUR", denom: "欧元面额 / 自选金额", note: "意区账号使用。" },
