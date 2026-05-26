@@ -3,15 +3,6 @@
   "name": "hkai-shop",
   "compatibility_date": "2026-05-20",
   "pages_build_output_dir": "dist",
-
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "hkai-sms-db",
-      "database_id": "在这里填入你的-D1-database_id"
-    }
-  ],
-
   "vars": {
     "SMS_USD_CNY_RATE": "7.2",
     "SMS_MARGIN_CNY": "10"
