@@ -265,6 +265,17 @@ function DetailToc({ steps, funding }) {
 
 // ── 顶栏（共用） ──────────────────────────────────────────
 function DetailHeader({ back = "/", backLabel = "全部产品" }) {
+  const [user, setUser] = React.useState(null);
+  React.useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(r => r.json())
+      .then(d => setUser(d.user || null))
+      .catch(() => {});
+  }, []);
+  const handleLogout = () => {
+    fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+      .finally(() => setUser(null));
+  };
   return (
     <header className="hdr hdr--detail">
       <div className="hdr-inner">
@@ -280,11 +291,19 @@ function DetailHeader({ back = "/", backLabel = "全部产品" }) {
           <a className="hdr-tab" href={dHomeHref("cards")}>银行卡</a>
           <a className="hdr-tab" href={dHomeHref("gifts")}>礼品卡</a>
           <a className="hdr-tab" href="/sms">接码</a>
-          <a className="hdr-tab" href={dHomeHref("mail")}>邮箱</a>
+          <a className="hdr-tab" href="/accounts">账号</a>
           <a className="hdr-tab" href={dHomeHref("faq")}>常见问题</a>
         </nav>
         <div className="hdr-right">
           <a className="hdr-link" href={back}>返回{backLabel}</a>
+          {user ? (
+            <div className="hdr-user">
+              <span className="hdr-user-email">{user.email}</span>
+              <button className="ca-button ca-button--outline hdr-logout" onClick={handleLogout}>退出</button>
+            </div>
+          ) : (
+            <a className="ca-button ca-button--outline" href={"/login?next=" + encodeURIComponent(window.location.pathname)}>登录</a>
+          )}
           <a className="ca-button ca-button--primary" href="https://t.me/Whohaoe" target="_blank" rel="noopener">加入社群</a>
         </div>
       </div>
