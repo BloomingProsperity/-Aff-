@@ -108,6 +108,106 @@ function SmsServiceBoard({ products, product, setProduct, serviceQuery, setServi
   );
 }
 
+// ── 三栏选择器组件 ──────────────────────────────────────────
+
+function SmsServicePanel({ products, product, setProduct, serviceQuery, setServiceQuery }) {
+  const filtered = products.filter(item => {
+    const q = serviceQuery.trim().toLowerCase();
+    return !q || item.code.toLowerCase().includes(q) || productLabel(item.code).toLowerCase().includes(q);
+  });
+  return (
+    <div className="sms-tp">
+      <div className="sms-tp-head">
+        <h3>选择服务</h3>
+        <input value={serviceQuery} onChange={e => setServiceQuery(e.target.value)} placeholder="搜索服务..." className="sms-tp-search" />
+      </div>
+      <div className="sms-tp-list">
+        {filtered.map(item => (
+          <button key={item.code} type="button"
+            className={`sms-tp-row ${item.code === product ? 'is-active' : ''}`}
+            onClick={() => setProduct(item.code)}>
+            <span className="sms-tp-name">{productLabel(item.code)}</span>
+            <span className="sms-tp-meta">库存 {item.count ?? '—'}</span>
+            <span className="sms-tp-price">{yuan(item.charge)}</span>
+          </button>
+        ))}
+        {!filtered.length && <div className="sms-tp-empty">没有匹配的服务</div>}
+      </div>
+    </div>
+  );
+}
+
+function SmsCountryPanel({ countries, country, setCountry }) {
+  const [q, setQ] = React.useState('');
+  const filtered = countries.filter(c => !q || c.name.includes(q) || c.code.includes(q));
+  return (
+    <div className="sms-tp">
+      <div className="sms-tp-head">
+        <h3>选择国家</h3>
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="搜索国家..." className="sms-tp-search" />
+      </div>
+      <div className="sms-tp-list">
+        {filtered.map(c => (
+          <button key={c.code} type="button"
+            className={`sms-tp-row ${c.code === country ? 'is-active' : ''}`}
+            onClick={() => setCountry(c.code)}>
+            <span className="sms-tp-name">{c.name}</span>
+            <span className="sms-tp-meta">{c.dial}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SmsOrderPanel({ user, product, country, countries, currentProduct, busy, onBuy, onLoadOrders, message, turnstileSiteKey, turnstileToken, setTurnstileToken, turnstileResetKey }) {
+  const countryLabel = countries.find(x => x.code === country);
+  return (
+    <div className="sms-tp sms-tp--order">
+      <div className="sms-tp-head">
+        <h3>{user ? '下单' : '登录购买'}</h3>
+      </div>
+      <div className="sms-order-summary">
+        <div className="sms-order-row">
+          <span>服务</span>
+          <strong>{productLabel(product)}</strong>
+        </div>
+        <div className="sms-order-row">
+          <span>国家</span>
+          <strong>{countryLabel?.name || country}</strong>
+        </div>
+        <div className="sms-order-row">
+          <span>价格</span>
+          <strong>{currentProduct ? yuan(currentProduct.charge) : '—'}</strong>
+        </div>
+        {user && (
+          <div className="sms-order-row">
+            <span>余额</span>
+            <strong>{yuan(user.balance)}</strong>
+          </div>
+        )}
+      </div>
+      {user ? (
+        <div className="sms-tp-actions">
+          <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} />
+          <button className="ca-button ca-button--primary ca-button--lg sms-buy-btn"
+            onClick={onBuy}
+            disabled={busy || !product || Number(user.balance || 0) <= 0}>
+            {busy ? '处理中…' : '购买号码'}
+          </button>
+          <button className="ca-button ca-button--outline" onClick={onLoadOrders} disabled={busy}>刷新订单</button>
+          {message && <p className="sms-message">{message}</p>}
+        </div>
+      ) : (
+        <div className="sms-tp-actions">
+          <a className="ca-button ca-button--primary ca-button--lg sms-buy-btn" href="/login?next=/sms">登录下单</a>
+          <a className="ca-button ca-button--outline ca-button--lg" href="https://t.me/Whohaoe" target="_blank" rel="noopener">TG 游客购买</a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TurnstileBox({ siteKey, onToken, resetKey }) {
   const boxRef = React.useRef(null);
   const widgetRef = React.useRef(null);
@@ -407,32 +507,23 @@ function SmsDesk() {
       </section>
 
 
-      {/* 始终可见：库存预览（未登录全宽展示） */}
-      {!user && (
-        <section className="k-section">
-          <div className="wrap">
-            <div className="grid-head">
-              <h2 className="ca-h2">实时库存</h2>
-              <div style={{display:"flex", gap:"10px", alignItems:"center"}}>
-                <label className="sms-field" style={{margin:0, flexDirection:"row", alignItems:"center", gap:"8px"}}>
-                  <span style={{whiteSpace:"nowrap"}}>国家</span>
-                  <select value={country} onChange={e => setCountry(e.target.value)}>
-                    {countries.map(c => <option key={c.code} value={c.code}>{c.name} {c.dial}</option>)}
-                  </select>
-                </label>
-                <a className="ca-button ca-button--primary" href="/login?next=/sms">登录下单</a>
-              </div>
-            </div>
-            <SmsServiceBoard
-              products={products}
-              product={product}
-              setProduct={setProduct}
-              serviceQuery={serviceQuery}
-              setServiceQuery={setServiceQuery}
-            />
-          </div>
-        </section>
-      )}
+      {/* 三栏选择器：始终可见 */}
+      <section className="k-section sms-three-section">
+        <div className="wrap sms-three-grid">
+          <SmsServicePanel
+            products={products} product={product} setProduct={setProduct}
+            serviceQuery={serviceQuery} setServiceQuery={setServiceQuery}
+          />
+          <SmsCountryPanel countries={countries} country={country} setCountry={setCountry} />
+          <SmsOrderPanel
+            user={user} product={product} country={country} countries={countries}
+            currentProduct={currentProduct} busy={busy}
+            onBuy={buyNumber} onLoadOrders={loadOrders} message={message}
+            turnstileSiteKey={turnstileSiteKey} turnstileToken={turnstileToken}
+            setTurnstileToken={setTurnstileToken} turnstileResetKey={turnstileResetKey}
+          />
+        </div>
+      </section>
 
       {user && (
         <React.Fragment>
@@ -456,103 +547,39 @@ function SmsDesk() {
             </div>
           </section>
 
-          <section className="k-section sms-work-section">
-            <div className="wrap sms-grid">
-              <div className="sms-panel sms-panel--main">
-                <div className="grid-head">
-                  <h2 className="ca-h2">下单</h2>
-                  <span className="ca-meta">{busy ? "处理中" : "余额足够即可购买"}</span>
-                </div>
-
-                <div className="sms-field-row">
-                  <label className="sms-field">
-                    <span>国家</span>
-                    <select value={country} onChange={e => setCountry(e.target.value)}>
-                      {countries.map(c => <option key={c.code} value={c.code}>{c.name} {c.dial}</option>)}
-                    </select>
-                  </label>
-                  <label className="sms-field">
-                    <span>运营商</span>
-                    <input value={operator} onChange={e => setOperator(e.target.value.trim() || "any")} placeholder="any" />
-                  </label>
-                </div>
-
-                <label className="sms-field">
-                  <span>服务</span>
-                  <input list="sms-products" value={product} onChange={e => setProduct(e.target.value.trim())} placeholder="telegram" />
-                  <datalist id="sms-products">
-                    {(products.length ? products.map(x => x.code) : SMS_PRODUCT_FALLBACK).map(x => <option key={x} value={x} />)}
-                  </datalist>
-                </label>
-
-                <div className="sms-choice">
-                  <span>当前选择</span>
-                  <strong>{countryLabel?.name || country} / {operator || "any"} / {product}</strong>
-                  <em>{currentProduct ? `库存 ${currentProduct.count ?? "-"} · ${yuan(currentProduct.charge)}` : "请选择可用服务"}</em>
-                </div>
-
-                <SmsPriceBox currentProduct={currentProduct} />
-
-                <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} />
-                <div className="sms-actions">
-                  <button className="ca-button ca-button--primary ca-button--lg" onClick={buyNumber} disabled={busy || !product || Number(user.balance || 0) <= 0}>
-                    购买号码
-                  </button>
-                  <button className="ca-button ca-button--outline ca-button--lg" onClick={loadOrders} disabled={busy}>
-                    刷新订单
-                  </button>
-                </div>
-                <p className="sms-message">{message}</p>
-
-                <SmsServiceBoard
-                  products={products}
-                  product={product}
-                  setProduct={setProduct}
-                  serviceQuery={serviceQuery}
-                  setServiceQuery={setServiceQuery}
-                />
-              </div>
-
-              <div className="sms-panel sms-order">
-                <div className="grid-head">
-                  <h2 className="ca-h2">当前号码</h2>
-                  <span className="ca-meta">{order?.status || "未下单"}</span>
-                </div>
-
-                {order ? (
-                  <React.Fragment>
-                    <div className="sms-number">
-                      <span>{order.country || country} · {order.product || product} · {yuan(order.price)}</span>
-                      <strong>{order.phone || order.number || "-"}</strong>
-                      <button className="ca-button ca-button--outline" onClick={copyNumber}>复制号码</button>
-                    </div>
-
-                    <div className="sms-code-list">
-                      <h3>验证码</h3>
-                      {smsList.length ? smsList.map((sms, i) => (
-                        <div className="sms-code" key={sms.id || i}>
-                          <strong>{sms.code || sms.text || sms.sender || "已收到"}</strong>
-                          <span>{sms.text || sms.date || ""}</span>
-                        </div>
-                      )) : <p>还没有收到短信。</p>}
-                    </div>
-
-                    <div className="sms-actions sms-actions--tight">
-                      <button className="ca-button ca-button--primary" onClick={() => checkOrder()} disabled={busy}>刷新验证码</button>
-                      <button className="ca-button ca-button--outline" onClick={() => setOrderState("finish")} disabled={busy}>完成订单</button>
-                      <button className="ca-button ca-button--outline" onClick={() => setOrderState("cancel")} disabled={busy}>取消订单</button>
-                      <button className="ca-button ca-button--outline" onClick={() => setOrderState("ban")} disabled={busy}>拉黑号码</button>
-                    </div>
-                  </React.Fragment>
-                ) : (
-                  <div className="sms-empty">
-                    <strong>还没有号码</strong>
-                    <span>有余额后选择国家和服务，点击购买号码。</span>
+          {/* 当前号码详情（购买成功后显示） */}
+          {order && (
+            <section className="k-section">
+              <div className="wrap">
+                <div className="sms-panel">
+                  <div className="grid-head">
+                    <h2 className="ca-h2">当前号码</h2>
+                    <span className="ca-meta">{order?.status || "未下单"}</span>
                   </div>
-                )}
+                  <div className="sms-number">
+                    <span>{order.country || country} · {order.product || product} · {yuan(order.price)}</span>
+                    <strong>{order.phone || order.number || "-"}</strong>
+                    <button className="ca-button ca-button--outline" onClick={copyNumber}>复制号码</button>
+                  </div>
+                  <div className="sms-code-list">
+                    <h3>验证码</h3>
+                    {smsList.length ? smsList.map((sms, i) => (
+                      <div className="sms-code" key={sms.id || i}>
+                        <strong>{sms.code || sms.text || sms.sender || "已收到"}</strong>
+                        <span>{sms.text || sms.date || ""}</span>
+                      </div>
+                    )) : <p>还没有收到短信。</p>}
+                  </div>
+                  <div className="sms-actions sms-actions--tight">
+                    <button className="ca-button ca-button--primary" onClick={() => checkOrder()} disabled={busy}>刷新验证码</button>
+                    <button className="ca-button ca-button--outline" onClick={() => setOrderState("finish")} disabled={busy}>完成订单</button>
+                    <button className="ca-button ca-button--outline" onClick={() => setOrderState("cancel")} disabled={busy}>取消订单</button>
+                    <button className="ca-button ca-button--outline" onClick={() => setOrderState("ban")} disabled={busy}>拉黑号码</button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           <section className="k-section">
             <div className="wrap">
