@@ -222,7 +222,12 @@ function SmsDesk() {
 
     refreshMe()
       .then(found => {
-        setMessage(found ? "已登录，可以下单。" : "注册或登录后开始接码。");
+        if (!found) {
+          window.history.replaceState({}, "", "/login?next=/sms");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        } else {
+          setMessage("已登录，可以下单。");
+        }
       })
       .catch(() => {});
 
@@ -400,13 +405,9 @@ function SmsDesk() {
           </div>
           <div className="sms-balance">
             <span>{user ? user.email : "未登录"}</span>
-            <strong>{user ? yuan(user.balance) : "请登录"}</strong>
-            {user ? (
+            <strong>{user ? yuan(user.balance) : "—"}</strong>
+            {user && (
               <button className="ca-button ca-button--outline" onClick={logout} disabled={busy}>退出登录</button>
-            ) : (
-              <button className="ca-button ca-button--outline" onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>
-                {authMode === "login" ? "切换注册" : "切换登录"}
-              </button>
             )}
           </div>
         </div>
@@ -414,65 +415,8 @@ function SmsDesk() {
 
       {!user && (
         <section className="k-section">
-          <div className="wrap sms-auth-layout">
-            <div className="sms-panel sms-auth">
-              <div className="grid-head">
-                <h2 className="ca-h2">{authMode === "login" ? "登录" : "注册"}</h2>
-                <span className="ca-meta">接码系统账户</span>
-              </div>
-              <label className="sms-field">
-                <span>邮箱</span>
-                <input value={email} onChange={e => setEmail(e.target.value)} placeholder="QQ / 163 / Gmail 邮箱" />
-              </label>
-              <label className="sms-field">
-                <span>密码</span>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="至少 8 位" />
-              </label>
-              <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} />
-              <div className="sms-actions">
-                <button className="ca-button ca-button--primary ca-button--lg" onClick={submitAuth} disabled={busy}>
-                  {authMode === "login" ? "登录" : "注册"}
-                </button>
-                <button className="ca-button ca-button--outline ca-button--lg" onClick={() => setAuthMode(authMode === "login" ? "register" : "login")} disabled={busy}>
-                  {authMode === "login" ? "我要注册" : "已有账户"}
-                </button>
-              </div>
-              <p className="sms-message">{message}</p>
-            </div>
-            <div className="sms-panel sms-lookup">
-              <div className="grid-head">
-                <h2 className="ca-h2">实时库存</h2>
-                <span className="ca-meta">服务列表</span>
-              </div>
-              <div className="sms-field-row">
-                <label className="sms-field">
-                  <span>国家</span>
-                  <select value={country} onChange={e => setCountry(e.target.value)}>
-                    {countries.map(c => <option key={c.code} value={c.code}>{c.name} {c.dial}</option>)}
-                  </select>
-                </label>
-                <label className="sms-field">
-                  <span>运营商</span>
-                  <input value={operator} onChange={e => setOperator(e.target.value.trim() || "any")} placeholder="any" />
-                </label>
-              </div>
-              <SmsPriceBox currentProduct={currentProduct} />
-              <div className="sms-actions">
-                <a className="ca-button ca-button--primary ca-button--lg" href={guestBuyUrl} target="_blank" rel="noopener">
-                  游客购买
-                </a>
-                <button className="ca-button ca-button--outline ca-button--lg" onClick={() => setAuthMode("register")} disabled={busy}>
-                  注册购买
-                </button>
-              </div>
-              <SmsServiceBoard
-                products={products}
-                product={product}
-                setProduct={setProduct}
-                serviceQuery={serviceQuery}
-                setServiceQuery={setServiceQuery}
-              />
-            </div>
+          <div className="wrap">
+            <p className="sms-message">正在跳转到登录页…</p>
           </div>
         </section>
       )}
@@ -666,4 +610,114 @@ function SmsDesk() {
   );
 }
 
-Object.assign(window, { SmsDesk });
+// ── 独立登录页 ──────────────────────────────────────────
+function LoginDesk() {
+  const [authMode, setAuthMode] = useState("login");
+  const [email, setEmail]       = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy]         = useState(false);
+  const [message, setMessage]   = useState("");
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
+  const [turnstileToken, setTurnstileToken]     = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+
+  const nextPath = new URLSearchParams(window.location.search).get("next") || "/sms";
+
+  const api = async (path, options = {}) => {
+    const res = await fetch(smsApiUrl(path), {
+      ...options,
+      credentials: "include",
+      headers: {
+        ...(options.body ? { "content-type": "application/json" } : {}),
+        ...(options.headers || {}),
+      },
+    });
+    const text = await res.text().catch(() => "");
+    let data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+    if (!res.ok) throw new Error(data.error || text.slice(0, 80) || `请求失败（${res.status}）。`);
+    return data;
+  };
+
+  React.useEffect(() => {
+    api("/api/config")
+      .then(d => setTurnstileSiteKey(d.turnstileEnabled ? d.turnstileSiteKey : ""))
+      .catch(() => {});
+    // 已登录则直接跳回
+    api("/api/auth/me")
+      .then(d => {
+        if (d.user) {
+          window.history.replaceState({}, "", nextPath);
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const resetTurnstile = () => {
+    setTurnstileToken("");
+    setTurnstileResetKey(v => v + 1);
+  };
+
+  const submit = async () => {
+    setBusy(true);
+    try {
+      const data = await api(`/api/auth/${authMode}`, {
+        method: "POST",
+        body: JSON.stringify({ email, password, turnstileToken }),
+      });
+      if (data.user) {
+        window.history.replaceState({}, "", nextPath);
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      }
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      resetTurnstile();
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="detail login-page">
+      <DetailHeader back="/" backLabel="首页" />
+      <section className="login-hero">
+        <div className="wrap login-wrap">
+          <div className="login-card">
+            <div className="login-card-head">
+              <h1>{authMode === "login" ? "登录" : "注册"}</h1>
+              <span className="ca-meta">接码系统账户</span>
+            </div>
+            <label className="sms-field">
+              <span>邮箱</span>
+              <input value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="QQ / 163 / Gmail 邮箱" autoFocus />
+            </label>
+            <label className="sms-field">
+              <span>密码</span>
+              <input type="password" value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="至少 8 位"
+                onKeyDown={e => e.key === "Enter" && !busy && submit()} />
+            </label>
+            <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} />
+            <div className="sms-actions">
+              <button className="ca-button ca-button--primary ca-button--lg"
+                onClick={submit} disabled={busy}>
+                {authMode === "login" ? "登录" : "注册"}
+              </button>
+              <button className="ca-button ca-button--outline ca-button--lg"
+                onClick={() => { setAuthMode(authMode === "login" ? "register" : "login"); setMessage(""); }}
+                disabled={busy}>
+                {authMode === "login" ? "我要注册" : "已有账户"}
+              </button>
+            </div>
+            {message && <p className="sms-message">{message}</p>}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+Object.assign(window, { SmsDesk, LoginDesk });

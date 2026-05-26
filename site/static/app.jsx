@@ -716,6 +716,7 @@ function readRoute() {
   if (parts[0] === "contact" && !parts[1]) return { scene: "home", section: "contact" };
   if (parts[0] === "wechat" && !parts[1]) return { scene: "home", section: "contact" };
   if (parts[0] === "sms") return { scene: "sms" };
+  if (parts[0] === "login" && !parts[1]) return { scene: "login" };
   return { scene: "home" };
 }
 
@@ -809,6 +810,8 @@ function App() {
         <Footer />
       </React.Fragment>
     );
+  } else if (route.scene === "login" && window.LoginDesk) {
+    scene = <window.LoginDesk />;
   } else if (route.scene === "sms" && window.SmsDesk) {
     scene = <window.SmsDesk />;
   } else {

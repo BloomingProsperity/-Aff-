@@ -1640,6 +1640,43 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
 }
 .use-item span:last-child { font-size: 14px; color: #0b1538; line-height: 1.6; }
 
+/* Login page */
+.login-page { min-height: 100vh; }
+.login-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+}
+.login-wrap {
+  display: flex;
+  justify-content: center;
+}
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  padding: 36px 32px 32px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.login-card-head {
+  margin-bottom: 4px;
+}
+.login-card-head h1 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  margin: 0 0 4px;
+}
+@media (max-width: 480px) {
+  .login-card { padding: 28px 20px 24px; }
+}
+
 /* SMS desk */
 .sms-hero {
   padding: 38px 0 22px;
