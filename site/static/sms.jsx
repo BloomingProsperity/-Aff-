@@ -406,43 +406,6 @@ function SmsDesk() {
         </div>
       </section>
 
-      {!user && (
-        <section className="k-section">
-          <div className="wrap sms-auth-layout">
-            {/* 登录提示 */}
-            <div className="sms-panel sms-login-gate">
-              <h2 className="ca-h2">登录后购买</h2>
-              <p className="sms-gate-desc">注册账户后联系管理员充值，即可自助购买号码。</p>
-              <div className="sms-actions">
-                <a className="ca-button ca-button--primary ca-button--lg" href="/login?next=/sms">登录 / 注册</a>
-                <a className="ca-button ca-button--outline ca-button--lg" href="https://t.me/Whohaoe" target="_blank" rel="noopener">TG 游客购买</a>
-              </div>
-            </div>
-            {/* 实时库存预览 */}
-            <div className="sms-panel sms-lookup">
-              <div className="grid-head">
-                <h2 className="ca-h2">实时库存</h2>
-                <span className="ca-meta">登录后可下单</span>
-              </div>
-              <div className="sms-field-row">
-                <label className="sms-field">
-                  <span>国家</span>
-                  <select value={country} onChange={e => setCountry(e.target.value)}>
-                    {countries.map(c => <option key={c.code} value={c.code}>{c.name} {c.dial}</option>)}
-                  </select>
-                </label>
-              </div>
-              <SmsServiceBoard
-                products={products}
-                product={product}
-                setProduct={setProduct}
-                serviceQuery={serviceQuery}
-                setServiceQuery={setServiceQuery}
-              />
-            </div>
-          </div>
-        </section>
-      )}
 
       {user && (
         <React.Fragment>
