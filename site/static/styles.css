@@ -688,6 +688,16 @@ a { color: inherit; text-decoration: none; }
   font-weight: 700;
   font-size: 13px;
 }
+.acct-note {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #f5f8ff;
+  border-left: 3px solid #6aa9ff;
+  border-radius: 0 6px 6px 0;
+  font-size: 12px;
+  color: #66708f;
+  line-height: 1.6;
+}
 
 /* ============================================================
    Gift store

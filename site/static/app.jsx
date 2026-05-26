@@ -14,11 +14,45 @@ const MAIL_SERVICES = [
   { name: "邮箱迁移配置", scope: "收发迁移", desc: "旧邮箱迁移、新邮箱别名、转发、发信身份和常用客户端设置。", tag: "配置" },
 ];
 
+const ACCOUNT_ITEMS = [
+  {
+    slug: "gmail",
+    name: "Gmail 账号",
+    icon: "G",
+    tag: "热销",
+    scope: "Google 全系服务",
+    price: "询价",
+    desc: "手工注册真实 Gmail，可绑 YouTube、Google Play、Google Workspace，支持海外平台注册。",
+    note: "独立 IP 注册，交付后请立即修改密码和绑定手机。",
+  },
+  {
+    slug: "outlook",
+    name: "Outlook 账号",
+    icon: "O",
+    tag: "微软",
+    scope: "Microsoft 全系服务",
+    price: "询价",
+    desc: "微软 Outlook 邮箱，可绑 Office 365、Azure、Xbox、GitHub，适合海外平台注册备用。",
+    note: "交付后请立即修改密码，可选绑定手机号加固。",
+  },
+  {
+    slug: "telegram",
+    name: "Telegram 账号",
+    icon: "T",
+    tag: "海外手机号",
+    scope: "TG 正常使用",
+    price: "询价",
+    desc: "海外真实手机号注册，TG 账号可正常收发消息、加群、建频道，无封号风险。",
+    note: "交付后建议绑定邮箱和两步验证，提升账号安全性。",
+  },
+];
+
 const homeHref = (section = "") => {
   if (!section) return "/";
   if (section === "cards") return "/cards";
   if (section === "gifts") return "/shop";
   if (section === "mail") return "/mail";
+  if (section === "accounts") return "/accounts";
   if (section === "faq") return "/faq";
   if (section === "contact") return "/contact";
   if (section === "wechat") return "/contact";
@@ -111,8 +145,9 @@ function Header({ section, setSection }) {
   const tabs = [
     { id: "cards",    label: "银行卡" },
     { id: "gifts",    label: "礼品卡" },
-    { id: "sms",      label: "接码", href: "/sms" },
-    { id: "mail",     label: "邮箱", href: "/mail" },
+    { id: "sms",      label: "接码",   href: "/sms" },
+    { id: "mail",     label: "邮箱",   href: "/mail" },
+    { id: "accounts", label: "账号",   href: "/accounts" },
     { id: "faq",      label: "常见问题" },
   ];
   return (
@@ -198,6 +233,9 @@ function HomeBoard({ cards }) {
         </div>
         <div className="home-panel home-panel--mail">
           <MailServiceStrip />
+        </div>
+        <div className="home-panel home-panel--accounts">
+          <AccountStrip />
         </div>
         <div className="home-panel home-panel--faq">
           <FAQ />
@@ -375,6 +413,70 @@ function MailStore() {
                   <span>{item.scope}</span>
                   <a href="/contact">联系配置</a>
                 </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    </React.Fragment>
+  );
+}
+
+function AccountStrip() {
+  return (
+    <section className="k-section mail-section" id="accounts">
+      <div className="wrap">
+        <div className="grid-head">
+          <h2 className="ca-h2">账号出售</h2>
+          <a href="/accounts" className="ca-button ca-button--outline">进入商店</a>
+        </div>
+        <div className="mail-grid">
+          {ACCOUNT_ITEMS.map(item => (
+            <a key={item.slug} href="/accounts" className="mail-card">
+              <span className="mail-icon">{item.icon}</span>
+              <span className="mail-copy">
+                <strong>{item.name}</strong>
+                <span>{item.scope}</span>
+                <em>{item.tag}</em>
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AccountStore() {
+  return (
+    <React.Fragment>
+      <section className="gift-store-hero mail-hero">
+        <div className="wrap gift-store-hero-inner">
+          <div>
+            <Kicker tone="brand">账号出售</Kicker>
+            <h1 className="gift-store-title">Gmail · Outlook · Telegram 账号</h1>
+            <p className="gift-store-lead">手工注册真实账号，海外手机号/独立 IP，交付后请立即修改密码。支持 USDT / 微信付款，TG 私信下单。</p>
+          </div>
+          <a className="ca-button ca-button--primary ca-button--lg" href="https://t.me/Whohaoe" target="_blank" rel="noopener">TG 下单</a>
+        </div>
+      </section>
+
+      <section className="k-section mail-store-section">
+        <div className="wrap">
+          <div className="mail-store-grid">
+            {ACCOUNT_ITEMS.map(item => (
+              <article key={item.slug} className="mail-store-card">
+                <div className="mail-store-head">
+                  <span className="mail-icon">{item.icon}</span>
+                  <span className="ca-pill ca-pill--brand">{item.tag}</span>
+                </div>
+                <h2>{item.name}</h2>
+                <p>{item.desc}</p>
+                <div className="mail-store-foot">
+                  <span>{item.price}</span>
+                  <a href="https://t.me/Whohaoe" target="_blank" rel="noopener">TG 询价</a>
+                </div>
+                <div className="acct-note">{item.note}</div>
               </article>
             ))}
           </div>
@@ -585,6 +687,7 @@ function readRoute() {
   }
   if (parts[0] === "shop" && parts[1]) return { scene: "gift", slug: parts[1] };
   if (parts[0] === "mail" && !parts[1]) return { scene: "mail", section: "mail" };
+  if (parts[0] === "accounts" && !parts[1]) return { scene: "accounts", section: "accounts" };
   if (parts[0] === "faq" && !parts[1]) return { scene: "home", section: "faq" };
   if (parts[0] === "contact" && !parts[1]) return { scene: "home", section: "contact" };
   if (parts[0] === "wechat" && !parts[1]) return { scene: "home", section: "contact" };
@@ -677,6 +780,17 @@ function App() {
         {tweaks.showPromo && <PromoBar />}
         <Header section="mail" setSection={setSection} />
         <MailStore />
+        <FAQ />
+        <Contact />
+        <Footer />
+      </React.Fragment>
+    );
+  } else if (route.scene === "accounts") {
+    scene = (
+      <React.Fragment>
+        {tweaks.showPromo && <PromoBar />}
+        <Header section="accounts" setSection={setSection} />
+        <AccountStore />
         <FAQ />
         <Contact />
         <Footer />
