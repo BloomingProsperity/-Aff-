@@ -1,4 +1,5 @@
 import { publicUser, requireAdmin } from "../lib/auth.js";
+import { writeAuditLog } from "../lib/audit.js";
 import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
 import { enforceRateLimit, verifyTurnstile } from "../lib/security.js";
@@ -33,6 +34,29 @@ function normalizeLog(row) {
     ...row,
     type: logType(row),
     delta_cents: Number(row.delta_cents || 0),
+  };
+}
+
+function normalizeAuditLog(row) {
+  let metadata = {};
+  try { metadata = JSON.parse(row.metadata_json || "{}"); } catch {}
+  return {
+    id: Number(row.id),
+    actorUserId: row.actor_user_id ? Number(row.actor_user_id) : null,
+    actorEmail: row.actor_email || "",
+    targetUserId: row.target_user_id ? Number(row.target_user_id) : null,
+    targetEmail: row.target_email || "",
+    action: row.action,
+    resourceType: row.resource_type || "",
+    resourceId: row.resource_id || "",
+    status: row.status,
+    httpStatus: row.http_status ? Number(row.http_status) : null,
+    ip: row.ip || "",
+    userAgent: row.user_agent || "",
+    method: row.method || "",
+    path: row.path || "",
+    metadata,
+    createdAt: row.created_at,
   };
 }
 
@@ -147,6 +171,16 @@ export async function adminRoutes(app) {
        VALUES ($1, $2, $3, $4, $5, $6)`,
       [userId, auth.user.id, delta, updated.balance_cents, "admin_adjust", note],
     );
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      targetUserId: userId,
+      action: "admin.balance.adjust",
+      resourceType: "balance",
+      resourceId: userId,
+      status: "success",
+      httpStatus: 200,
+      metadata: { amount: centsToAmount(delta), note },
+    });
 
     return { user: publicUser(updated), amount: centsToAmount(delta) };
   });
@@ -201,6 +235,54 @@ export async function adminRoutes(app) {
     return { logs: rows.map(normalizeLog), total: Number(count?.total || 0), page };
   });
 
+  app.get("/api/admin/audit-logs", async (request, reply) => {
+    const auth = await requireAdmin(app.db, request, reply, app.config);
+    if (auth.response) return auth.response;
+
+    const { page, limit, offset } = pageParams(request.query);
+    const action = String(request.query.action || "").trim().slice(0, 80);
+    const status = String(request.query.status || "").trim().slice(0, 24);
+    const q = String(request.query.q || "").trim().slice(0, 120);
+    const params = [];
+    const filters = [];
+
+    if (action) {
+      params.push(action);
+      filters.push(`l.action = $${params.length}`);
+    }
+    if (status) {
+      params.push(status);
+      filters.push(`l.status = $${params.length}`);
+    }
+    if (q) {
+      params.push(`%${q}%`);
+      filters.push(`(l.ip ILIKE $${params.length} OR l.action ILIKE $${params.length} OR l.path ILIKE $${params.length} OR au.email ILIKE $${params.length} OR tu.email ILIKE $${params.length})`);
+    }
+    const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+    const count = await one(
+      app.db,
+      `SELECT COUNT(*)::int AS total
+         FROM audit_logs l
+    LEFT JOIN users au ON au.id = l.actor_user_id
+    LEFT JOIN users tu ON tu.id = l.target_user_id
+        ${where}`,
+      params,
+    );
+    params.push(limit, offset);
+    const rows = await many(
+      app.db,
+      `SELECT l.*, au.email AS actor_email, tu.email AS target_email
+         FROM audit_logs l
+    LEFT JOIN users au ON au.id = l.actor_user_id
+    LEFT JOIN users tu ON tu.id = l.target_user_id
+        ${where}
+        ORDER BY l.id DESC
+        LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params,
+    );
+    return { logs: rows.map(normalizeAuditLog), total: Number(count?.total || 0), page };
+  });
+
   app.get("/api/admin/settings", async (request, reply) => {
     const auth = await requireAdmin(app.db, request, reply, app.config);
     if (auth.response) return auth.response;
@@ -226,6 +308,7 @@ export async function adminRoutes(app) {
     if (turnstile) return turnstile;
 
     const allowed = settingKeys();
+    const changedKeys = [];
     for (const key of allowed) {
       if (input[key] === undefined) continue;
       const normalized = normalizeAdminSetting(key, input[key]);
@@ -235,6 +318,7 @@ export async function adminRoutes(app) {
       }
       if (normalized.skip) continue;
       applySettingToConfig(app.config, key, normalized.value);
+      changedKeys.push(key);
       await exec(
         app.db,
         `INSERT INTO app_settings (key, value, updated_at)
@@ -243,6 +327,14 @@ export async function adminRoutes(app) {
         [key, normalized.value],
       );
     }
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      action: "admin.settings.update",
+      resourceType: "settings",
+      status: "success",
+      httpStatus: 200,
+      metadata: { changedKeys },
+    });
 
     return {
       ok: true,

@@ -1,4 +1,5 @@
 import { requireUser } from "../lib/auth.js";
+import { writeAuditLog } from "../lib/audit.js";
 import { centsToAmount, cleanOrderId, cleanPart, toIso } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
 import { fivesimHttpError } from "../lib/fivesim.js";
@@ -103,13 +104,6 @@ function enrichProducts(config, products) {
   }));
 }
 
-async function estimatedPrice(app, country, operator, product) {
-  const catalog = await loadProductCatalog(app, country, operator);
-  if (!catalog.ok) return 0;
-  const info = catalog.data?.[product] || {};
-  return Number(info.cost || info.Price || info.price || 0);
-}
-
 async function refundBalance(db, userId, cents) {
   if (cents <= 0) return null;
   return one(
@@ -132,6 +126,19 @@ async function reserveBalance(db, userId, cents) {
       RETURNING *`,
     [cents, userId],
   );
+}
+
+async function auditSmsBuy(app, request, auth, status, httpStatus, metadata = {}, resourceId = "") {
+  await writeAuditLog(app.db, request, {
+    actorUserId: auth.user.id,
+    targetUserId: auth.user.id,
+    action: "sms.buy",
+    resourceType: "sms_order",
+    resourceId,
+    status,
+    httpStatus,
+    metadata,
+  });
 }
 
 export async function smsRoutes(app) {
@@ -202,6 +209,7 @@ export async function smsRoutes(app) {
     const product = cleanPart(body.product || "");
     if (!product) {
       reply.code(400);
+      await auditSmsBuy(app, request, auth, "failed", 400, { reason: "missing_product", country, operator });
       return { error: "请选择服务。" };
     }
 
@@ -209,6 +217,7 @@ export async function smsRoutes(app) {
     const candidates = sortBuyableQuotes(quotes);
     if (!candidates.length) {
       reply.code(400);
+      await auditSmsBuy(app, request, auth, "failed", 400, { reason: "no_buyable_provider", country, operator, product });
       return { error: "当前服务暂不可购买，请稍后重试。" };
     }
 
@@ -225,6 +234,13 @@ export async function smsRoutes(app) {
         if (!extra) {
           if (reservedCents > 0) await refundBalance(app.db, auth.user.id, reservedCents);
           reply.code(402);
+          await auditSmsBuy(app, request, auth, "failed", 402, {
+            reason: "insufficient_balance",
+            country,
+            operator,
+            product,
+            requiredAmount: quote.charge,
+          });
           return { error: `余额不足，预计需要 ${quote.charge} 元。` };
         }
         reservedCents = quote.chargeCents;
@@ -241,6 +257,12 @@ export async function smsRoutes(app) {
 
     if (!bought || !chosen) {
       if (reservedCents > 0) await refundBalance(app.db, auth.user.id, reservedCents);
+      await auditSmsBuy(app, request, auth, "failed", lastError?.status || 502, {
+        reason: "provider_buy_failed",
+        country,
+        operator,
+        product,
+      });
       return smsProviderHttpError(reply, lastError || { status: 502 });
     }
 
@@ -253,6 +275,14 @@ export async function smsRoutes(app) {
         await changeSmsProviderOrder(app, { ...bought, provider: chosen.provider, fivesim_id: providerOrderKey(chosen.provider, bought.id) }, "cancel");
         await refundBalance(app.db, auth.user.id, reservedCents);
         reply.code(402);
+        await auditSmsBuy(app, request, auth, "failed", 402, {
+          reason: "insufficient_balance_after_provider_buy",
+          country,
+          operator,
+          product,
+          provider: chosen.provider,
+          requiredAmount: realQuote.charge,
+        });
         return { error: "余额不足，号码已取消。" };
       }
       reservedCents = realCost;
@@ -265,6 +295,13 @@ export async function smsRoutes(app) {
       await changeSmsProviderOrder(app, { ...bought, provider: chosen.provider, fivesim_id: providerOrderKey(chosen.provider, bought.id) }, "cancel");
       await refundBalance(app.db, auth.user.id, reservedCents);
       reply.code(402);
+      await auditSmsBuy(app, request, auth, "failed", 402, {
+        reason: "invalid_provider_price",
+        country,
+        operator,
+        product,
+        provider: chosen.provider,
+      });
       return { error: "余额不足，号码已取消。" };
     }
 
@@ -296,6 +333,14 @@ export async function smsRoutes(app) {
     );
 
     const row = await one(app.db, "SELECT * FROM sms_orders WHERE fivesim_id = $1", [providerOrderKey(chosen.provider, bought.id)]);
+    await auditSmsBuy(app, request, auth, "success", 200, {
+      country,
+      operator,
+      product,
+      provider: chosen.provider,
+      price: centsToAmount(realCost),
+      status: row.status,
+    }, row.id);
     return { order: normalizeOrder(row), balance: centsToAmount(updatedUser.balance_cents), pricing: realQuote };
   });
 
@@ -342,6 +387,24 @@ export async function smsRoutes(app) {
     const updated = await one(app.db, "SELECT * FROM sms_orders WHERE id = $1", [row.id]);
     if (["finished", "completed"].includes(String(updated?.status || "").toLowerCase())) {
       await maybeGrantReferralReward(app.db, updated.id);
+    }
+    const oldStatus = String(row.status || "");
+    const newStatus = String(updated?.status || "");
+    if (oldStatus !== newStatus || (updated?.sms_json || "[]") !== (row.sms_json || "[]")) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: auth.user.id,
+        action: "sms.check",
+        resourceType: "sms_order",
+        resourceId: row.id,
+        status: "success",
+        httpStatus: 200,
+        metadata: {
+          oldStatus,
+          newStatus,
+          hasSms: normalizeOrder(updated).sms.length > 0,
+        },
+      });
     }
     return { order: normalizeOrder(updated) };
   });
@@ -391,6 +454,19 @@ export async function smsRoutes(app) {
       if (["finish", "completed"].includes(action) || ["finished", "completed"].includes(String(updated?.status || "").toLowerCase())) {
         await maybeGrantReferralReward(app.db, updated.id);
       }
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: auth.user.id,
+        action: `sms.${action}`,
+        resourceType: "sms_order",
+        resourceId: row.id,
+        status: "success",
+        httpStatus: 200,
+        metadata: {
+          oldStatus: row.status,
+          newStatus: updated.status,
+        },
+      });
       return { order: normalizeOrder(updated) };
     });
   }

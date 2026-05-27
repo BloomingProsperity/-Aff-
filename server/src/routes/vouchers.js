@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { publicUser, requireAdmin, requireUser } from "../lib/auth.js";
+import { writeAuditLog } from "../lib/audit.js";
 import { amountToCents, centsToAmount, cleanOrderId, toIso } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
 import { enforceRateLimit, verifyTurnstile } from "../lib/security.js";
@@ -55,6 +56,15 @@ export async function voucherRoutes(app) {
     const code = normalizeVoucherCode(body.code);
     if (code.length < 8) {
       reply.code(400);
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: auth.user.id,
+        action: "voucher.redeem",
+        resourceType: "voucher",
+        status: "failed",
+        httpStatus: 400,
+        metadata: { reason: "invalid_code", codeLength: code.length },
+      });
       return { error: "兑换码无效。" };
     }
 
@@ -78,6 +88,15 @@ export async function voucherRoutes(app) {
       if (!redeemed) {
         await client.query("ROLLBACK");
         reply.code(400);
+        await writeAuditLog(app.db, request, {
+          actorUserId: auth.user.id,
+          targetUserId: auth.user.id,
+          action: "voucher.redeem",
+          resourceType: "voucher",
+          status: "failed",
+          httpStatus: 400,
+          metadata: { reason: "not_active_or_expired", codeSuffix: voucherSuffix(code) },
+        });
         return { error: "兑换码无效、已使用或已过期。" };
       }
 
@@ -108,6 +127,21 @@ export async function voucherRoutes(app) {
     } finally {
       client.release();
     }
+
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      targetUserId: auth.user.id,
+      action: "voucher.redeem",
+      resourceType: "voucher",
+      resourceId: redeemed.id,
+      status: "success",
+      httpStatus: 200,
+      metadata: {
+        amount: centsToAmount(redeemed.amount_cents),
+        codeSuffix: redeemed.code_suffix,
+        batchId: redeemed.batch_id,
+      },
+    });
 
     return {
       ok: true,
@@ -188,6 +222,21 @@ export async function voucherRoutes(app) {
       }
     }
 
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      action: "admin.voucher_batch.create",
+      resourceType: "voucher_batch",
+      resourceId: id,
+      status: "success",
+      httpStatus: 200,
+      metadata: {
+        count: codes.length,
+        amount: centsToAmount(amountCents),
+        expiresAt: expiresAt ? expiresAt.toISOString() : null,
+        note,
+      },
+    });
+
     return {
       batchId: id,
       amount: centsToAmount(amountCents),
@@ -245,8 +294,26 @@ export async function voucherRoutes(app) {
     );
     if (!row) {
       reply.code(400);
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.voucher.void",
+        resourceType: "voucher",
+        resourceId: id,
+        status: "failed",
+        httpStatus: 400,
+        metadata: { reason: "not_active_or_missing" },
+      });
       return { error: "兑换券不可作废。" };
     }
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      action: "admin.voucher.void",
+      resourceType: "voucher",
+      resourceId: row.id,
+      status: "success",
+      httpStatus: 200,
+      metadata: { codeSuffix: row.code_suffix, batchId: row.batch_id },
+    });
     return { voucher: normalizeVoucher(row) };
   });
 }

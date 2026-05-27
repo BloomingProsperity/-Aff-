@@ -586,6 +586,113 @@
     ["", "全部"], ["active", "可用"], ["redeemed", "已兑换"], ["void", "已作废"],
   ];
 
+  const AUDIT_STATUS_FILTERS = [
+    ["", "全部"], ["success", "成功"], ["failed", "失败"],
+  ];
+
+  function auditStatusLabel(status) {
+    if (status === "success") return "成功";
+    if (status === "failed") return "失败";
+    return status || "—";
+  }
+
+  function auditMetaText(meta) {
+    if (!meta || Object.keys(meta).length === 0) return "—";
+    try { return JSON.stringify(meta); } catch { return "—"; }
+  }
+
+  function AdminAuditLogs() {
+    const [logs, setLogs] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [page, setPage] = useState(1);
+    const [status, setStatus] = useState("");
+    const [query, setQuery] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [msg, setMsg] = useState("");
+
+    function load(p, s = status, q = query) {
+      setLoading(true);
+      setMsg("");
+      const qs = new URLSearchParams({ page: String(p), limit: "20" });
+      if (s) qs.set("status", s);
+      if (q.trim()) qs.set("q", q.trim());
+      admApi(`/admin/audit-logs?${qs.toString()}`)
+        .then(d => { setLogs(d.logs || []); setTotal(d.total || 0); })
+        .catch(() => setMsg("加载失败，请稍后重试"))
+        .finally(() => setLoading(false));
+    }
+
+    useEffect(() => { load(1, "", ""); }, []);
+
+    function search(e) {
+      e.preventDefault();
+      setPage(1);
+      load(1, status, query);
+    }
+
+    return (
+      <div className="adm-content-inner">
+        <div className="adm-page-head">
+          <h2 className="adm-page-title">审计日志</h2>
+          <span className="adm-count">共 {fmt(total)} 条</span>
+        </div>
+
+        <form className="adm-search-row" onSubmit={search}>
+          <input className="adm-input" value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="搜索 IP、邮箱、动作、路径..." />
+          <button className="adm-btn adm-btn--primary" type="submit">搜索</button>
+        </form>
+
+        <div className="adm-filter-row">
+          {AUDIT_STATUS_FILTERS.map(([s, label]) => (
+            <button key={s}
+              className={`adm-filter-btn${status === s ? " is-active" : ""}`}
+              onClick={() => { setStatus(s); setPage(1); load(1, s, query); }}>
+              {label}
+            </button>
+          ))}
+        </div>
+        {msg && <div className="adm-field-hint">{msg}</div>}
+
+        <div className="adm-card adm-card--table">
+          <table className="adm-table adm-table--audit">
+            <thead>
+              <tr>
+                <th>ID</th><th>动作</th><th>状态</th><th>操作者</th>
+                <th>目标用户</th><th>IP</th><th>路径</th><th>详情</th><th>时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan={9} className="adm-empty">加载中…</td></tr>}
+              {!loading && logs.length === 0 && <tr><td colSpan={9} className="adm-empty">暂无数据</td></tr>}
+              {logs.map(l => (
+                <tr key={l.id}>
+                  <td className="adm-td--mono">#{l.id}</td>
+                  <td className="adm-td--mono">{l.action}</td>
+                  <td>
+                    <span className={`adm-badge ${l.status === "success" ? "adm-badge--ok" : "adm-badge--err"}`}>
+                      {auditStatusLabel(l.status)}
+                    </span>
+                  </td>
+                  <td className="adm-td--email">{l.actorEmail || "—"}</td>
+                  <td className="adm-td--email">{l.targetEmail || "—"}</td>
+                  <td className="adm-td--mono">{l.ip || "—"}</td>
+                  <td className="adm-audit-path">{l.method ? `${l.method} ` : ""}{l.path || "—"}</td>
+                  <td><code className="adm-audit-meta">{auditMetaText(l.metadata)}</code></td>
+                  <td className="adm-td--date">{fmtDate(l.createdAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <AdmPager page={page} hasMore={logs.length >= 20}
+            onPrev={() => { const p = page - 1; setPage(p); load(p, status, query); }}
+            onNext={() => { const p = page + 1; setPage(p); load(p, status, query); }} />
+        </div>
+      </div>
+    );
+  }
+
   function AdminVouchers() {
     const [vouchers, setVouchers] = useState([]);
     const [total, setTotal] = useState(0);
@@ -919,10 +1026,11 @@
 
   /* ─── AdminDesk shell ────────────────────────────────────── */
   const ADM_NAV = [
-    { id: "overview", label: "概览"   },
+    { id: "overview", label: "概览" },
     { id: "users",    label: "用户管理" },
     { id: "orders",   label: "订单管理" },
     { id: "logs",     label: "余额流水" },
+    { id: "audit",    label: "审计日志" },
     { id: "vouchers", label: "充值券" },
     { id: "settings", label: "系统设置" },
   ];
@@ -996,6 +1104,7 @@
           {tab === "users"     && <AdminUsers />}
           {tab === "orders"    && <AdminOrders />}
           {tab === "logs"      && <AdminLogs />}
+          {tab === "audit"     && <AdminAuditLogs />}
           {tab === "vouchers"  && <AdminVouchers />}
           {tab === "settings"  && <AdminSettings />}
         </main>
