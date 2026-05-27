@@ -163,7 +163,8 @@ function SmsCountryPanel({ countries, country, setCountry }) {
 function turnstileHint(status, hasToken, actionText = "提交") {
   if (hasToken) return "";
   if (status === "error") return "验证没有通过，请重新验证。";
-  if (status === "expired" || status === "timeout") return "验证已过期，请重新验证。";
+  if (status === "expired") return "验证已过期，请重新验证。";
+  if (status === "timeout") return "验证时间过长，请重新验证。";
   if (status === "unsupported") return "当前浏览器不支持验证，请换个浏览器。";
   if (status === "script-error") return "验证加载失败，请刷新页面或关闭拦截插件。";
   return `人机验证通过后可${actionText}。`;
@@ -234,10 +235,27 @@ function SmsOrderPanel({ user, product, country, countries, currentProduct, busy
 function TurnstileBox({ siteKey, onToken, resetKey, onStatus }) {
   const boxRef = React.useRef(null);
   const widgetRef = React.useRef(null);
+  const pendingTimerRef = React.useRef(null);
+  const tokenReadyRef = React.useRef(false);
+
+  const clearPendingTimer = () => {
+    if (pendingTimerRef.current) {
+      window.clearTimeout(pendingTimerRef.current);
+      pendingTimerRef.current = null;
+    }
+  };
+
+  const armPendingTimer = () => {
+    clearPendingTimer();
+    pendingTimerRef.current = window.setTimeout(() => {
+      if (!tokenReadyRef.current) onStatus?.("timeout");
+    }, 18000);
+  };
 
   React.useEffect(() => {
     if (!siteKey || !boxRef.current) return undefined;
     let cancelled = false;
+    tokenReadyRef.current = false;
     onStatus?.("loading");
 
     const render = () => {
@@ -252,28 +270,39 @@ function TurnstileBox({ siteKey, onToken, resetKey, onStatus }) {
         "refresh-expired": "auto",
         "refresh-timeout": "manual",
         callback: token => {
+          tokenReadyRef.current = true;
+          clearPendingTimer();
           onToken(token);
           onStatus?.("ready");
         },
         "expired-callback": () => {
+          tokenReadyRef.current = false;
+          clearPendingTimer();
           onToken("");
           onStatus?.("expired");
         },
         "timeout-callback": () => {
+          tokenReadyRef.current = false;
+          clearPendingTimer();
           onToken("");
           onStatus?.("timeout");
         },
         "error-callback": () => {
+          tokenReadyRef.current = false;
+          clearPendingTimer();
           onToken("");
           onStatus?.("error");
           return true;
         },
         "unsupported-callback": () => {
+          tokenReadyRef.current = false;
+          clearPendingTimer();
           onToken("");
           onStatus?.("unsupported");
         },
       });
       onStatus?.("rendered");
+      armPendingTimer();
     };
 
     render();
@@ -285,6 +314,7 @@ function TurnstileBox({ siteKey, onToken, resetKey, onStatus }) {
       cancelled = true;
       window.clearInterval(timer);
       window.clearTimeout(failTimer);
+      clearPendingTimer();
       if (widgetRef.current && window.turnstile?.remove) {
         try { window.turnstile.remove(widgetRef.current); } catch {}
       }
@@ -295,8 +325,10 @@ function TurnstileBox({ siteKey, onToken, resetKey, onStatus }) {
   React.useEffect(() => {
     if (!widgetRef.current || !window.turnstile?.reset) return;
     onToken("");
+    tokenReadyRef.current = false;
     onStatus?.("loading");
     try { window.turnstile.reset(widgetRef.current); } catch {}
+    armPendingTimer();
   }, [resetKey]);
 
   if (!siteKey) return null;
