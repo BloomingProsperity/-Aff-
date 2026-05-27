@@ -708,150 +708,265 @@ window.TUTORIALS = {
   "bybit-eu-card": [
     {
       n: "01",
-      t: "确认你用的是 Bybit EU 独立账户",
+      t: "注册 bybit.eu 账户（EEA 独立平台）",
       img: "/images/tutorials/bybit-card/step-01.jpg",
-      caption: "账户体系截图：Bybit EU 与普通 Bybit 是独立账户体系，入口相似。",
-      b: "Bybit EU 卡走欧洲路线：德国地址选 Germany / 德国；法区地址选 France / 法国；同类欧盟用户再按 Spain、Italy、Netherlands、Austria、Belgium、Ireland 这类欧盟国家走。",
+      caption: "bybit.eu 注册页：必须在 bybit.eu 注册，与 bybit.com 完全独立，账户和资产不互通。",
+      b: "bybit.eu 和 bybit.com 是完全独立的平台。2026 年 1 月 1 日起，EEA 居民必须使用 bybit.eu。已有 bybit.com 账户的用户需手动提现后重新在 bybit.eu 注册，账户不能直接迁移。支持 30+ EEA 国家，包括德国、法国、西班牙、意大利、荷兰等。邀请码输入框填 1NNDZ0W（或点本页「立即申请」链接自动带入）。",
       actions: [
-        "先点击本页「立即申请」，进入 Bybit EU 注册入口。",
-        "打开 bybit.eu 注册或登录，确认页面主体是 Bybit EU。",
-        "使用本人长期可控邮箱和手机号。",
-        "邀请码输入框填 1NNDZ0W；如果链接已经自动带出邀请码，不要删除。",
-        "开启 2FA，完成基础安全设置。",
-        "德国路线选择 Germany / Deutschland。",
-        "法国路线选择 France。",
-        "其它欧盟路线选择 Spain、Italy、Netherlands、Austria、Belgium、Ireland 等欧盟国家。"
+        "打开浏览器访问 https://www.bybit.eu，确认地址栏是 bybit.eu 不是 bybit.com。",
+        "点击 Sign Up，输入欧盟邮箱地址和密码。",
+        "验证邮箱（收取验证码邮件完成确认）。",
+        "邀请码输入框填 1NNDZ0W；如点本页「立即申请」链接，邀请码已自动填入，不要删除。",
+        "已有 bybit.com 账户的用户：先从 bybit.com 提出所有资产，再在 bybit.eu 全新注册。"
       ],
       checks: [
-        "浏览器地址是 bybit.eu。",
-        "账户已完成基础 KYC。",
-        "菜单里能进入 Finance / Card。",
-        "邀请码显示 1NNDZ0W。"
+        "浏览器地址是 bybit.eu，已完成邮箱验证并能正常登录。",
+        "邀请码显示 1NNDZ0W。",
+        "确认访问的是 bybit.eu 而非 bybit.com。"
       ],
       warnings: [
-        "bybit.com 的 KYC 不等于 bybit.eu KYC。",
-        "本页 EU 教程只讲德国/法国/欧盟路线，不再写模糊地区。"
+        "bybit.eu 和 bybit.com 账户完全独立，资产不互通，请勿混淆。",
+        "bybit.com 的 KYC 不等于 bybit.eu KYC，需要在 bybit.eu 重新完成 KYC。"
       ]
     },
     {
       n: "02",
-      t: "准备证件和地址证明",
+      t: "绑定 Google Authenticator（2FA，所有操作必须）",
       img: "/images/tutorials/bybit-card/step-02.jpg",
-      caption: "证件上传截图：证件上传和自拍审核逻辑与普通 Bybit 类似。",
-      b: "欧洲卡按德国/法国这类欧盟地址证明准备材料。不要自己猜材料类型，按下面清单准备：证件、地址证明、手机号、邮箱、2FA。",
+      caption: "2FA 设置截图：Profile → Security → Google Auth → 扫码绑定，抄下恢复码。",
+      b: "Bybit EU 的所有卡片操作（查看卡号、充值、修改设置）都需要 2FA 验证。Google Authenticator 是实际必须的，短信 2FA 在部分操作中不够用。绑定后抄下恢复码保存到安全位置，换手机时需要用到。",
       actions: [
-        "准备护照、身份证、驾照、居留卡等页面支持证件。",
-        "德国路线准备德国地址证明；法国路线准备法国地址证明。",
-        "准备近 3 个月地址证明：银行账单、水电账单、政府信件或租住证明。",
-        "文件必须显示完整姓名、完整地址、签发日期。",
-        "证件姓名、Bybit EU 账户姓名、地址证明姓名保持一致。",
-        "如果文件是多页 PDF，上传前确认第一页就能看到关键信息。"
+        "手机下载 Google Authenticator（iOS/Android 均可）。",
+        "登录 bybit.eu，进入 Profile → Security。",
+        "找到 Two-Factor Authentication，选择 Google Auth。",
+        "用手机 Google Auth 扫描页面上的二维码。",
+        "输入 App 显示的 6 位动态码确认绑定成功。",
+        "抄下恢复码并保存到安全位置（换手机时用）。",
+        "打开登录通知和交易通知，方便及时发现异常。"
       ],
       checks: [
-        "地址证明没有过期。",
-        "不是手机截图或裁切图。",
-        "文件语言和格式能被系统识别。"
+        "Google Auth 状态显示为 Enabled。",
+        "输入动态码可以通过验证。",
+        "恢复码已保存到安全位置。"
       ],
       warnings: [
-        "地址证明文件过期、缺页、截图压缩都会导致退回。",
-        "实体卡收货地址按德国/法国地址证明填写，不要和申请国家分开。"
+        "丢失 2FA 且没有恢复码会导致账户无法访问，恢复码务必保存好。",
+        "换手机前先迁移 Google Auth，或使用恢复码重置，不要直接删除 App。"
       ]
     },
     {
       n: "03",
-      t: "进入 Get Your Card 流程",
+      t: "完成 KYC 身份认证（证件 + 人脸）",
       img: "/images/tutorials/bybit-card/step-03.jpg",
-      caption: "Card 入口截图：Card 入口通常在 Finance 菜单下。",
-      b: "登录 Bybit EU 后进入 Finance / Card，点击 Get Your Card。国家选择不要模糊：德区选 Germany，法区选 France，其它欧盟用户按自己欧盟居住国选择。",
+      caption: "KYC 页面：上传护照或身份证正面，完成人脸识别，审核通常几分钟内完成。",
+      b: "Standard KYC 是申请 Lite 虚拟卡（€150 终身限额）的最低要求，也是 Advanced KYC 的前提。上传护照或居住地政府颁发身份证，完成人脸识别。审核通常几分钟到几小时，通过后 KYC 状态变为 Verified。",
       actions: [
-        "打开 Finance 菜单，进入 Card。",
-        "点击 Get Your Card 或 Apply Now。",
-        "Country of Residence 德国用户选 Germany / Deutschland。",
-        "法国用户选 France。",
-        "其它欧盟路线选 Spain、Italy、Netherlands、Austria、Belgium、Ireland 等实际居住国。",
-        "阅读 Bybit EU Card 条款和费用说明。",
-        "如页面要求补充邮箱确认或 2FA，先完成再继续。"
+        "进入 Profile → Identity Verification / KYC。",
+        "选择 Standard Verification。",
+        "选择证件类型：护照（推荐）或政府颁发身份证。",
+        "拍摄或上传证件正面（如有背面也需上传）。",
+        "按提示完成人脸识别（需摄像头权限）。",
+        "提交后等待审核，通常几分钟到几小时内完成。"
       ],
       checks: [
-        "没有跳回普通 Bybit 国际站。",
-        "申请页显示的是 Bybit EU Card。",
-        "国家字段已经显示 Germany 或 France。"
+        "KYC 状态变为 Verified。",
+        "证件上的姓名与注册邮箱一致，拼写无误。"
       ],
       warnings: [
-        "这页 EU 教程默认给德国/法国用户看，不再让用户自己猜 EEA。",
-        "如果是西班牙、意大利、荷兰、奥地利、比利时、爱尔兰用户，按同样流程替换国家字段。"
+        "证件照片模糊、被遮挡或四角不完整会被拒，重新提交时需拍新照片。",
+        "KYC 使用的姓名将用于所有后续文件，必须保持完全一致。"
       ]
     },
     {
       n: "04",
-      t: "上传材料并等待审核",
+      t: "准备地址证明（Advanced KYC，Standard 卡必须）",
       img: "/images/tutorials/bybit-card/step-04.jpg",
-      caption: "材料页截图：地区和材料页需要逐项核对。",
-      b: "Bybit EU Card 提交后按页面显示的审核时间等待。补件邮件会发到注册邮箱，所以要保持邮箱可收信。",
+      caption: "地址证明要求：3 个月内文件，姓名和地址必须与 KYC 证件完全一致，手机账单不被接受。",
+      b: "申请日限 €5000 的 Standard 虚拟卡需要 Advanced KYC，即额外上传地址证明。文件必须是 3 个月内签发的，且姓名和地址与 KYC 资料完全一致。Lite 卡（终身限额 €150）只需 Standard KYC，无需地址证明。",
       actions: [
-        "上传身份证明文件。",
-        "上传地址证明文件。",
-        "确认账单地址和 Germany / France 居住国家一致。",
-        "绑定或确认注册邮箱。",
-        "把 Bybit EU 通知邮箱加入联系人，避免补件邮件漏掉。",
-        "提交后保存申请时间，便于后续追踪。"
+        "确认目标卡类：Standard 卡（日限 €5000）需地址证明；Lite 卡（终身 €150 上限）只需 Standard KYC。",
+        "准备以下任意一种文件（3 个月内签发）：",
+        "✓ 水电气网费账单（Utility bill）。",
+        "✓ 银行月结单（Bank statement）。",
+        "✓ 政府信件（Government letter）。",
+        "✓ 租房合同（Tenancy agreement，需含开始日期和双方签字）。",
+        "✗ 以下不接受：手机账单（Mobile phone bill）、保险文件、银行转账凭证。",
+        "确认文件上的姓名和地址与 KYC 证件完全一致，清晰无遮挡，四角完整。"
       ],
       checks: [
-        "申请状态进入 Under Review。",
-        "邮箱能收到 Bybit EU 通知。",
-        "补件时知道在哪里重新上传。"
+        "文件日期在 3 个月内。",
+        "姓名和地址与 KYC 信息完全一致。",
+        "文件清晰可读，无遮挡，非截图。"
       ],
       warnings: [
-        "德国路线就用德国地址证明，法国路线就用法国地址证明。",
-        "地址证明不清晰会直接退回。"
+        "手机账单（Mobile phone bill）是最常见的错误选择，Bybit EU 不接受。",
+        "租约必须包含起始日期和双方签字，空白租约模板会被拒。"
       ]
     },
     {
       n: "05",
-      t: "启用虚拟卡并充值 Funding Account",
+      t: "申请虚拟卡并选择 Lite 或 Standard",
       img: "/images/tutorials/bybit-card/step-05.jpg",
-      caption: "卡片详情：虚拟卡通过后进入卡片信息。",
-      b: "Bybit EU Card 优先从 Funding Account 扣法币；法币不足时会按设置顺序卖出支持的加密资产。",
+      caption: "卡片申请：Finance → Card → Get Your Card，选择 Virtual，再选 Lite（Standard KYC）或 Standard（需地址证明）。",
+      b: "Bybit EU 提供三种卡：Virtual Lite（仅 Standard KYC，终身消费上限 €150）、Virtual Standard（Advanced KYC + 地址证明，日限 €5000）、Physical（€10 费用）。绝大多数需求选 Virtual Standard。国家选择要准确：德国选 Germany，法国选 France，按居住国选。",
       actions: [
-        "审核通过后进入 Card Dashboard。",
-        "查看虚拟卡号、有效期、CVV 和账单地址。",
-        "给 Funding Account 留 EUR 或支持的稳定币。",
-        "检查 crypto liquidation order，设置不想优先卖出的资产。",
-        "确认 0.9% crypto conversion fee 和外汇费用规则。",
-        "先小额线上支付，再绑定订阅。"
+        "进入 Finance → Card，点击 Get Your Card。",
+        "选择 Virtual Card。",
+        "选择卡片级别：Standard（推荐，需 Advanced KYC）或 Lite（仅 Standard KYC，限额低）。",
+        "Country of Residence：德国选 Germany / Deutschland；法国选 France；其他按实际居住国选。",
+        "上传地址证明（Standard 卡必须，Lite 卡不需要）。",
+        "填写账单地址，确认与地址证明完全一致。",
+        "阅读持卡人协议后提交申请。"
       ],
       checks: [
-        "卡片状态 Active。",
-        "Funding Account 余额足够。",
-        "消费资产顺序已按你的偏好调整。"
+        "国家字段与地址证明一致。",
+        "Standard 卡：地址证明已上传。",
+        "申请状态进入 Under Review 或 Pending。"
       ],
       warnings: [
-        "余额在 Spot Account 不一定能被卡片直接扣。",
-        "用波动资产消费会有价格波动和税务记录。"
+        "Virtual Lite 终身消费上限 €150，额度用完不可续，不推荐用于长期订阅。",
+        "2025 年 5 月 13 日后新用户，加密清算顺序最多设置 3 种（老用户 6 种）。"
       ]
     },
     {
       n: "06",
-      t: "3DS 验证、钱包绑定和实体卡",
-      img: "/images/tutorials/bybit-card/step-07.jpg",
-      caption: "绑卡截图：绑卡后先做小额验证。",
-      b: "欧洲卡适合 Apple Pay、Google Pay 和线上订阅，但仍要先确认 3DS 验证链路稳定。",
+      t: "处理 EDD 加强尽职调查（部分用户）",
+      img: "/images/tutorials/bybit-card/step-06.jpg",
+      caption: "EDD 页面：如触发需提供资金来源证明 + 财富来源证明，2026 年有多起因材料不足被拒案例。",
+      b: "部分用户申请后会收到 EDD（Enhanced Due Diligence）要求，需额外提供资金来源和财富来源文件。2026 年已有多起用户反映反复被拒或资金临时冻结，务必准备完整充分的材料。",
       actions: [
-        "线上支付时填写卡号、有效期、CVV 和账单地址。",
-        "遇到 3DS 时回 Bybit EU App 完成生物识别或 OTP。",
-        "绑定 Apple Pay / Google Pay 时按系统提示完成设备验证。",
-        "实体卡需要先有虚拟卡，显示名最多 21 个拉丁字符。",
-        "实体卡收货地址要能收件，并与地址验证一致。",
-        "收到实体卡后按 App 提示激活，设置 PIN。"
+        "收到 EDD 通知后进入 Card 页面查看具体要求。",
+        "准备资金来源证明：工资单、雇主证明信、加密交易记录（含盈亏截图）。",
+        "准备财富来源证明：纳税申报表、投资账户截图、资产证明文件。",
+        "按要求上传所有文件，文件必须清晰、完整、真实。",
+        "提交后等待审核，可能需要数个工作日。",
+        "如被拒，查看具体拒绝原因，补充对应材料，不要重复提交相同文件。"
       ],
       checks: [
-        "小额订单能成功授权。",
-        "钱包里显示卡片可用。",
-        "实体卡寄送地址可收信。"
+        "所有要求的文件已按要求上传。",
+        "材料与 KYC 信息一致，无矛盾。"
       ],
       warnings: [
-        "部分地区钱包绑定支持会变。",
-        "跨境消费、ATM、第三方费用要看实时费率页。"
+        "2026 年报告显示 EDD 可能导致账户资金被临时冻结，提前准备充分材料再申请。",
+        "提供虚假或伪造文件会导致永久封号且资金冻结。"
+      ]
+    },
+    {
+      n: "07",
+      t: "等待审核并处理补件",
+      img: "/images/tutorials/bybit-card/step-07.jpg",
+      caption: "审核状态：Under Review（等待）/ Need More Information（补件）/ Active（通过）。邮箱和卡片页面都要看。",
+      b: "提交申请后通常 1-5 个工作日完成审核。要同时查看 Card 页面状态和注册邮箱，出现 Need More Information 时按具体原因补件，不要重复提交相同文件。",
+      actions: [
+        "回到 Finance → Card 查看申请状态。",
+        "同时检查注册邮箱是否有 Bybit EU 补件邮件。",
+        "Under Review：耐心等待，不要重复提交材料。",
+        "Need More Information：点击查看缺少什么内容，按具体原因重新上传。",
+        "补件提交后确认状态已更新为待审核。",
+        "审核通过后状态变为 Active，进入卡片页面激活使用。"
+      ],
+      checks: [
+        "没有未处理的补件请求。",
+        "邮箱没有未回复的 Bybit EU 邮件。",
+        "卡片状态最终变为 Active。"
+      ],
+      warnings: [
+        "重复上传同一张模糊文件不会改变审核结果，先按原因改善材料质量。",
+        "审核期间不要修改个人资料，可能导致重新审核延误。"
+      ]
+    },
+    {
+      n: "08",
+      t: "激活虚拟卡，查看卡号和账单地址",
+      img: "/images/tutorials/bybit-card/step-08.jpg",
+      caption: "卡片详情：Finance → Card → 点击卡片 → 输入 Google Auth 动态码 → 查看完整卡号。",
+      b: "审核通过后在 Finance → Card 可见虚拟卡。点击卡片后输入 Google Auth 动态码解锁卡号。记录完整的 16 位卡号、有效期、CVV 和账单地址，用于线上支付和绑卡。",
+      actions: [
+        "进入 Finance → Card，找到已激活的虚拟卡。",
+        "点击卡片图片或 View Card Details。",
+        "输入 Google Authenticator 6 位动态码。",
+        "记录 16 位卡号、有效期（MM/YY）、CVV（3 位）。",
+        "记录账单地址（Billing Address），线上绑卡时需要填写。",
+        "卡片状态确认为 Active，无 Frozen 或 Pending 标识。"
+      ],
+      checks: [
+        "卡号、有效期、CVV 完整记录。",
+        "账单地址已知，与申请时填写的地址一致。",
+        "卡片状态为 Active。"
+      ],
+      warnings: [
+        "卡号 + CVV 不要截图发给任何人，包括自称 Bybit EU 客服的账号。",
+        "CVV 是静态的，泄露后需立即在 App 中冻结卡片并联系客服更换。"
+      ]
+    },
+    {
+      n: "09",
+      t: "SEPA 充值并设置加密资产清算顺序",
+      img: "/images/tutorials/bybit-card/step-09.jpg",
+      caption: "Paying With 设置：Finance → Card → Paying With，拖拽设置清算顺序；SEPA 充值收款人姓名必须与 KYC 完全一致。",
+      b: "Bybit EU 卡消费时自动将指定加密资产兑换成欧元付款。Finance → Card → Paying With 设置清算顺序，2025 年 5 月 13 日后新用户最多 3 种。SEPA 充值：收款人姓名必须与 KYC 姓名完全一致，否则被退款（2-5 工作日退回）。",
+      actions: [
+        "进入 Finance → Card → Paying With。",
+        "拖拽排序：USDC 放最前（推荐），其次 USDT，再次 EUR。",
+        "新用户（2025/05/13 后）最多添加 3 种资产，老用户最多 6 种。",
+        "SEPA 充值：Finance → Deposit → EUR → SEPA Transfer，复制 IBAN。",
+        "在欧盟银行发起 SEPA 转账，收款人姓名必须与 KYC 姓名完全一致。",
+        "到账后余额显示在账户，消费时按 Paying With 顺序自动清算。"
+      ],
+      checks: [
+        "Paying With 顺序已按需设置。",
+        "账户有足够余额可以消费。",
+        "SEPA 转账收款人姓名与 KYC 完全一致。"
+      ],
+      warnings: [
+        "SEPA 收款人姓名不匹配会被银行退款，资金 2-5 工作日后才能退回，影响使用。",
+        "加密资产兑换欧元有汇率差，消费前确保账户余额充足，留有缓冲。"
+      ]
+    },
+    {
+      n: "10",
+      t: "申请实体卡（可选，€10 费用）",
+      img: "/images/tutorials/bybit-card/step-10.jpg",
+      caption: "实体卡申请：Finance → Card → Physical Card，费用 €10，邮寄最长 30 天，收到后先插芯片 + 输 PIN。",
+      b: "需要线下消费或 ATM 取款时可申请实体卡，费用 €10，官方邮寄 14 工作日，实际可能 30 天。收到后必须先在 POS 机插卡 + 输 PIN 完成首次接触式支付，之后才能使用 NFC 非接触支付。",
+      actions: [
+        "进入 Finance → Card → Physical Card。",
+        "支付 €10 卡片费用。",
+        "填写欧盟邮寄地址，确认与 KYC/居住地一致。",
+        "等待邮寄，官方说 14 工作日，实际可能 30 天。",
+        "收到卡后：在支持芯片的 POS 机插卡，输入 PIN 完成一笔消费（任意金额）激活。",
+        "完成插芯片消费后，NFC 非接触支付才能正常使用。"
+      ],
+      checks: [
+        "邮寄地址正确，在 EEA 境内。",
+        "收到卡后已完成首次插芯片 + PIN 激活。",
+        "NFC 支付可以正常使用。"
+      ],
+      warnings: [
+        "收到卡不先做插芯片 + PIN 操作，NFC 支付会被拒绝，务必先激活。",
+        "实体卡邮寄地址必须在 EEA 境内，无法寄到中国大陆。"
+      ]
+    },
+    {
+      n: "11",
+      t: "日常管理、限额和费用说明",
+      img: "/images/tutorials/bybit-card/step-11.jpg",
+      caption: "费用页：Finance → Card → Card Info，查看当前消费限额、ATM 限额和手续费率。",
+      b: "Bybit EU Standard 虚拟卡月费 €0，消费手续费目前免费（2025 年），日限 €5000。ATM 每月 2 次免费（单次 €200 内），超出 €1.5/次。发现异常消费立即冻结卡片，联系客服。",
+      actions: [
+        "Finance → Card → Card Info 查看当前消费限额和手续费率。",
+        "定期在交易记录中核查每笔消费，发现异常立即处理。",
+        "发现异常：Card → Freeze 临时冻结卡片，再联系客服。",
+        "修改 PIN：Card → More → Change PIN。",
+        "注销卡片：联系客服，余额会退回账户。"
+      ],
+      checks: [
+        "交易通知已开启，能实时收到消费提醒。",
+        "PIN 码已记住并设置。"
+      ],
+      warnings: [
+        "连续 3 次 PIN 错误会锁卡，需联系客服解锁，操作比较麻烦。",
+        "EDD 审查可能随时触发，保持联系方式（邮箱/手机）有效可接收通知。"
       ]
     }
   ],
@@ -1104,248 +1219,609 @@ window.TUTORIALS = {
   "pokepay": [
     {
       n: "01",
-      t: "通过邀请链接注册 PokePay 账户",
+      t: "下载 PokePay App 或使用网页版",
       img: "/images/tutorials/pokepay/step-01.jpg",
-      caption: "注册入口截图：先点本页邀请链接，再完成注册。",
-      b: "先点本页「立即申请」进入 PokePay 邀请注册页，邀请码 447963 会自动填入。注册入口只走官网或官方应用商店，不要从陌生链接进入。",
+      caption: "App 下载入口截图：iOS 需要香港区 App Store，推荐用网页版 app.pokepay.cc 省去换区麻烦。",
+      b: "iOS 用户需要香港区 Apple ID 才能在 App Store 搜到 PokePay（搜索 PokePay，或直链 apps.apple.com/hk/app/id6741506101）。没有港区账号直接用网页版 app.pokepay.cc，功能完整，KYC 摄像头兼容性也很好。Android 用户可从 Google Play 或官网 pokepay.cc/appdown.html 下载 APK。注册不需要开 VPN，国内网络可直接访问。",
       actions: [
-        "先点击本页上方「立即申请」，使用邀请链接：https://app.pokepay.cc/pages/invitation/regist?r=447963。",
-        "页面邀请码栏会自动填入 447963，不要删除。",
-        "用长期可控邮箱或手机号注册。",
-        "设置强密码并完成邮箱验证码。",
-        "进入账户后先看安全中心，开启可用的二次验证。",
-        "确认网页和 App 都能正常登录。"
+        "iOS 用户：确认 App Store 已切换到香港区，搜索 PokePay 或直接访问 apps.apple.com/hk/app/id6741506101。",
+        "没有港区 Apple ID 的 iOS 用户：用 Safari 或 Chrome 直接打开 app.pokepay.cc，功能与 App 相同，推荐此方式。",
+        "Android 用户：打开 Google Play 搜索 PokePay，或访问 pokepay.cc/appdown.html 下载官方 APK。",
+        "安装完成后打开 App 或网页，确认进入 PokePay 登录页，不是其他仿站。",
+        "检查网页地址栏确认是 app.pokepay.cc，有 HTTPS 锁标志。",
+        "不要从 Telegram 私聊或陌生短链接进入，仿站风险极高。",
+        "国内网络无需 VPN 即可正常访问，注册和 KYC 全程不需要翻墙。"
       ],
       checks: [
-        "注册时邀请码显示 447963。",
-        "邮箱验证完成。",
-        "能进入钱包和 Card 页面。"
+        "确认访问地址是 app.pokepay.cc，有 HTTPS。",
+        "页面能正常加载登录/注册界面。",
+        "没有被要求输入助记词或钱包地址。"
       ],
       warnings: [
-        "不要从 Telegram 私聊链接直接登录，以免进仿站。",
-        "如果页面要求助记词，大概率不是正常 PokePay 登录。"
+        "中国区 App Store 搜不到 PokePay，不要下载搜到的同名山寨 App。",
+        "如果页面要求输入助记词或钱包私钥，立即关闭，那不是正版 PokePay。"
       ]
     },
     {
       n: "02",
-      t: "完成 KYC 实名：英文姓名顺序是最大坑",
+      t: "注册账号",
       img: "/images/tutorials/pokepay/step-02.jpg",
-      caption: "KYC 入口截图：英文名填反是最常见被拒原因，名在前姓在后。",
-      b: "PokePay 的英文姓名顺序和国内习惯相反：Given Name（名）在前，Family Name（姓）在后。例如张三，First Name 填 SAN，Last Name 填 ZHANG。填反了就会被拒，提交前务必核对一遍。",
+      caption: "注册页截图：推荐用 Gmail 或 Outlook 邮箱，如有邀请码此步填入。",
+      b: "访问 app.pokepay.cc 开始注册。推荐使用 Gmail 或 Outlook 邮箱，不推荐 QQ 邮箱或 163 邮箱（可能收不到验证邮件）。如果有邀请码，注册时务必填入，可获得开卡优惠券。浏览器推荐 Google Chrome，后续 KYC 摄像头兼容性最好。",
       actions: [
-        "登录后进入 Identity Verification / 身份认证页面。",
-        "选择证件签发国（大陆选 China）和证件类型（ID Card 身份证或 Passport 护照）。",
-        "英文姓名：Given Name 填拼音名，Family Name 填拼音姓。张三举例 → First: SAN，Last: ZHANG。",
-        "上传证件正面和背面，找自然光，四角完整，文字清晰，不要反光遮字。",
-        "在浏览器弹窗里允许摄像头权限，完成人脸识别。",
-        "提交后等状态更新，通常几分钟内出结果。",
-        "失败时看失败原因再改，姓名问题重填，照片问题重拍，不要随意猜测。"
+        "用 Chrome 浏览器打开 app.pokepay.cc，点击注册/Sign Up。",
+        "输入 Gmail 或 Outlook 邮箱地址，避免使用 QQ、163 等国内邮箱。",
+        "设置密码（建议 12 位以上，含大小写字母和数字）。",
+        "如有邀请码，在邀请码栏填入（邀请码对应开卡折扣券）。",
+        "点击发送验证码，查收邮件并填入 6 位验证码。",
+        "完成注册后登录账户，进入主界面确认正常。",
+        "进入安全中心，开启二步验证（Google Authenticator 或邮箱验证）。",
+        "确认 Card 页面和 Wallet 页面都能正常访问。"
       ],
       checks: [
-        "英文姓名：Given Name（名字）在前，Family Name（姓氏）在后。",
-        "证件四角完整、无反光、文字可读。",
-        "摄像头权限已在浏览器弹窗层面允许，不只是 App 层面。"
+        "注册邮箱可正常收到 PokePay 验证邮件。",
+        "邀请码已填入（如有）。",
+        "能进入 Card 和 Wallet 页面。"
       ],
       warnings: [
-        "姓名顺序填反是被拒首因，提交前再看一遍 First Name / Last Name。",
-        "截图、翻拍、美颜修过的证件照片会直接被拒，用原相机拍证件实物。"
+        "QQ 邮箱和 163 邮箱可能将 PokePay 邮件识别为垃圾邮件，收不到验证码。",
+        "邀请码只能在注册时填入，注册后无法补填。"
       ]
     },
     {
       n: "03",
-      t: "充值 USDT：选 TRC20，手续费最低",
+      t: "完成 KYC 实名认证",
       img: "/images/tutorials/pokepay/step-03.jpg",
-      caption: "充值页截图：PokePay 不支持人民币直充，需先在交易所换好 USDT 再转入。",
-      b: "PokePay 只接受加密货币充值（USDT、USDC、BTC、ETH），不能直接用人民币。没有境外交易所的话，先在欧易或币安用 C2C 功能买好 USDT，再转到 PokePay 钱包地址。开卡费折后约 7 美元，建议首次充 20-30 美元留有余量。",
+      caption: "KYC 入口截图：左上角菜单 → 会员 → KYC → Level 1，Country 选 China，证件选身份证。",
+      b: "KYC 路径：左上角菜单 → 会员 → KYC → Level 1。Country 选 China，Document Type 选身份证（ID Card）。英文姓名顺序与国内习惯相反：Given Name 填名，Family Name 填姓。例如张三 → Given Name: SAN，Family Name: ZHANG。提交后通常 2-5 分钟自动审核，最长 24 小时。失败时看具体原因重新拍摄，不要重复提交同一张照片。",
       actions: [
-        "登录后进入 Wallet → Recharge / Import，选择 USDT。",
-        "网络优先选 TRC20（Tron 链），手续费约 1 美元，到账快，是最划算的路线。",
-        "复制 PokePay 的 USDT 充值地址，核对前 4 位和后 4 位。",
-        "没有境外交易所的话：打开欧易或币安 App → C2C 交易 → 用支付宝或微信买 USDT → 提币到上面的地址。",
-        "提币时网络同样选 TRC20，两边必须一致。",
-        "复制交易 TXID 保存，到账通常 2-5 分钟，超 30 分钟未到账时凭 TXID 找客服。",
-        "刷新页面确认 Wallet 余额已更新。"
+        "登录后点击左上角菜单 → 会员（Member）→ KYC → Level 1。",
+        "Country 选 China，Document Type 选 ID Card（身份证）。",
+        "填写英文姓名：Given Name 填拼音名，Family Name 填拼音姓。例如张三 → Given: SAN，Family: ZHANG。",
+        "上传身份证正面照：光线均匀，四角完整入镜，文字清晰，关闭美颜。",
+        "上传身份证背面照：同样要求光线好、四角完整、无反光遮字。",
+        "点击提交，等待状态更新，通常 2-5 分钟，最长 24 小时。",
+        "失败时看提示原因：姓名问题重填，照片问题重拍对应面，不要用同一张照片反复提交。"
       ],
       checks: [
-        "PokePay 充值地址和提币端地址一字不差。",
-        "两端网络都是 TRC20，不能一端 TRC20 一端 ERC20。",
-        "余额已到账，金额正确。"
+        "Given Name（名）在前，Family Name（姓）在后，和国内习惯相反。",
+        "证件四角完整，无遮挡，文字可读，无反光。",
+        "KYC 状态显示 Approved 或 Verified。"
       ],
       warnings: [
-        "网络选错（如一端 TRC20 一端 ERC20）资产可能永久丢失，每次转账前反复核对网络。",
-        "不要接受陌生人转来的 USDT，来源不明的资产可能导致账户被风控。"
+        "姓名顺序填反是被拒最常见原因，提交前再检查一遍 Given Name / Family Name。",
+        "截图、翻拍、P 图处理的证件照片会直接被拒，必须用手机原相机拍实物证件。"
       ]
     },
     {
       n: "04",
-      t: "申请 PokeCard：邀请码自动抵扣开卡费",
+      t: "人脸识别（活体检测）",
       img: "/images/tutorials/pokepay/step-04.jpg",
-      caption: "开卡页截图：通过邀请链接注册后系统发放折扣券，实付约 7 美元。",
-      b: "PokeCard 虚拟卡原价 20 美元开卡费，通过邀请链接注册后系统会发放约 12.8 美元优惠券，实际只需约 7 美元。开卡后有效期 5 年，无月费，消费手续费 1%，跨境汇率转换 1%，每日限额最高 10 万港元。",
+      caption: "人脸识别截图：上传证件后进行活体检测，需开启系统层面相机权限，光线充足，正对手机。",
+      b: "KYC 上传证件后会进行人脸识别（活体检测，不是静态照片）。必须在系统层面开启相机权限才能正常工作：iOS 进设置→Safari/Chrome→相机→允许；Android 进设置→应用→Chrome→权限→相机→允许。拍摄时光线充足，正面朝向手机，距离约 30-50cm，不要背光，按页面提示做动作（点头、眨眼等）。",
       actions: [
-        "确认已通过邀请链接注册，邀请码 447963 已填入。",
-        "进入 Card → Apply Card，选择 PokeCard 虚拟卡（Virtual Card）。",
-        "支付页面确认优惠券是否已自动抵扣，正常显示约 7 美元而非原价 20 美元。",
-        "确认扣费来源是钱包余额，余额不足先补充值。",
-        "阅读并同意卡片服务条款，点击确认申请。",
-        "等待卡片生成，通常几分钟内完成。",
-        "进入 My Card 查看卡片状态是否为 Active。"
+        "iOS：进入手机设置 → Safari 浏览器（或 Chrome）→ 相机 → 选择「允许」。",
+        "Android：进入手机设置 → 应用管理 → Chrome → 权限 → 相机 → 允许。",
+        "回到 PokePay KYC 页面，点击开始人脸识别。",
+        "浏览器弹出相机权限请求时点击「允许」。",
+        "确保光线充足，不要背对窗户，距离手机约 30-50 厘米。",
+        "脸部完整露出，无帽子、口罩、墨镜，按页面动作提示（点头/眨眼）配合。",
+        "关闭手机美颜和滤镜，人脸识别系统对美颜处理后的图像识别率低。"
       ],
       checks: [
-        "开卡费显示折后价约 7 美元，不是原价 20 美元。",
-        "卡片生成后状态为 Active，不是 Pending。",
-        "能进入卡片详情页查看卡号区域。"
+        "相机权限已在手机系统层面（不只是 App 层面）授权。",
+        "人脸识别通过，KYC 页面显示 Approved。",
+        "光线充足，无背光，距离适当。"
       ],
       warnings: [
-        "优惠券只有通过邀请链接注册的账号才有，直接官网注册没有折扣。",
-        "实体卡开卡费 88 美元，建议先开虚拟卡用几个月再决定要不要实体卡。"
+        "相机权限必须在手机系统设置里授权，只在 App 内授权可能不够。",
+        "背光环境、开启美颜、相机权限未授权是人脸识别失败的三大原因。"
       ]
     },
     {
       n: "05",
-      t: "激活并查看卡片详情",
+      t: "选择卡片类型",
       img: "/images/tutorials/pokepay/step-05.jpg",
-      caption: "卡片详情截图：激活后才能查看卡号信息。",
-      b: "卡片生成后先激活，再查看卡号、有效期、CVV 和持卡人名。这里要像保管实体信用卡一样保管信息。",
+      caption: "选卡页截图：KYC 通过后进入 Card → Apply Card，新版 PokeCard 手续费 0%，主要用于日常跨境消费。",
+      b: "KYC 通过后进入 Card 页面 → Apply Card。新版 PokeCard 开卡费约 5 USDT，消费手续费 0%，是日常使用的推荐选择。PokePay 不作为 ChatGPT / Claude 订阅卡推荐，AI 订阅不要用它测试，避免无效扣款和风控。如有优惠券，申请时记得选择使用。首次充值建议 30 USDT（覆盖开卡费 + 手续费 buffer + 小额试刷金额）。",
       actions: [
-        "进入 My Card，点击刚申请的卡。",
-        "按页面提示 Activate。",
-        "完成短信、邮箱或 App 验证。",
-        "查看卡号、有效期、CVV。",
-        "复制账单信息备用。",
-        "打开交易通知和锁卡入口。",
-        "不要把完整卡号发给客服以外的人。"
+        "KYC 审核通过后，进入 Card → Apply Card。",
+        "查看当前可申请的卡片列表，确认新版 PokeCard、实体卡和历史卡种的区别。",
+        "日常跨境消费选新版 PokeCard（开卡费约 5 USDT，消费手续费 0%）。",
+        "如果目标是 ChatGPT / Claude，PokePay 不推荐使用，改看 Roogoo 等更适合 AI 订阅的卡。",
+        "确认优惠券区域，如有优惠券点击选择使用，可抵扣部分开卡费。",
+        "确认钱包余额足够支付开卡费，不足则先充值。",
+        "首次充值建议至少 30 USDT：覆盖开卡费（约 5 USDT）+ 手续费缓冲 + 小额试刷金额。"
       ],
       checks: [
-        "卡片状态 Active。",
-        "能看到卡号、有效期、CVV。",
-        "锁卡功能位置已确认。"
+        "选择的卡片类型和自己的使用场景匹配（日常消费、支付宝、流媒体等）。",
+        "优惠券已选择使用（如有）。",
+        "钱包余额足够支付开卡费。"
       ],
       warnings: [
-        "连续输错 CVV、有效期或 PIN 会锁卡。",
-        "卡号泄露后退款/争议处理会很麻烦。"
+        "PokePay 不要作为 ChatGPT / Claude 订阅卡使用，失败率高且容易触发风控。",
+        "优惠券只有通过邀请链接注册的账号才会发放，直接注册没有折扣。"
       ]
     },
     {
       n: "06",
-      t: "小额试刷和 3DS 验证",
+      t: "充值 USDT（从 OKX C2C 购买）",
       img: "/images/tutorials/pokepay/step-06.jpg",
-      caption: "消费验证截图：先试小额，再绑定长期订阅。",
-      b: "别一开卡就拿去大额订阅。先跑通小额订单，确认余额、3DS、短信和商户接受情况。",
+      caption: "充值流程截图：PokePay 只接受加密货币，需先在 OKX 用 C2C 买 USDT，再通过 TRC20 网络转入。",
+      b: "PokePay 只接受加密货币充值，不能直接用支付宝或微信。流程：在 OKX 用 C2C 买 USDT → 从 OKX 提币到 PokePay。PokePay 充值路径：汇入 → 选 USDT → 选 TRC20 网络 → 复制地址。TRC20 到账约 3-15 分钟，超 30 分钟未到账保存 TXID 联系客服。",
       actions: [
-        "选择 1 到 5 美元或等值小额商户。",
-        "填写卡号、有效期、CVV 和账单地址。",
-        "遇到 3DS 时按页面跳转完成验证。",
-        "回 PokePay 查看是否成功扣款。",
-        "记录扣款币种、手续费、汇率。",
-        "失败时看错误提示，不要连续重复刷同一个商户。"
+        "进入 PokePay：钱包/Wallet → 汇入/Import → 选择 USDT → 选网络 TRC20。",
+        "复制 PokePay 显示的 TRC20 充值地址，核对地址前 4 位和后 4 位。",
+        "打开 OKX App → C2C 买币 → 选择 USDT → 选择支付宝或微信或银行卡付款。",
+        "选择合适的卖家（选择月成交量高、好评率 98% 以上的商家）。",
+        "按卖家银行账号转账，备注栏留空，不要写任何文字。",
+        "转账完成后点「我已付款」，等待卖家确认并释放 USDT（通常 5-15 分钟）。",
+        "OKX 资产 → 提币 → USDT → 网络选 TRC20 → 粘贴 PokePay 充值地址 → 确认金额。",
+        "复制提币 TXID 保存，等待 3-15 分钟，刷新 PokePay 钱包确认余额到账。"
       ],
       checks: [
-        "交易记录能看到授权或扣款。",
-        "3DS 可以正常完成。",
-        "手续费和汇率在预期范围。"
+        "PokePay 充值地址和 OKX 提币地址完全一致。",
+        "两端网络都选 TRC20，不能混用 ERC20 或其他网络。",
+        "USDT 已到账，PokePay 钱包余额已更新。"
       ],
       warnings: [
-        "有些商户会先预授权再结算。",
-        "连续失败可能触发商户和卡片双重风控。"
+        "C2C 转账备注栏必须留空，写备注可能被平台判定为违规交易被冻结。",
+        "网络选错（一端 TRC20 一端 ERC20）资产可能永久丢失，每次都要核对。"
       ]
     },
     {
       n: "07",
-      t: "绑定 PayPal / 支付平台并处理退款",
+      t: "申请并激活卡片",
       img: "/images/tutorials/pokepay/step-07.jpg",
-      caption: "绑卡截图：支付平台支持会随卡段变化。",
-      b: "PokePay 常见用法是 PayPal、Apple Store、海外订阅和部分平台绑卡。绑定前先看当前卡段支持列表。",
+      caption: "申请卡片截图：账户有余额后提交申请，虚拟卡秒出，申请成功后进入 My Card 激活。",
+      b: "账户有余额后：Card → Apply Card → 选卡片类型 → 确认费用 → 同意条款 → 提交。虚拟卡秒出。申请成功后进入 My Card → 点击卡片 → Activate → 完成验证（短信/邮箱/App）完成激活。激活后才能查看完整卡号和 CVV。注意：连续输错 CVV、有效期或 PIN 会锁卡，需联系客服解锁。",
       actions: [
-        "在 PayPal 或目标平台选择添加信用卡 / 借记卡。",
-        "输入卡号、有效期、CVV 和账单地址。",
-        "如平台扣验证小额，等记录出现后再确认。",
-        "订阅服务先用月付，观察一次续费。",
-        "退款时记录商户退款时间和 PokePay 入账时间。",
-        "长时间未入账时带订单号、ARN 或商户退款凭证联系支持。"
+        "确认钱包余额足够支付开卡费，进入 Card → Apply Card。",
+        "选择卡片类型，确认开卡费金额，确认优惠券已使用（如有）。",
+        "勾选同意服务条款，点击提交申请。",
+        "等待虚拟卡生成，通常秒出，刷新 My Card 页面查看。",
+        "进入 My Card → 点击刚申请的卡片 → 点击 Activate（激活）。",
+        "按页面提示完成短信、邮箱或 App 验证码验证。",
+        "激活成功后确认卡片状态显示 Active（而非 Pending 或 Inactive）。"
       ],
       checks: [
-        "支付平台显示卡片已验证。",
-        "订阅扣款成功且 PokePay 有记录。",
-        "退款知道查询路径。"
+        "卡片状态显示 Active，不是 Pending。",
+        "能进入卡片详情页。",
+        "激活验证（短信/邮箱）已完成。"
       ],
       warnings: [
-        "线上平台退款常见 3 到 10 个工作日，跨境退款可能更久。",
-        "如果平台提示地区、KYC 或风控原因，先保存提示文案再联系客服。"
+        "连续输错 CVV、有效期或 PIN 会触发锁卡，需联系客服解锁，麻烦且耗时。",
+        "卡片状态为 Pending 时不能消费，需等待或联系客服确认进度。"
+      ]
+    },
+    {
+      n: "08",
+      t: "查看卡号和账单地址",
+      img: "/images/tutorials/pokepay/step-08.jpg",
+      caption: "卡片详情截图：My Card → 点击卡片，记录卡号、有效期、CVV、持卡人英文姓名和账单地址。",
+      b: "进入 My Card → 点击卡片 → 查看卡片详情，记录以下信息：16 位卡号、有效期（MM/YY）、CVV（3 位）、持卡人英文姓名、账单地址。账单地址是美国或香港虚拟地址，绑定支付宝或网购时要用这个地址，不能填国内地址。卡号截图只保存给自己，不要发给任何人。",
+      actions: [
+        "进入 My Card，点击目标卡片，进入卡片详情页。",
+        "记录 16 位卡号（Card Number），注意不要抄错。",
+        "记录有效期（Expiry Date，格式 MM/YY）。",
+        "记录 CVV（安全码，3 位数字）。",
+        "记录持卡人英文姓名（Cardholder Name，格式和 KYC 时一致）。",
+        "记录账单地址（Billing Address，美国或香港虚拟地址），后续绑卡时需要用到。",
+        "将上述信息安全保存（截图存本地，不要传到云端或发给他人）。"
+      ],
+      checks: [
+        "16 位卡号、有效期、CVV 已完整记录。",
+        "账单地址已记录，包含街道、城市、州/省、邮编。",
+        "持卡人英文姓名与 KYC 认证时填写的一致。"
+      ],
+      warnings: [
+        "完整卡号加 CVV 等同于卡片本身，不要截图发给客服以外的任何人。",
+        "账单地址必须用卡片详情页显示的虚拟地址，填国内地址会导致绑卡失败。"
+      ]
+    },
+    {
+      n: "09",
+      t: "绑定支付宝",
+      img: "/images/tutorials/pokepay/step-09.jpg",
+      caption: "支付宝绑卡截图：添加银行卡 → 输入卡号，账单地址填卡片详情页的美国地址，切换英文界面成功率更高。",
+      b: "支付宝 App → 我的 → 银行卡 → 添加银行卡 → 输入 16 位卡号。绑定失败率较高时，切换到英文界面（我的 → 设置 → 多语言 → English）再操作，成功率明显提升。账单地址填写 PokePay 卡片详情页显示的美国地址，不填国内地址。Apple Pay 明确不支持 PokePay（多名用户实测均提示不支持此卡片）。绑定成功后先做 10 元以内小额消费养卡。支付宝单笔 200 元以内不加手续费，超出收 3% 手续费。",
+      actions: [
+        "打开支付宝 App → 我的 → 银行卡 → 右上角添加银行卡。",
+        "输入 PokePay 卡片的 16 位卡号，点击下一步。",
+        "填写有效期、CVV、持卡人英文姓名。",
+        "账单地址填写 PokePay 卡片详情页显示的美国地址（格式如：123 Main St, Los Angeles, CA 90001）。",
+        "若绑定失败，切换支付宝到英文界面：我的 → 设置 → 多语言 → English，再重新操作。",
+        "绑定成功后先做 10 元以内小额消费验证（如购买小额优惠券或充值）。",
+        "支付宝消费 200 元以内每笔不收手续费，超出收 3%，合理控制单笔金额。"
+      ],
+      checks: [
+        "支付宝显示 PokePay 卡片已绑定。",
+        "小额消费（<10 元）测试成功，PokePay 有扣款记录。",
+        "账单地址使用了 PokePay 提供的美国地址。"
+      ],
+      warnings: [
+        "Apple Pay 明确不支持 PokePay，不要浪费时间尝试。",
+        "Steam 官方明确不支持 PokePay，不要在 Steam 消费。"
+      ]
+    },
+    {
+      n: "10",
+      t: "确认不支持的平台，避免无效扣款",
+      img: "/images/tutorials/pokepay/step-10.jpg",
+      caption: "风控检查截图：PokePay 不作为 ChatGPT / Claude 订阅卡推荐，先把不可用平台排除。",
+      b: "PokePay 适合日常跨境消费、部分流媒体和小额验证，不要拿它反复测试 ChatGPT / Claude / Steam / AWS / GCP。反复失败会产生预授权占用、退款等待和账户风控。AI 订阅需求优先看 Roogoo 等明确支持的卡。",
+      actions: [
+        "不要用 PokePay 订阅 ChatGPT Plus 或 Claude Pro。",
+        "不要用 PokePay 在 Steam、Blizzard、EA 这类明确限制预付卡的平台反复测试。",
+        "不要用 PokePay 跑 AWS / GCP 云服务绑卡测试。",
+        "先用 1-5 美元小额商户验证卡片状态，再用于目标场景。",
+        "出现一次拒付或验证失败后，先查失败原因，不要连续重试。",
+        "AI 订阅需求改用页面里标注支持 ChatGPT / Claude 的卡。"
+      ],
+      checks: [
+        "已确认 PokePay 不用于 ChatGPT / Claude。",
+        "目标商户支持预付卡或虚拟卡。",
+        "卡片先通过小额试刷。"
+      ],
+      warnings: [
+        "连续失败会占用余额或触发账户风控，别拿同一张卡硬刷。",
+        "ChatGPT / Claude 需求不要放在 PokePay 这条路线里处理。"
+      ]
+    },
+    {
+      n: "11",
+      t: "小额试刷验证卡片状态",
+      img: "/images/tutorials/pokepay/step-11.jpg",
+      caption: "试刷记录截图：先用 $1-5 小额消费验证卡片正常，再上长期订阅，连续失败时停下排查原因。",
+      b: "不要一开卡就直接绑长期订阅。先选 $1-5 的小额消费验证卡片是否正常工作。检查交易记录、扣款金额、手续费是否在预期范围内。连续失败时停下来排查原因（余额不足、账单地址错误、3DS 验证未完成），不要连刷同一商户触发双重风控。Steam 官方明确不支持 PokePay，不要在 Steam 测试。",
+      actions: [
+        "选择一个 $1-5 美元的小额商户（如 Patreon 最低档、Google Play 应用、海外小额充值）。",
+        "输入卡号、有效期、CVV 和卡片详情页的账单地址。",
+        "遇到 3DS 验证时，按页面跳转完成邮箱或短信验证。",
+        "等待交易结果，回 PokePay 查看交易记录是否有扣款或预授权记录。",
+        "检查扣款金额和手续费是否在预期范围（消费手续费 0%，跨境汇率转换费另计）。",
+        "失败时读错误提示，根据提示排查：余额不足 → 充值；账单地址错误 → 重新核对；3DS 失败 → 重走验证流程。",
+        "不要在 Steam 消费，官方明确不支持 PokePay 卡。"
+      ],
+      checks: [
+        "PokePay 交易记录中能看到该笔消费的授权或扣款记录。",
+        "手续费在预期范围内。",
+        "3DS 验证流程可以正常完成。"
+      ],
+      warnings: [
+        "连续失败 3 次以上同一商户可能触发商户风控，停下来排查原因再继续。",
+        "Steam 官方明确不支持 PokePay，不要用此卡在 Steam 消费。"
+      ]
+    },
+    {
+      n: "12",
+      t: "账户维护和日常避坑",
+      img: "/images/tutorials/pokepay/step-12.jpg",
+      caption: "账户管理截图：保持账户活跃，随用随充，不要存大额，自动续费扣款失败会触发风控。",
+      b: "2025 年下半年 PokePay 清退了大批长期不活跃的僵尸账号，需保持定期使用。随用随充，不要在账户存放大额资金。不要把同一张卡绑定到多个高风控订阅平台。C2C 转账不要写备注。自动续费扣款失败会触发风控，建议关闭自动续费改手动续费。退款时间：普通 3-7 工作日，跨境 7-30 工作日。",
+      actions: [
+        "保持账户活跃：每月至少有 1-2 笔消费记录，避免被判定为僵尸账号。",
+        "随用随充：消费前充值，消费后不要在账户留大额余额，降低平台风险敞口。",
+        "一张卡只用于一个主要场景，多平台共用会提高风控概率。",
+        "关闭重要订阅服务的自动续费，改为到期前手动充值续费，避免扣款失败触发风控。",
+        "C2C 购买 USDT 时转账备注栏留空，写备注可能被平台判定为违规交易。",
+        "退款到账时间：普通商户 3-7 工作日，跨境退款 7-30 工作日，超时凭 ARN 联系客服。",
+        "发现异常扣款立即在 My Card 页面使用锁卡功能冻结卡片，再联系客服处理。"
+      ],
+      checks: [
+        "已了解锁卡/解锁入口位置。",
+        "重要订阅服务已关闭自动续费，改为手动。",
+        "客服联系方式已保存（官网 Live Chat 或 Telegram 官方群）。"
+      ],
+      warnings: [
+        "长期不活跃账号有被清退风险，2025 年已有大规模清退案例。",
+        "不要把卡号、CVV、有效期同时发给任何人，包括自称 PokePay 客服的陌生人。"
       ]
     }
   ],
   "roogoo": [
     {
       n: "01",
-      t: "通过邀请链接注册并保留邀请码",
+      t: "访问 Roogoo 并安装到主屏幕",
       img: "/images/tutorials/roogoo/step-01.jpg",
-      caption: "注册页截图：邀请码 0eq357 不要删，影响折扣和返现。",
-      b: "先点本页「立即申请」，使用邀请链接进入注册页，邀请码 0eq357 会自动填入。填入邀请码可享 $3.3 开卡费折扣 + 激活后 $10 返现到卡。",
+      caption: "PWA 安装截图：正确网址 h5.roogoo.money，iOS Safari 底部分享→添加到主屏幕，Android Chrome 右上角三点→添加到主屏幕。",
+      b: "Roogoo 的正确网址是 https://h5.roogoo.money（旧域名 wap.roogoo.cloud 已废弃）。Roogoo 是 PWA 网页应用，没有 App Store 版本，安装到主屏幕后使用体验接近原生 App。iOS Safari 安装：底部分享图标（上箭头）→ 添加到主屏幕；微信内打开时先点右上角三点 → 在 Safari 中打开，再执行安装。Android Chrome：右上角三点 → 添加到主屏幕。不要从非官方链接进入，仅认准 h5.roogoo.money。",
       actions: [
-        "先点击本页上方「立即申请」，使用邀请链接：https://wap.roogoo.cloud/register?inviteCode=0eq357。",
-        "页面邀请码栏会自动填入 0eq357，不要删除。",
-        "填写邮箱，设置密码。",
-        "完成邮箱验证码。",
-        "注册后进入 dashboard。"
+        "iOS Safari：打开 h5.roogoo.money，点击底部分享图标（方块加上箭头）→ 添加到主屏幕。",
+        "iOS 微信内打开时：右上角三点 → 在 Safari 中打开，再执行添加到主屏幕步骤。",
+        "Android Chrome：打开 h5.roogoo.money，右上角三点菜单 → 添加到主屏幕。",
+        "华为浏览器：右上角三点 → 添加到桌面。",
+        "小米/VIVO 等国产浏览器：先进手机设置 → 应用权限 → 开启「创建桌面快捷方式」，再操作。",
+        "安装完成后从主屏幕图标打开，确认进入 h5.roogoo.money 登录页。",
+        "不要从非官方短链接、Telegram 私聊或陌生渠道进入，仅从 h5.roogoo.money 访问。"
       ],
       checks: [
-        "注册时邀请码显示 0eq357。",
-        "能登录 dashboard。",
-        "邮箱能收到系统邮件。"
+        "浏览器地址栏显示 h5.roogoo.money，有 HTTPS 锁标志。",
+        "主屏幕上已有 Roogoo 图标，点击可正常进入。",
+        "没有被要求输入助记词或钱包私钥。"
       ],
       warnings: [
-        "删除邀请码后折扣和返现无法补救。",
-        "只从 wap.roogoo.cloud 官方地址注册，不要从非官方短链接进入。"
+        "旧域名 wap.roogoo.cloud 已废弃，不要访问旧地址。",
+        "Roogoo 没有 App Store 或 Google Play 版本，从应用商店搜到的同名应用是仿冒品。"
       ]
     },
     {
       n: "02",
-      t: "认识 Dashboard：资金账户和卡片余额是两个口袋",
+      t: "注册账号（保留邀请码）",
       img: "/images/tutorials/roogoo/step-02.jpg",
-      caption: "Dashboard 截图：Asset Account 是资金池，Card Balance 是消费余额，充值进来的钱要手动 Top-up 到卡片才能刷。",
-      b: "注册完成后登录 wap.roogoo.cloud/dashboard。Roogoo 是 PWA 网页应用，建议在 Safari 或 Chrome 里添加到主屏幕当 App 用。最关键的一点：Asset Account（资金账户）和 Card Balance（卡片余额）是分开的，充值进来的 USDT 先进资金账户，后面还要单独 Top-up 到卡片才能消费。",
+      caption: "注册页截图：点本页「立即申请」，邀请码 0eq357 自动填入，不要删除。有邀请码可享 $3.3 折扣 + 激活后 $10 返现。",
+      b: "点击本页「立即申请」，邀请码 0eq357 会自动填入注册页（不要删除）。填写邮箱，设置密码，完成邮箱验证码。有邀请码可享：$3.3 开卡费折扣 + 激活后 $10 返现直接进卡。注册成功后进入 Dashboard，第一次登录时建议设置支付密码并开启二步验证。",
       actions: [
-        "用浏览器打开 wap.roogoo.cloud，登录后进入 Dashboard。",
-        "在浏览器菜单里选添加到主屏幕，方便日后直接打开。",
-        "找到 Asset Account 区域：这里显示充进来的 USDT 余额，不含卡片余额。",
-        "找到 Deposit（充币）、Withdraw（提币）、Transfer（转账）入口。",
-        "找到 Cards 或 Card Management 菜单，管理虚拟卡用。",
-        "找到 Help / Support 客服入口，截图保存备用。"
+        "点击本页上方「立即申请」，进入带邀请码的注册链接：https://h5.roogoo.money/register?inviteCode=0eq357。",
+        "确认注册页邀请码栏已自动填入 0eq357，不要删除或修改。",
+        "填写邮箱地址（推荐 Gmail 或 Outlook，国内邮箱可能收不到验证邮件）。",
+        "设置密码（建议 12 位以上，含大小写和数字）。",
+        "查收邮箱验证码，填入完成验证。",
+        "注册成功后登录 Dashboard，进入安全设置，设置支付密码和二步验证。",
+        "确认 Dashboard 可以正常访问，能看到 Asset Account 和 Cards 入口。"
       ],
       checks: [
-        "能看到 Asset Account 余额区域（即使是 0）。",
-        "Cards 管理入口能正常点开。",
-        "页面地址是 wap.roogoo.cloud，不是其他域名。"
+        "注册时邀请码显示 0eq357，未被删除。",
+        "邮箱验证已完成，能收到系统邮件。",
+        "Dashboard 可正常访问，显示 Asset Account 和 Cards 入口。"
       ],
       warnings: [
-        "Asset Account 里的钱不能直接刷卡，必须先 Top-up 到具体卡片才能消费。",
-        "PWA 登录状态存在浏览器里，换浏览器或清除缓存后需要重新登录。"
+        "邀请码只能在注册时填入，注册后无法补填，折扣和返现无法补救。",
+        "删除邀请码后 $3.3 折扣和 $10 返现均无法获得，注意保留。"
       ]
     },
     {
       n: "03",
-      t: "充值 USDT：首次备足 100 USDT 最省事",
+      t: "认识三种卡，选择适合的",
       img: "/images/tutorials/roogoo/step-03.jpg",
-      caption: "充值页截图：TRC20 或 SOL 链到账约 2 分钟，首次建议备 100 USDT 覆盖开卡费和首次 Top-up。",
-      b: "开卡前必须先往 Asset Account 充值。Roogoo 开卡费约 16.6-19.9 美元，首次 Top-up 到卡建议 50 美元，合计约需 70 美元。为了中途不卡顿，建议首次充值 100 USDT。支持 TRC20（Tron）和 SOL（Solana）两条链，到账约 2 分钟。",
+      caption: "卡片选择截图：尊享卡（紫色 Mastercard）唯一官方支持 AI 订阅；乐享卡（Visa）适合日常消费；无界卡（香港 Visa）支持微信香港钱包。",
+      b: "Roogoo 提供三种卡，首张均免费（$0 开卡费），后续每张 $4.99。尊享卡（Premier Card）：紫色 Mastercard，美国发行，唯一官方支持 ChatGPT/Claude/Cursor 等 AI 订阅，首张免费。乐享卡（Enjoy Card）：Visa，美国（波多黎各）发行，适合日常跨境消费，Apple Pay 2026 Q2 上线。无界卡（Borderless Card）：Visa，香港发行，支持微信香港钱包，适合大额消费或香港场景。",
       actions: [
-        "进入 Dashboard → Deposit，选择 USDT。",
-        "选充值网络：TRC20（Tron）或 SOL（Solana），两者手续费都低，到账约 2 分钟。",
-        "也可选站内收款：让另一个 Roogoo 用户直接站内转账给你，0 网络手续费。",
-        "复制 Roogoo 充值地址，核对前 4 位和后 4 位。",
-        "去交易所提币，提币端选和 Roogoo 一致的网络（TRC20 对 TRC20，SOL 对 SOL）。",
-        "首次建议充 100 USDT：17-20 美元开卡费 + 50 美元首次卡片充值 + 少量余量。",
-        "等 2-5 分钟，刷新 Dashboard 确认 Asset Account 余额增加。"
+        "明确自己的主要用途：AI 订阅（ChatGPT/Claude/Cursor）→ 选尊享卡（Premier Card，紫色 Mastercard）。",
+        "日常跨境网购和订阅 → 选乐享卡（Enjoy Card，Visa）。",
+        "需要微信香港钱包、香港实体消费或大额消费 → 选无界卡（Borderless Card，香港 Visa）。",
+        "进入 Dashboard → Cards → Apply Card，查看三种卡的详细说明和当前活动。",
+        "确认首张免费（$0 开卡费），第二张起 $4.99/张。",
+        "可以同时持有多种卡，分场景使用。",
+        "如果同时有 AI 订阅和日常消费需求，建议先申请尊享卡，再申请乐享卡。"
       ],
       checks: [
-        "Roogoo 充值网络和交易所提币网络完全一致（都是 TRC20 或都是 SOL）。",
-        "Asset Account 余额已更新，金额正确。",
-        "余额足够覆盖开卡费加首次卡片 Top-up。"
+        "已确认选择的卡片类型与使用场景匹配。",
+        "已了解首张免费政策和后续开卡费用。",
+        "AI 订阅场景确认选择尊享卡（Mastercard），不是乐享卡或无界卡。"
       ],
       warnings: [
-        "网络选错（如一端 TRC20 一端 ERC20）资产大概率丢失，每次操作前都要对一遍。",
-        "只充刚好够开卡费会导致后面 Top-up 不够用，多备一点更稳。"
+        "乐享卡和无界卡不适合订阅 ChatGPT，AI 订阅必须用尊享卡（Mastercard）。",
+        "无界卡是香港 Visa，不支持订阅 ChatGPT（香港 IP 被 OpenAI 封禁）。"
+      ]
+    },
+    {
+      n: "04",
+      t: "充值 USDT（从 OKX 买入）",
+      img: "/images/tutorials/roogoo/step-04.jpg",
+      caption: "充值流程截图：Dashboard → Assets → Deposit → USDT → TRC20 → 复制地址，再从 OKX C2C 买 USDT 提币过来。",
+      b: "进入 Dashboard → Assets → Deposit → USDT → 选 TRC20 网络 → 复制充值地址。在 OKX 用 C2C 买 USDT：C2C 买币 → USDT → 选支付宝/微信付款 → 转账时备注栏留空 → 点已付款 → 等卖家释放。OKX 提币时两端网络必须一致（都选 TRC20），选错永久丢失。TRC20 到账约 2 分钟，首次建议充 30-50 USDT。",
+      actions: [
+        "进入 Dashboard → Assets → Deposit，选择 USDT，网络选 TRC20。",
+        "复制 Roogoo 显示的 TRC20 充值地址，核对前 4 位和后 4 位。",
+        "打开 OKX App → C2C 买币 → 选择 USDT → 选支付宝或微信付款方式。",
+        "选择成交量高、好评率 98% 以上的卖家，确认金额后下单。",
+        "按卖家银行账号转账，备注栏留空（不写任何文字）。",
+        "转账完成后点「我已付款」，等待卖家释放 USDT（通常 5-15 分钟）。",
+        "OKX 资产 → 提币 → USDT → 网络选 TRC20 → 粘贴 Roogoo 充值地址 → 确认金额。",
+        "等待约 2 分钟，刷新 Roogoo Dashboard 确认 Asset Account 余额到账。"
+      ],
+      checks: [
+        "Roogoo 充值地址和 OKX 提币地址完全一致。",
+        "两端网络都选 TRC20，绝对不能混用 ERC20 或其他网络。",
+        "Asset Account 余额已更新，金额与充值金额一致。"
+      ],
+      warnings: [
+        "两端网络必须完全一致（都是 TRC20），选错网络资产永久丢失，无法找回。",
+        "OKX C2C 转账备注栏必须留空，写备注可能被平台判定违规导致资金冻结。"
+      ]
+    },
+    {
+      n: "05",
+      t: "完成 Sumsub KYC",
+      img: "/images/tutorials/roogoo/step-05.jpg",
+      caption: "KYC 截图：Dashboard → Account/Verification，使用 Sumsub 平台，选中国和身份证，完成信息填写和人脸识别。",
+      b: "Dashboard → Account/Verification → 进入 KYC 认证（使用 Sumsub 第三方平台）。选择国家（China）和证件类型（身份证或护照）。填写真实姓名、出生日期、证件号码。上传证件正反面照片并完成活体人脸识别。Sumsub 审核通常 5-15 分钟，审核结果不由 Roogoo 人工决定。",
+      actions: [
+        "进入 Dashboard → Account 或 Verification，找到 KYC 认证入口，点击开始。",
+        "选择国家：China（中国）。",
+        "选择证件类型：身份证（ID Card）或护照（Passport）。",
+        "按提示填写真实姓名（拼音，名在前姓在后）、出生日期、证件号码。",
+        "上传证件正面照片：光线均匀，四角完整，文字清晰，无反光，关闭美颜。",
+        "上传证件背面照片：同样要求清晰完整，无遮挡。",
+        "完成人脸识别（活体检测）：脸部完整，光线充足，无帽子/口罩，按提示做动作。",
+        "提交后等待 5-15 分钟，回 Dashboard 查看 KYC 状态更新。"
+      ],
+      checks: [
+        "KYC 状态显示 Approved 或 Verified。",
+        "证件四角完整，无反光，文字可读。",
+        "人脸识别已通过。"
+      ],
+      warnings: [
+        "Sumsub 是第三方平台，审核结果自动判断，失败时按提示原因重新操作，不要重复提交同一张照片。",
+        "截图、翻拍、P 图处理的证件会直接被拒，必须用手机原相机拍证件实物。"
+      ]
+    },
+    {
+      n: "06",
+      t: "证件拍摄标准（KYC 成败关键）",
+      img: "/images/tutorials/roogoo/step-06.jpg",
+      caption: "证件拍摄示范：实物原件，光线均匀，四角完整，无反光，关闭美颜滤镜。人脸识别时脸部完整露出，光线充足。",
+      b: "证件拍摄质量直接决定 KYC 成败。使用原始实体证件，禁止复印件、截图、PS 处理。光线要均匀，避免反光和眩光。四角完整入镜，文字清晰可读。关闭手机美颜、滤镜和自动对焦虚化。人脸识别：脸部完整露出，无帽子/口罩/墨镜，光线充足。Sumsub 审核失败时按原因重新拍摄，不要重复提交同一张照片。",
+      actions: [
+        "准备原始实体证件，不要使用复印件、截图、照片的照片或任何 P 图处理版本。",
+        "找自然光或均匀室内灯光环境，避免窗户直射造成反光或眩光。",
+        "将证件放在深色背景上（如黑色桌面），四角完整入镜，不要有遮挡。",
+        "关闭手机美颜、滤镜、自动 HDR 和人像模式（自动虚化会让证件文字模糊）。",
+        "拍完后放大检查：证件号码、姓名、有效期等关键文字是否清晰可读。",
+        "人脸识别时：找光线充足的环境，脸部完整，摘掉帽子/口罩/墨镜，距手机约 30-50 厘米。",
+        "Sumsub 审核失败时，认真读失败原因，根据具体原因重新拍摄对应材料，不要随意猜测。"
+      ],
+      checks: [
+        "证件原件，非复印件、截图或 P 图。",
+        "四角完整，无遮挡，关键文字清晰可读。",
+        "关闭美颜滤镜，光线均匀无反光。"
+      ],
+      warnings: [
+        "美颜和滤镜是 KYC 失败的常见原因，拍摄前必须关闭所有图像增强功能。",
+        "失败后不要重复提交同一张照片，Sumsub 会识别重复图片并直接拒绝。"
+      ]
+    },
+    {
+      n: "07",
+      t: "申请卡片（首张免费）",
+      img: "/images/tutorials/roogoo/step-07.jpg",
+      caption: "开卡页截图：KYC 通过后 Cards → Apply Card，AI 订阅选尊享卡，日常消费选乐享卡，首张开卡费 $0。",
+      b: "KYC 通过后，进入 Cards → Apply Card。根据用途选择卡片：AI 订阅（ChatGPT/Claude/Cursor）选尊享卡（Premier Card，Mastercard）；日常跨境消费选乐享卡（Enjoy Card，Visa）。首张开卡费 $0，后续每张 $4.99。确认首次最低充值金额（建议 $50），同意服务条款后提交，虚拟卡申请后即时生成。",
+      actions: [
+        "确认 KYC 状态已通过，进入 Cards → Apply Card。",
+        "根据用途选择卡片类型：AI 订阅选尊享卡（紫色 Mastercard），日常消费选乐享卡（Visa）。",
+        "确认卡组织（Mastercard 或 Visa）、发行地区和开卡费（首张 $0）。",
+        "确认 Asset Account 中有足够余额用于后续 Top-up（建议 $50 以上）。",
+        "阅读并同意服务条款，点击提交申请。",
+        "等待虚拟卡生成，通常几秒内即时完成。",
+        "进入 Cards 页面确认新卡已出现，状态显示正常。"
+      ],
+      checks: [
+        "KYC 状态已通过（Approved/Verified）。",
+        "选择的卡片类型与用途匹配（AI 订阅 → 尊享卡）。",
+        "首张开卡费显示 $0，卡片已即时生成。"
+      ],
+      warnings: [
+        "尊享卡（Mastercard）才能用于 AI 订阅，乐享卡（Visa）不适合订阅 ChatGPT。",
+        "卡片申请后不能更改卡片类型，选错了只能重新申请（第二张起收 $4.99）。"
+      ]
+    },
+    {
+      n: "08",
+      t: "从资金账户充值到卡片（Top-up）",
+      img: "/images/tutorials/roogoo/step-08.jpg",
+      caption: "Top-up 截图：充值进来的 USDT 先在 Asset Account，还需手动 Cards → 选卡片 → Top-up 才能消费，卡片余额低于 $2 会自动冻结。",
+      b: "Roogoo 资金账户（Asset Account）和卡片余额（Card Balance）是分开的，充值进来的 USDT 先进资金账户，需要手动 Top-up 到卡片才能消费。路径：Cards → 选择目标卡片 → Top-up / 充值 → 来源选 Asset Account → 输入金额 → 确认 → 等待 1-5 分钟同步。消费前余额建议比订单额高 3-5%（覆盖手续费）。卡片余额低于 $2 会被自动冻结，需充至 $10 解冻。",
+      actions: [
+        "进入 Cards 页面，点击目标卡片，找到 Top-up / 充值入口。",
+        "来源选择 Asset Account（资金账户），确认 Asset Account 余额足够。",
+        "输入充值金额，查看 USDT 换算为美元的汇率，确认无误。",
+        "点击确认，等待 1-5 分钟，刷新卡片页面查看 Card Balance 是否更新。",
+        "消费前确认卡片余额比预计消费额高 3-5%，覆盖手续费（尊享/乐享卡 1%，无界卡 0.8%）。",
+        "确保卡片余额不低于 $2，低于 $2 卡片会被自动冻结。",
+        "如卡片已被冻结（余额归零），需充值至 $10 才能解冻。"
+      ],
+      checks: [
+        "卡片 Card Balance 已更新，金额与 Top-up 金额一致。",
+        "Card Balance 高于预计消费额的 103-105%。",
+        "Card Balance 不低于 $2。"
+      ],
+      warnings: [
+        "Asset Account 里的 USDT 不能直接消费，必须先 Top-up 到卡片，这是最容易忽略的一步。",
+        "卡片余额低于 $2 会自动冻结，需充值到 $10 才能解冻，订阅前务必确认余额充足。"
+      ]
+    },
+    {
+      n: "09",
+      t: "查看卡号并绑定支付宝",
+      img: "/images/tutorials/roogoo/step-09.jpg",
+      caption: "卡片详情截图：Cards → 点击卡片 → 查看卡号/CVV/有效期/英文姓名/账单地址，绑定支付宝时账单地址填美国地址。",
+      b: "进入 Cards → 点击目标卡片 → 卡片详情，查看并记录：卡号（16 位）、CVV（3 位）、有效期（MM/YY）、持卡人英文姓名、账单地址（美国地址）。绑定支付宝：支付宝 → 我的 → 银行卡 → 添加银行卡 → 输入卡号，账单地址填卡片详情页的美国地址，城市+州+邮编缺一不可。无界卡（香港 Visa）额外支持微信香港钱包绑定；乐享卡暂不支持微信。绑定后做小额消费测试。",
+      actions: [
+        "进入 Cards → 点击目标卡片 → 卡片详情，解锁查看敏感信息。",
+        "记录：16 位卡号、CVV（3 位）、有效期（MM/YY）、持卡人英文姓名、账单地址（美国地址）。",
+        "打开支付宝 App → 我的 → 银行卡 → 右上角添加银行卡。",
+        "输入 16 位卡号，填写有效期、CVV、持卡人英文姓名。",
+        "账单地址填写卡片详情页显示的美国地址，格式：街道 + 城市 + 州 + 邮编（缺一不可）。",
+        "绑定成功后做小额消费测试（<10 元），确认扣款正常。",
+        "无界卡（香港 Visa）用户：可额外绑定微信香港钱包；乐享卡（Visa）暂不支持微信。"
+      ],
+      checks: [
+        "支付宝显示 Roogoo 卡片已绑定成功。",
+        "小额消费（<10 元）测试成功，Roogoo 卡片有扣款记录。",
+        "账单地址使用了卡片详情页的美国地址，不是国内地址。"
+      ],
+      warnings: [
+        "账单地址必须完整（街道+城市+州+邮编），填国内地址或格式不完整会导致绑卡失败。",
+        "完整卡号加 CVV 等同于卡片本身，截图只保存给自己，不要发给任何人。"
+      ]
+    },
+    {
+      n: "10",
+      t: "用尊享卡订阅 ChatGPT Plus",
+      img: "/images/tutorials/roogoo/step-10.jpg",
+      caption: "ChatGPT 订阅截图：必须用尊享卡（紫色 Mastercard）+ Clash TUN 模式美国住宅 IP，卡内余额需 > $22。",
+      b: "订阅 ChatGPT Plus 必须用尊享卡（Premier Card，紫色 Mastercard），乐享卡和无界卡不适合。VPN 设置：Clash Verge Rev → 以管理员身份运行 → 设置 → 安装服务 → 开启 TUN 模式；节点选美国住宅 IP（洛杉矶或旧金山），TUN 模式是关键，普通全局代理不够。Chrome 无痕模式访问 chat.openai.com → Upgrade to Plus。账单地址填卡片详情页的美国地址，卡内余额 > $22，同一张卡只给一个账号订阅。",
+      actions: [
+        "确认使用尊享卡（Premier Card，紫色 Mastercard），不是乐享卡或无界卡。",
+        "确认卡片 Card Balance > $22（订阅 $20 + 税费 + 手续费）。",
+        "下载 Clash Verge Rev（Windows），以管理员身份运行。",
+        "进入设置 → 安装服务（Install Service），等待显示「运行中」，再打开 TUN 模式开关。",
+        "选择美国住宅 IP 节点（洛杉矶或旧金山），访问 whoer.net 确认显示美国住宅 IP，无 DNS 泄漏。",
+        "打开 Chrome 无痕窗口（Ctrl+Shift+N），访问 chat.openai.com → Upgrade to Plus。",
+        "填写尊享卡的卡号、有效期、CVV，账单地址填卡片详情页的美国地址。",
+        "点击提交，等待扣款结果，检查 Roogoo 卡片交易记录确认扣款成功。"
+      ],
+      checks: [
+        "whoer.net 显示美国住宅 IP，无 DNS 泄漏。",
+        "Clash Verge Rev 以管理员运行，服务「运行中」，TUN 模式已开启。",
+        "卡片为尊享卡（Mastercard），Card Balance > $22。",
+        "ChatGPT 订阅成功，账户显示 Plus 状态。"
+      ],
+      warnings: [
+        "普通全局代理（System Proxy）无法通过 Stripe 的 IP 检测，必须用 TUN 模式。",
+        "一张尊享卡只用于一个 ChatGPT 账号，多账号共用同一张卡会触发 OpenAI 风控封号。"
+      ]
+    },
+    {
+      n: "11",
+      t: "费用说明和隐藏坑点",
+      img: "/images/tutorials/roogoo/step-11.jpg",
+      caption: "费用明细截图：消费手续费 1%，非美元区跨境费 1.6%，退款手续费 2.5%，争议处理费 $50/笔。禁用商户包括 Uber、Wise、AWS、Azure 等。",
+      b: "使用前必须了解费用结构和禁用商户。消费手续费：尊享卡/乐享卡 1%，无界卡 0.8%（$30 以下每笔加 $0.35）。跨境手续费：美元区 0%，非美元区 1.6%。退款手续费：2.5%（主动退款反而被扣，是大坑）。争议处理费：$50/笔（发起拒付直接收 $50）。禁用商户：Uber、Wise、AWS、Azure、Oracle Cloud、OnlyFans、Coinbase、加油站、在线赌博平台。",
+      actions: [
+        "记住消费手续费：尊享卡/乐享卡 1%，无界卡 0.8%（$30 以下每笔额外加 $0.35）。",
+        "非美元区消费（如人民币、欧元区）额外收 1.6% 跨境手续费，美元区 0%。",
+        "退款手续费 2.5%：主动申请退款会被扣 2.5% 手续费，退款前想清楚。",
+        "争议处理费 $50/笔：发起信用卡拒付（Chargeback）直接收 $50，不到万不得已不要用。",
+        "以下商户消费会被直接拒绝，不要尝试：Uber、Wise、AWS、Azure、Oracle Cloud、OnlyFans、Coinbase、加油站、在线赌博平台。",
+        "确保卡片有足够余额覆盖手续费（消费额 × 101%-103%）。",
+        "长期账户余额为零或不活跃可能导致账户强制注销。"
+      ],
+      checks: [
+        "已了解消费手续费率（尊享/乐享 1%，无界 0.8%）。",
+        "已了解退款手续费（2.5%）和争议处理费（$50）。",
+        "已知晓禁用商户列表，不在禁用商户消费。"
+      ],
+      warnings: [
+        "退款手续费 2.5% 是最容易踩的坑，主动退款不是免费的，退款前务必确认。",
+        "发起拒付（Chargeback）直接收 $50 手续费，绝大多数情况下直接联系商户退款更合算。"
+      ]
+    },
+    {
+      n: "12",
+      t: "卡片安全和日常维护",
+      img: "/images/tutorials/roogoo/step-12.jpg",
+      caption: "安全设置截图：Cards → 选卡片 → Freeze/Unfreeze 冻结解冻，订阅扣款日前确认余额，异常交易立即冻结并联系客服。",
+      b: "冻结/解冻入口：Cards → 选择卡片 → Freeze/Unfreeze（24 小时内生效）。订阅服务扣款日前 24 小时确保余额充足。不要在 Roogoo 账户长期存放大额 USDT。余额 > $2 才能正常使用，建议保留 $2-5 缓冲。发现异常交易立即冻结卡片，联系客服：help@roogoo.com 或 Telegram @mrpayfi。",
+      actions: [
+        "了解并记住冻结/解冻入口：Cards → 选择卡片 → Freeze（冻结）/ Unfreeze（解冻）。",
+        "订阅服务（如 ChatGPT Plus）扣款日前 24 小时，确认卡片余额充足（> 订阅额 × 103%）。",
+        "不要在 Roogoo 账户长期存放大额 USDT，按需充值，降低平台风险。",
+        "保持卡片余额高于 $2，余额归零会自动冻结，需充至 $10 解冻。",
+        "建议保留 $2-5 缓冲余额，避免因小额手续费导致余额归零触发冻结。",
+        "发现异常交易：立即进入 Cards → 卡片 → Freeze 冻结卡片，截图保存交易记录。",
+        "联系 Roogoo 客服：发送邮件至 help@roogoo.com，或 Telegram 联系 @mrpayfi，提供交易截图。"
+      ],
+      checks: [
+        "已知晓冻结/解冻卡片的操作路径。",
+        "客服联系方式已保存（help@roogoo.com 或 Telegram @mrpayfi）。",
+        "重要订阅服务扣款日期已记录，提前确认余额充足。"
+      ],
+      warnings: [
+        "账户余额长期为零或长期不活跃可能触发强制注销，需定期使用。",
+        "发现异常交易第一时间冻结卡片，不要等待观望，先冻结再排查。"
       ]
     },
     {
@@ -1500,147 +1976,239 @@ window.TUTORIALS = {
   "kraken-card": [
     {
       n: "01",
-      t: "确认 Krak App 和开卡入口",
+      t: "确认开卡资格（英国/EEA），下载独立 Krak App",
       img: "/images/tutorials/kraken-card/step-01.jpg",
-      caption: "Krak 入口截图：Krak Card 当前主要面向 UK / EEA 用户。",
-      b: "Krak Card 是 Kraken 新的消费卡入口，不是老式交易所卡片页面。先确认你用的是 Krak App，并且首页能看到 Everyday account。",
+      caption: "Krak App 入口：Krak 是独立于 Kraken Pro 交易所的单独 App，iOS 搜索「Krak: Money App & Card」，Android 搜索「Krak: Spend, Send & Grow」。",
+      b: "Krak Card 仅限英国（UK）和 EEA 31 个国家居民申请，美国不支持。Krak App 是独立于 Kraken Pro 交易所的单独应用，两个 App 不是同一个。iOS：App Store 搜索「Krak: Money App & Card」（开发者 Payward，App ID: 6738051700）。Android：Google Play 搜索「Krak: Spend, Send & Grow」（包名: com.kraken.pay.app）。",
       actions: [
-        "安装或更新 Krak App。",
-        "登录 Kraken / Krak 账户。",
-        "完成个人 KYC。",
-        "确认账户资料已完成到页面要求的级别。",
-        "打开 Everyday account。",
-        "确认页面有 card icon 或卡片弹窗。"
+        "确认居住地在支持国家内：英国、德国、法国、西班牙、意大利、荷兰、比利时、奥地利等 EEA 国家。",
+        "iOS 用户：App Store 搜索「Krak: Money App & Card」，确认开发者是 Payward，App ID: 6738051700。",
+        "Android 用户：Google Play 搜索「Krak: Spend, Send & Grow」，包名 com.kraken.pay.app。",
+        "安装后打开 Krak App（不是 Kraken Pro 交易所 App）。",
+        "如已有 Kraken 账户可用同一邮箱登录；没有则点 Create account 新注册。",
+        "确认 App 首页显示 Everyday account 入口，不是交易图表界面。"
       ],
       checks: [
-        "Krak App 已登录。",
-        "KYC 通过。",
-        "Everyday account 可用。"
+        "下载的是 Krak App，不是 Kraken Pro。",
+        "App 首页有 Everyday account 入口。",
+        "居住国在支持列表内。"
       ],
       warnings: [
-        "如果没有开卡入口，先更新 App，再检查账户状态。",
-        "Krak Card 和普通 Kraken Pro 交易页不是同一个入口。"
+        "Krak App 和 Kraken Pro 是两个不同 App，开卡必须用 Krak App，不要搞混。",
+        "不在支持国家居住的用户无法申请卡片，申请会被直接拒绝。"
       ]
     },
     {
       n: "02",
-      t: "进入 Everyday Account 开卡",
+      t: "完成 KYC（证件 + 地址证明）",
       img: "/images/tutorials/kraken-card/step-02.jpg",
-      caption: "Everyday account 截图：点击右上角卡片图标。",
-      b: "官方步骤很短，但真实操作路径是：Home 中间的 Everyday account，再进入卡片图标。",
+      caption: "KYC 截图：上传护照或政府身份证，再上传 3 个月内地址证明（银行账单、水电费账单等）。",
+      b: "Krak Card 需要两级 KYC：身份证件（护照或政府颁发身份证）+ 地址证明（3 个月内）。地址证明可用银行月结单、水电费账单、政府信件或租约。证件上的姓名和地址必须与地址证明完全一致。",
       actions: [
-        "打开 Krak App 首页。",
-        "点击中间的 Everyday account。",
-        "点击右上角 card icon。",
-        "阅读弹出的 Krak Card 说明。",
-        "选择是否立即创建虚拟卡。",
-        "如果没有弹窗，检查地区、版本和 KYC 状态。"
+        "进入 Krak App → Profile / Account → Identity Verification（KYC）。",
+        "选择证件类型：护照（推荐）或政府颁发身份证。",
+        "拍摄或上传证件正面（护照信息页），按提示完成人脸识别（自拍）。",
+        "上传地址证明（3 个月内）：银行月结单、水电费账单、政府信件或租约均可。",
+        "确认地址证明上的姓名和地址与证件完全一致。",
+        "提交后等待审核，通常几分钟到数小时内完成。"
       ],
       checks: [
-        "看到 Krak Card 申请弹窗。",
-        "可以继续选择卡面颜色。",
-        "没有被提示暂不可用。"
+        "KYC 状态变为 Verified。",
+        "地址证明在 3 个月内，姓名地址与证件一致。",
+        "App 首页 Everyday account 正常可用。"
       ],
       warnings: [
-        "部分账户需要等待功能开放。",
-        "老版本 App 可能没有入口。"
+        "地址证明超过 3 个月会被拒，请准备最新账单。",
+        "证件照片模糊或四角不完整会导致审核失败，需重新拍摄。"
       ]
     },
     {
       n: "03",
-      t: "创建虚拟卡",
+      t: "查看 Everyday Account（UK Sort Code / EEA IBAN）",
       img: "/images/tutorials/kraken-card/step-03.jpg",
-      caption: "虚拟卡创建截图：选择 Coral 或 Black。",
-      b: "Krak Card 先创建虚拟卡。创建后就可以线上使用，也可以添加到手机钱包。",
+      caption: "账户详情：UK 用户获得真实英国 Sort Code + 账号（Faster Payments）；EEA 用户获得德国 IBAN（SEPA）。",
+      b: "KYC 通过后 Krak 自动创建 Everyday Account。英国用户获得真实英国 Sort Code 和账号，支持 Faster Payments 入账（通常秒到）。EEA 用户获得德国 IBAN，支持 SEPA 入账（1-2 工作日）。这是 Krak Card 的扣款账户。",
       actions: [
-        "选择 Krak Coral 或 Krak Black。",
-        "阅读 Krak Card terms of service。",
-        "点击 Continue。",
-        "等待卡片创建。",
-        "查看虚拟卡号、有效期和安全码。",
-        "记录账单信息和卡片状态。"
+        "进入 Krak App 首页，点击 Everyday account。",
+        "UK 用户：查看并记录 Sort Code（6 位）和 Account Number（8 位）。",
+        "EEA 用户：查看并记录德国 IBAN（DE 开头），用于 SEPA 转账入金。",
+        "确认账户货币：UK 默认 GBP，EEA 默认 EUR。",
+        "在自己的银行 App 中将 Krak 账户添加为收款人，方便后续转账。"
       ],
       checks: [
-        "虚拟卡显示 ready to use。",
-        "能打开卡片详情。",
-        "能进入钱包绑定按钮。"
+        "UK：Sort Code 和 Account Number 已记录。",
+        "EEA：IBAN 已记录，确认是 DE 开头的德国 IBAN。",
+        "账户状态显示正常可用。"
       ],
       warnings: [
-        "虚拟卡不是一次性卡。",
-        "30 天滚动周期内虚拟卡数量有限。"
+        "EEA 用户的 IBAN 是德国 IBAN（DE 开头），即使你在其他 EEA 国家居住也是如此，属正常现象。",
+        "Everyday Account 里的资金是普通法币，不是加密资产。"
       ]
     },
     {
       n: "04",
-      t: "添加 Apple Pay / Google Pay",
+      t: "向 Everyday Account 存款",
       img: "/images/tutorials/kraken-card/step-04.jpg",
-      caption: "钱包绑定截图：创建后可添加到手机或手表。",
-      b: "Krak Card 的核心体验之一是直接放进手机钱包，用于线下和线上 tap-to-pay。",
+      caption: "存款截图：UK 银行转账到 Sort Code/账号（Faster Payments 秒到）；EEA 发 SEPA 到 IBAN（1-2 工作日）。",
+      b: "三种存款方式：①UK 银行 Faster Payments（Sort Code + Account Number，通常秒到）；②EEA SEPA 转账（IBAN，1-2 工作日）；③Kraken 账户划转（即时）。存款后不需要额外激活，直接可以消费。",
       actions: [
-        "在卡片详情中点击 Add to Apple Wallet 或 Add to Google Wallet。",
-        "选择添加到手机或手表。",
-        "按系统提示接受设备服务条款。",
-        "完成设备验证。",
-        "打开钱包 App 确认卡片出现。",
-        "先做小额线下或线上测试。"
+        "UK：打开自己的银行 App，发起 Faster Payments，填入 Sort Code 和 Account Number，备注填自己姓名。",
+        "EEA：在银行发起 SEPA 转账，收款 IBAN 填 Krak IBAN，收款人姓名填自己全名（必须与 KYC 一致）。",
+        "Kraken 划转：Krak App 内选 Transfer from Kraken，选资产和金额，即时到账。",
+        "存款后在 Everyday Account 页面确认余额已更新。",
+        "建议先小额（£/€10）测试，确认路径无误再大额入金。"
       ],
       checks: [
-        "钱包里能看到 Krak Card。",
-        "设备验证完成。",
-        "小额支付成功。"
+        "Everyday Account 余额已更新，与存款金额一致。",
+        "入金路径确认（UK 用 Sort Code，EEA 用 IBAN）。"
       ],
       warnings: [
-        "钱包支持取决于国家、设备和 App 版本。",
-        "线下支付前确认实体店接受 Mastercard / contactless。"
+        "EEA SEPA 转账收款人姓名必须与 KYC 姓名完全一致，姓名不符可能被退款。",
+        "从加密交易所充值法币手续费可能较高，优先用银行直接转账。"
       ]
     },
     {
       n: "05",
-      t: "设置消费资产顺序",
+      t: "创建虚拟卡",
       img: "/images/tutorials/kraken-card/step-05.jpg",
-      caption: "资产顺序截图：Krak Card 可从多种现金和加密资产扣款。",
-      b: "Krak Card 可以从 Everyday account 中的现金和 400+ 资产消费。关键是设置优先扣哪种资产。",
+      caption: "开卡路径：首页 → Everyday account（中间）→ 右上角卡片图标 → Coral 或 Black → 接受 ToS → Continue。",
+      b: "创建路径：Krak App 首页 → 点击中间的 Everyday account → 右上角 card icon → 弹出 Krak Card 说明 → 选颜色（Coral 或 Black，仅外观差异）→ 接受 ToS → Continue。虚拟卡即时生成，马上可用于线上支付。",
       actions: [
-        "进入 Card spending settings。",
-        "查看可用于消费的现金和 crypto 资产。",
-        "把你想优先使用的现金或稳定资产排在前面。",
-        "把不想动的长期持仓从消费顺序里移除或放后面。",
-        "确认资产不足时是否允许组合扣款。",
-        "做一笔小额测试看扣款记录。"
+        "打开 Krak App，点击首页中间的 Everyday account。",
+        "点击右上角 card icon（卡片图标）。",
+        "阅读弹出的 Krak Card 介绍说明。",
+        "选择卡面颜色：Coral（珊瑚色）或 Black（黑色），仅外观差异，功能完全相同。",
+        "阅读并接受持卡人服务条款（Terms of Service）。",
+        "点击 Continue，等待几秒，虚拟卡即时生成。",
+        "进入 Card 页面确认卡片状态正常，能打开卡片详情。"
       ],
       checks: [
-        "扣款顺序符合预期。",
-        "不想消费的资产不会被自动卖出。",
-        "交易记录显示用了哪些资产。"
+        "Card 页面出现新虚拟卡，状态正常。",
+        "能进入卡片详情页。",
+        "没有显示「暂不可用」或「区域限制」提示。"
       ],
       warnings: [
-        "用加密资产消费可能触发税务事件。",
-        "自动换汇/换币存在 spread。"
+        "KYC 未完全审核通过时无法创建卡片，先确认 KYC 状态为 Verified。",
+        "App 版本过旧可能没有卡片创建入口，先更新到最新版本。"
       ]
     },
     {
       n: "06",
-      t: "实体卡、安全和返现",
+      t: "查看卡号和 PIN，了解首次激活要求",
       img: "/images/tutorials/kraken-card/step-06.jpg",
-      caption: "实体卡和设置截图：实体卡、冻结、PIN、返现都在 App 内管理。",
-      b: "虚拟卡跑通后再考虑实体卡。日常使用要理解冻结、PIN、返现 pending 和资产等级。",
+      caption: "卡号查看：Card → Show card details，记录 16 位卡号、CVV、有效期、账单地址。实体卡首次必须插芯片 + 输 PIN。",
+      b: "Card 页面点击 Show card details 或解锁查看完整卡号（16 位）、CVV（3 位）、有效期（MM/YY）和账单地址。PIN：Card settings → Show PIN。实体卡重要提示：收到后必须先在 POS 机插芯片 + 输 PIN 进行一次接触式支付，才能使用 NFC 非接触支付。虚拟卡无此限制，可直接线上使用。",
       actions: [
-        "需要实体卡时点击 Yes, get the physical card。",
-        "选择显示姓名并确认收货地址。",
-        "等待邮寄，通常约 14 个工作日。",
-        "收到后按 App 提示激活并设置 PIN。",
-        "在安全设置里熟悉 freeze / unfreeze。",
-        "查看 cashback 规则：最高返现按 30 天平均资产分档。",
-        "商户 finalizes transaction 后返现才从 pending 变为到账。"
+        "进入 Krak App → Card 页面，点击 Show card details，通过生物识别或 PIN 解锁。",
+        "记录：16 位卡号、CVV（3 位）、有效期（MM/YY）。",
+        "记录账单地址（Billing Address），用于线上绑卡表单。",
+        "查看 PIN 码：Card settings → Show PIN（首次使用实体卡前必须知道 PIN）。",
+        "实体卡使用前：先在支持芯片的 POS 机插卡 + 输 PIN，哪怕消费 £/€1 也算激活。",
+        "完成插芯片消费后，NFC 非接触支付才能正常使用。",
+        "虚拟卡可直接用于线上支付，无需特别激活步骤。"
       ],
       checks: [
-        "知道冻结入口。",
-        "知道 PIN 管理入口。",
-        "明白返现不是下单瞬间到账。"
+        "卡号、CVV、有效期已记录。",
+        "账单地址已知，用于填写线上支付表单。",
+        "实体卡（如有）已完成首次插芯片 + PIN 激活。"
       ],
       warnings: [
-        "第三方 ATM 可能收费。",
-        "Metal Card 和最高返现需要较高平均资产门槛。"
+        "实体卡不做插芯片 + PIN 操作，NFC 支付会被拒绝——这是用户最常踩的坑。",
+        "卡号 + CVV 等同于卡片本身，截图请安全保管，不要发给任何人。"
+      ]
+    },
+    {
+      n: "07",
+      t: "绑定 Apple Pay / Google Pay",
+      img: "/images/tutorials/kraken-card/step-07.jpg",
+      caption: "钱包绑定：Apple Pay 正常添加；Google Pay 必须手动输入卡号，不支持自动关联。",
+      b: "Apple Pay：卡片详情页点击 Add to Apple Wallet，按提示完成设备验证即可。Google Pay：无法自动关联，必须手动输入。路径：Google Wallet → 右下角 + → Payment card → Enter details manually → 输入卡号/有效期/CVV/账单地址 → 完成短信验证。",
+      actions: [
+        "Apple Pay：Card 页面 → Add to Apple Wallet → 按提示完成验证 → Apple Wallet 中确认卡片出现。",
+        "Google Pay（必须手动）：打开 Google Wallet → 右下角 + 号 → Payment card。",
+        "选择 Enter details manually（手动输入），不要选扫描或自动导入。",
+        "输入 16 位卡号、有效期、CVV、持卡人姓名、账单地址。",
+        "完成短信或邮件验证码验证。",
+        "验证成功后在 Google Wallet 中确认 Krak Card 已出现。",
+        "做一笔小额 tap-to-pay 测试确认成功（实体卡需先完成插芯片 + PIN 激活）。"
+      ],
+      checks: [
+        "Apple Pay 或 Google Pay 中显示 Krak Card。",
+        "小额 tap-to-pay 测试成功。"
+      ],
+      warnings: [
+        "Google Pay 不支持 Krak Card 自动关联，必须手动输入卡号，否则添加失败。",
+        "实体卡未完成插芯片激活前，NFC tap-to-pay 会被拒绝。"
+      ]
+    },
+    {
+      n: "08",
+      t: "管理消费资金来源和 Krak Vaults（UK 专属）",
+      img: "/images/tutorials/kraken-card/step-08.jpg",
+      caption: "资金管理：消费优先扣 Everyday Account GBP/EUR；UK 用户可开启 Krak Vaults 年化 5.5-10%+（EEA 不可用）。",
+      b: "Krak Card 消费默认从 Everyday Account 的 GBP（UK）或 EUR（EEA）扣款。也可设置从加密资产自动兑换消费（触发资本利得税事件）。Krak Vaults（仅 UK 用户）：GBP 存入 Vaults 赚取年化 5.5-10%+，消费时自动取出，不影响日常使用。EEA 用户目前无 Vaults 功能。",
+      actions: [
+        "确认 Everyday Account 有足够 GBP（UK）或 EUR（EEA）用于日常消费。",
+        "UK 用户：在 Krak App 找到 Vaults，将 Everyday Account GBP 存入，获取 5.5-10%+ APY。",
+        "Vaults 存款不影响消费，消费时系统自动从 Vaults 取出，无需手动操作。",
+        "如需用加密资产消费：进入 Card spending settings 设置消费资产顺序（注意每笔触发税务事件）。",
+        "建议优先用 GBP/EUR 消费，避免频繁触发加密资产资本利得记录。"
+      ],
+      checks: [
+        "Everyday Account 余额充足。",
+        "UK 用户已了解 Vaults 功能（可选开启）。",
+        "消费资金来源设置符合预期。"
+      ],
+      warnings: [
+        "Krak Vaults 仅限 UK 用户，EEA 用户无法使用该功能。",
+        "用加密资产自动消费会触发资本利得税事件，根据所在国税法可能需要申报。"
+      ]
+    },
+    {
+      n: "09",
+      t: "了解返现规则（新用户 30 天 2% 欢迎期）",
+      img: "/images/tutorials/kraken-card/step-09.jpg",
+      caption: "返现规则：新用户前 30 天自动 2%；之后按 30 天平均余额分档（2026 年 3 月 31 日起生效）。",
+      b: "新用户注册后前 30 天自动获得 2% 全品类消费返现，无需操作。30 天后按 30 天滚动平均余额分档（2026 年 3 月 31 日起）：< £/€200 = 0%；≥ £/€200 = 0.5%；≥ £/€1000 = 1%；≥ £/€10000 = 1.5%；≥ £/€50000 = 2%。返现以加密资产形式发放，商户确认交易后 1-3 天从 Pending 变为到账。",
+      actions: [
+        "注册后 30 天内所有消费自动 2% 返现，无需任何设置，好好利用欢迎期。",
+        "30 天欢迎期结束后，维持目标档位余额：0.5% 需 ≥ £/€200；1% 需 ≥ £/€1000。",
+        "返现查看：Card → Rewards / Cashback，可见 Pending 和已到账记录。",
+        "返现以加密资产（BTC 或平台代币）形式发放，商户 finalize 后 1-3 天到账。",
+        "UK 用户可将返现存入 Vaults 继续赚取 APY 复利增长。"
+      ],
+      checks: [
+        "注册 30 天内消费已显示 2% 返现 Pending 记录。",
+        "已了解 30 天后按余额分档的规则。",
+        "Rewards 页面可以查看返现状态。"
+      ],
+      warnings: [
+        "返现不是即时到账，必须等商户 finalize transaction 后才从 Pending 变为正式到账。",
+        "2026 年 3 月 31 日起返现已改为余额分档，低余额用户（< £/€200）等于 0% 返现。"
+      ]
+    },
+    {
+      n: "10",
+      t: "申请实体卡（可选，邮寄 14-30 工作日）",
+      img: "/images/tutorials/kraken-card/step-10.jpg",
+      caption: "实体卡申请：Card 页面 → Get physical card，填写收货地址，官方 14 工作日，实际可能 30 天以上。",
+      b: "虚拟卡已足够线上使用。需要线下实体消费时可申请实体卡，免费邮寄。官方说 14 工作日到达，实际用户反馈有时超过 30 天。收到卡后必须先插芯片 + 输 PIN 完成一次接触式支付，之后才能使用 NFC 非接触支付。",
+      actions: [
+        "Card 页面 → Get physical card（或 Yes, get the physical card）。",
+        "填写 EEA/UK 收货地址，确认与 KYC 地址一致。",
+        "提交申请，等待邮寄。官方说 14 工作日，实际可能 30+ 天。",
+        "收到卡后首次激活：在支持芯片的 POS 机插卡，输入 PIN 完成一笔消费（哪怕 £/€1）。",
+        "完成插芯片消费后，NFC tap-to-pay 才能正常使用。",
+        "实体卡添加到 Google Pay 时仍需手动输入卡号（同虚拟卡步骤）。"
+      ],
+      checks: [
+        "邮寄地址正确无误，在 EEA/UK 境内。",
+        "收到卡后已完成首次插芯片 + PIN 激活。",
+        "NFC 支付可以正常使用。"
+      ],
+      warnings: [
+        "跳过插芯片 + PIN 这一步会导致所有 NFC 支付被拒，务必先完成激活消费。",
+        "卡片丢失时立即在 Krak App 中冻结（Card → Freeze）。"
       ]
     }
   ]
