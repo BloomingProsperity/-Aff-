@@ -1275,16 +1275,121 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   align-items: start;
 }
 .step-copy { min-width: 0; }
+.card-click-flow {
+  margin: 0 0 18px;
+  border: 1px solid #cfe0f7;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%);
+  padding: 16px 18px;
+  box-shadow: 0 10px 24px rgb(48 95 160 / .07);
+}
+.card-click-flow-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.card-click-flow-head span {
+  color: #0b1538;
+  font-size: 15px;
+  font-weight: 800;
+}
+.card-click-flow-head strong {
+  flex: 0 0 auto;
+  color: #2b79d9;
+  font-size: 12px;
+}
+.card-click-flow-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.card-click-flow-item {
+  border: 1px solid #d8e7fb;
+  border-radius: 8px;
+  background: #fff;
+  color: #23405f;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+  padding: 7px 9px;
+}
+.card-click-flow-dash {
+  color: #7f9fca;
+  font-weight: 800;
+}
+.step-actions-wrap {
+  margin-top: 16px;
+}
+.step-actions-title {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #cfe0f7;
+  border-radius: 999px;
+  background: #f6faff;
+  color: #2b79d9;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 7px 10px;
+}
 .step-actions {
-  margin: 14px 0 0;
-  padding-left: 20px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
   color: var(--color-ink);
+  display: grid;
+  gap: 10px;
 }
 .step-actions li {
-  margin: 7px 0;
-  padding-left: 4px;
+  margin: 0;
+  padding: 12px 13px;
+  border: 1px solid #e0e9f7;
+  border-radius: 10px;
+  background: #fff;
   font-size: 14px;
   line-height: 1.75;
+}
+.step-action-index {
+  display: block;
+  width: max-content;
+  margin-bottom: 5px;
+  color: #2b79d9;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+}
+.step-action-text {
+  display: block;
+  color: var(--color-ink);
+}
+.step-click-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  color: #546681;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.step-click-path b {
+  color: #2b79d9;
+}
+.step-click-path span {
+  border: 1px solid #d8e7fb;
+  border-radius: 7px;
+  background: #f8fbff;
+  color: #23405f;
+  font-weight: 800;
+  padding: 3px 7px;
+}
+.step-click-path em {
+  color: #91a6c4;
+  font-style: normal;
+  font-weight: 900;
 }
 .step-callout {
   margin-top: 14px;

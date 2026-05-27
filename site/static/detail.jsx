@@ -30,6 +30,14 @@ const scrollToAnchor = id => {
 const asArray = value => Array.isArray(value) ? value : (value ? [value] : []);
 const tutorialAnchor = step => `tutorial-step-${step.n}`;
 const fundingAnchor = index => `funding-item-${String(index + 1).padStart(2, "0")}`;
+const CARD_CLICK_FLOWS = {
+  "bybit-card": ["打开 Bybit App", "首页点 More / 更多", "Finance / 金融", "Card", "Activate / Apply Now", "选择哈萨克斯坦", "填写地址和用途", "绑定手机号", "提交审核", "查看虚拟卡"],
+  "bybit-eu-card": ["打开 Bybit EU", "Finance / 金融", "Card", "Apply", "选择德国 / 法国等 EU 地区", "上传身份材料", "提交地址证明", "设置安全项", "提交申请", "启用虚拟卡"],
+  "safepal-card": ["打开 SafePal", "底部 Bank", "Get Started", "Next", "Mint My Account NFT", "Register", "填写资料", "打开 ReadID", "扫护照和 NFC", "等待审核", "Activate Card"],
+  "pokepay": ["打开 Pokepay", "注册 / 登录", "填写邀请码", "Account / KYC", "上传证件和自拍", "Wallet / Deposit", "USDT TRC20 充值", "Cards / PokeCard", "Apply", "支付开卡费", "View Card"],
+  "roogoo": ["打开 Roogoo Dashboard", "Assets", "Deposit USDT", "选择 TRC20", "Account / Verification", "完成 Sumsub KYC", "Cards", "Apply Card", "选择卡片", "Transfer to Card", "View Details"],
+  "kraken-card": ["打开 Krak App", "Profile / KYC", "上传证件", "上传地址证明", "Everyday Account", "Card", "Apply", "确认条款", "View Virtual Card", "Add to Apple Pay / Google Pay"],
+};
 const requiresPassport = card => [
   card.idType,
   card.lead,
@@ -150,6 +158,10 @@ function TutorialStep({ step, anchorId }) {
   const actions = asArray(step.actions);
   const checks = asArray(step.checks);
   const warnings = asArray(step.warnings || step.warn);
+  const pathFor = item => {
+    if (typeof item !== "string" || !item.includes("→")) return [];
+    return item.split("→").map(part => part.trim()).filter(Boolean);
+  };
 
   return (
     <li className="step" id={anchorId}>
@@ -159,9 +171,31 @@ function TutorialStep({ step, anchorId }) {
           <h3 className="step-title">{step.t}</h3>
           <p className="step-text">{step.b}</p>
           {actions.length > 0 && (
-            <ol className="step-actions">
-              {actions.map((item, i) => <li key={i}>{item}</li>)}
-            </ol>
+            <div className="step-actions-wrap">
+              <div className="step-actions-title">照着点</div>
+              <ol className="step-actions">
+                {actions.map((item, i) => {
+                  const path = pathFor(item);
+                  return (
+                    <li key={i}>
+                      <span className="step-action-index">第 {String(i + 1).padStart(2, "0")} 步</span>
+                      <span className="step-action-text">{item}</span>
+                      {path.length > 1 && (
+                        <span className="step-click-path" aria-label="点击路径">
+                          <b>点击路径</b>
+                          {path.map((part, pi) => (
+                            <React.Fragment key={`${part}-${pi}`}>
+                              {pi > 0 && <em>-</em>}
+                              <span>{part}</span>
+                            </React.Fragment>
+                          ))}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
           )}
           {checks.length > 0 && (
             <div className="step-callout step-callout--ok">
@@ -306,6 +340,27 @@ function PassportGuideSidebar() {
         <span>具体材料以当地出入境窗口为准</span>
       </div>
     </aside>
+  );
+}
+
+function CardClickFlow({ slug }) {
+  const flow = CARD_CLICK_FLOWS[slug];
+  if (!flow || flow.length === 0) return null;
+  return (
+    <div className="card-click-flow" aria-label="开卡点击路线">
+      <div className="card-click-flow-head">
+        <span>先看整条点击路线</span>
+        <strong>{flow.length} 步</strong>
+      </div>
+      <div className="card-click-flow-list">
+        {flow.map((item, index) => (
+          <React.Fragment key={`${item}-${index}`}>
+            {index > 0 && <span className="card-click-flow-dash">-</span>}
+            <span className="card-click-flow-item">{item}</span>
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -470,8 +525,9 @@ function CardDetail({ slug }) {
         <div className="wrap">
           <div className="grid-head">
             <h2 className="ca-h2">开卡教程 · {steps.length} 章</h2>
-            <span className="ca-meta">含 {actionCount || steps.length} 个实操动作</span>
+            <span className="ca-meta">{actionCount || steps.length} 步照着点</span>
           </div>
+          <CardClickFlow slug={slug} />
           <div className="tutorial-warning">⚠ 禁止存放大量资金，即用即充</div>
           <ol className="steps">
             {steps.map(s => <TutorialStep key={s.n} step={s} anchorId={tutorialAnchor(s)} />)}
