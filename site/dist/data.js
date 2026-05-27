@@ -133,7 +133,7 @@ window.CARDS = [
     network: "Mastercard",
     bin: "瑞士",
     officialArt: "/images/cards/official/safepal-card.png",
-    applyUrl: "https://t.me/Whohaoe",
+    applyUrl: "https://safepal.com/en/bank",
     promoNote: "不想折腾可找我购买成品卡，如需个人指导 89元/张。",
     pros: [
       "完全免费",
@@ -235,7 +235,7 @@ window.CARDS = [
     network: "Mastercard",
     bin: "英国 / 欧盟",
     officialArt: "/images/cards/official/kraken-card.png",
-    applyUrl: "https://t.me/Whohaoe",
+    applyUrl: "https://www.kraken.com/krak/card",
     promoNote: "不想折腾可找我购买成品卡，如需个人指导 89元/张。",
     pros: [
       "0 月费 / 年费 / 外汇费",

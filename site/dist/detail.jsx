@@ -18,6 +18,9 @@ const dHomeHref = (section = "") => {
   return "/";
 };
 const dCardHref = slug => `/cards/${slug}`;
+const dCardTutorialHref = slug => `${dCardHref(slug)}#tutorial`;
+const dCardApplyHref = card => card.applyUrl || card.officialUrl || dCardHref(card.slug);
+const externalTargetFor = href => href && href.startsWith("http") ? "_blank" : undefined;
 const dGiftHref = slug => `/shop/${slug}`;
 const dGiftBuyHref = (slug, region) => region ? `/shop/${slug}/buy/${region}` : `/shop/${slug}/buy`;
 const scrollToAnchor = id => {
@@ -319,8 +322,8 @@ function CardDetail({ slug }) {
   const funding = FUNDING_GUIDES[slug] || [];
   const actionCount = steps.reduce((sum, s) => sum + asArray(s.actions).length, 0);
   const others = window.CARDS.filter(c => c.slug !== slug).slice(0, 3);
-  const applyUrl = card.applyUrl || "https://t.me/Whohaoe";
-  const applyTarget = applyUrl.startsWith("http") ? "_blank" : undefined;
+  const applyUrl = dCardApplyHref(card);
+  const applyTarget = externalTargetFor(applyUrl);
 
   return (
     <div className="detail">
@@ -347,10 +350,13 @@ function CardDetail({ slug }) {
 
             <div className="d-cta">
               <a className="ca-button ca-button--primary ca-button--lg"
+                 href={dCardTutorialHref(slug)}
+                 data-aff={slug}>查看攻略</a>
+              <a className="ca-button ca-button--outline ca-button--lg"
                  href={applyUrl}
                  target={applyTarget}
                  rel={applyTarget ? "noopener" : undefined}
-                 data-aff={slug}>查看攻略</a>
+                 data-aff={slug}>立即开卡</a>
             </div>
           </div>
         </div>

@@ -58,6 +58,9 @@ const homeHref = (section = "") => {
   return "/";
 };
 const cardHref = slug => `/cards/${slug}`;
+const cardTutorialHref = slug => `${cardHref(slug)}#tutorial`;
+const cardApplyHref = card => card.applyUrl || card.officialUrl || cardHref(card.slug);
+const externalTargetFor = href => href && href.startsWith("http") ? "_blank" : undefined;
 const giftHref = slug => `/shop/${slug}`;
 
 // ── 原子组件 ─────────────────────────────────────────────
@@ -226,7 +229,7 @@ function Hero({ featured }) {
           <div className="hero-product-frame">
             <div className="mini-head">
               <h2 className="mini-title">本期主打</h2>
-              <a href={cardHref(featured.slug)} className="mini-link">查看攻略</a>
+              <a href={cardTutorialHref(featured.slug)} className="mini-link">查看攻略</a>
             </div>
             <div className="hero-reco-list">
               {featuredCards.map(card => (
@@ -275,8 +278,9 @@ function HomeBoard({ cards }) {
 
 // ── 产品卡 ──────────────────────────────────────────────
 function ProductCard({ card }) {
-  const applyUrl = card.applyUrl || "https://t.me/Whohaoe";
-  const applyTarget = applyUrl.startsWith("http") ? "_blank" : undefined;
+  const tutorialUrl = cardTutorialHref(card.slug);
+  const applyUrl = cardApplyHref(card);
+  const applyTarget = externalTargetFor(applyUrl);
 
   return (
     <article className="pc" id={`card-${card.slug}`}>
@@ -322,11 +326,14 @@ function ProductCard({ card }) {
         </div>
 
         <div className="pc-foot">
+          <a className="ca-button ca-button--outline pc-guide"
+             href={tutorialUrl}
+             data-card={card.slug}>查看攻略</a>
           <a className="ca-button ca-button--primary pc-apply"
              href={applyUrl}
              target={applyTarget}
              rel={applyTarget ? "noopener" : undefined}
-             data-card={card.slug}>查看攻略</a>
+             data-card={card.slug}>立即开卡</a>
         </div>
       </div>
     </article>
