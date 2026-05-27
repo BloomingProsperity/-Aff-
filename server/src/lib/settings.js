@@ -16,6 +16,24 @@ function maskSecret(value) {
   return `••••${raw.slice(-4)}`;
 }
 
+function turnstileDiagnostics(config) {
+  const siteKey = String(config.turnstileSiteKey || "");
+  const secret = String(config.turnstileSecretKey || "");
+  const lastResult = config.turnstileLastResult || null;
+  return {
+    enabled: Boolean(secret.trim()),
+    siteKeySuffix: siteKey ? siteKey.slice(-6) : "",
+    lastResult: lastResult ? {
+      success: Boolean(lastResult.success),
+      errorCodes: Array.isArray(lastResult.errorCodes)
+        ? lastResult.errorCodes.map(code => String(code || "")).filter(Boolean).slice(0, 10)
+        : [],
+      hostname: String(lastResult.hostname || ""),
+      checkedAt: String(lastResult.checkedAt || ""),
+    } : null,
+  };
+}
+
 export function normalizeAdminSetting(key, value) {
   const def = SETTING_DEFS[key];
   if (!def) return { ok: false, error: "设置项不存在。" };
@@ -60,6 +78,9 @@ export function adminSettingsView(config) {
       const value = String(config[SETTING_DEFS[key].prop] || "");
       return [key, { configured: Boolean(value), masked: maskSecret(value) }];
     })),
+    diagnostics: {
+      turnstile: turnstileDiagnostics(config),
+    },
   };
 }
 

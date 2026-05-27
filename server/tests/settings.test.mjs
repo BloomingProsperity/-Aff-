@@ -20,6 +20,24 @@ test("admin settings view never exposes secret values", () => {
   assert.deepEqual(view.secrets.TURNSTILE_SECRET_KEY, { configured: true, masked: "••••7654" });
 });
 
+test("admin settings view exposes only safe turnstile diagnostics", () => {
+  const view = adminSettingsView({
+    turnstileSiteKey: "0x4AAAAAADWtP4gvLTD6rL6R",
+    turnstileSecretKey: "secret-987654",
+    turnstileLastResult: {
+      success: false,
+      errorCodes: ["timeout-or-duplicate"],
+      hostname: "hkai.shop",
+      checkedAt: "2026-05-27T09:00:00.000Z",
+    },
+  });
+
+  assert.equal(view.diagnostics.turnstile.enabled, true);
+  assert.equal(view.diagnostics.turnstile.siteKeySuffix, "D6rL6R");
+  assert.deepEqual(view.diagnostics.turnstile.lastResult.errorCodes, ["timeout-or-duplicate"]);
+  assert.equal(JSON.stringify(view).includes("secret-987654"), false);
+});
+
 test("runtime key settings can be applied without restart", () => {
   const config = {};
 

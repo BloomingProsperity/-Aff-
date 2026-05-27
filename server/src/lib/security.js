@@ -101,12 +101,44 @@ export function turnstileEnabled(config) {
   return Boolean(String(config.turnstileSecretKey || "").trim());
 }
 
+function safeErrorCodes(result, fallback = []) {
+  const codes = result?.["error-codes"];
+  if (!Array.isArray(codes)) return fallback;
+  return codes.map(code => String(code || "")).filter(Boolean).slice(0, 10);
+}
+
+function recordTurnstileResult(config, details) {
+  if (!config) return;
+  config.turnstileLastResult = {
+    success: Boolean(details.success),
+    errorCodes: Array.isArray(details.errorCodes) ? details.errorCodes : [],
+    hostname: String(details.hostname || ""),
+    checkedAt: new Date().toISOString(),
+  };
+}
+
+function logTurnstileResult(request, details) {
+  const payload = {
+    turnstile: {
+      success: Boolean(details.success),
+      errorCodes: Array.isArray(details.errorCodes) ? details.errorCodes : [],
+      hostname: String(details.hostname || ""),
+    },
+  };
+  const message = details.success ? "turnstile siteverify succeeded" : "turnstile siteverify failed";
+  if (details.success) request.log?.info?.(payload, message);
+  else request.log?.warn?.(payload, message);
+}
+
 export async function verifyTurnstile(config, request, reply, token) {
   const secret = String(config.turnstileSecretKey || "").trim();
   if (!secret) return null;
 
   const responseToken = String(token || "").trim();
   if (!responseToken) {
+    const details = { success: false, errorCodes: ["missing-input-response"], hostname: "" };
+    recordTurnstileResult(config, details);
+    logTurnstileResult(request, details);
     reply.code(400);
     return { error: "请先完成人机验证。" };
   }
@@ -126,11 +158,24 @@ export async function verifyTurnstile(config, request, reply, token) {
       body: formData,
     });
     const result = await response.json().catch(() => ({}));
+    const details = {
+      success: Boolean(response.ok && result.success),
+      errorCodes: safeErrorCodes(result, response.ok ? [] : [`http-${response.status}`]),
+      hostname: result.hostname,
+    };
+    recordTurnstileResult(config, details);
+    logTurnstileResult(request, details);
     if (!response.ok || !result.success) {
       reply.code(400);
       return { error: "验证失败，请刷新后重试。" };
     }
-  } catch {
+  } catch (error) {
+    const details = { success: false, errorCodes: ["siteverify-unavailable"], hostname: "" };
+    recordTurnstileResult(config, details);
+    request.log?.warn?.({
+      turnstile: details,
+      error: error instanceof Error ? error.message : String(error || "unknown"),
+    }, "turnstile siteverify request failed");
     reply.code(503);
     return { error: "验证失败，请稍后重试。" };
   }

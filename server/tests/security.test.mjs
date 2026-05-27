@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { loadConfig } from "../src/lib/config.js";
 import { isAllowedAuthEmail } from "../src/lib/common.js";
-import { isAllowedRequestOrigin, rateLimitKey, turnstileEnabled } from "../src/lib/security.js";
+import { isAllowedRequestOrigin, rateLimitKey, turnstileEnabled, verifyTurnstile } from "../src/lib/security.js";
 
 test("only allows QQ, 163 and Gmail accounts", () => {
   assert.equal(isAllowedAuthEmail("user@qq.com"), true);
@@ -89,4 +89,55 @@ test("api server binds to localhost unless explicitly changed", () => {
 test("turnstile is optional until a secret is configured", () => {
   assert.equal(turnstileEnabled({}), false);
   assert.equal(turnstileEnabled({ turnstileSecretKey: "secret" }), true);
+});
+
+test("turnstile verification records safe failure diagnostics", async () => {
+  const originalFetch = globalThis.fetch;
+  const logs = [];
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    success: false,
+    "error-codes": ["invalid-input-secret"],
+    hostname: "hkai.shop",
+  }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+
+  const config = { turnstileSecretKey: "secret-value" };
+  const reply = {
+    statusCode: 200,
+    code(value) {
+      this.statusCode = value;
+      return this;
+    },
+  };
+  const request = {
+    headers: {},
+    ip: "127.0.0.1",
+    log: {
+      warn(payload, message) {
+        logs.push({ level: "warn", payload, message });
+      },
+      info(payload, message) {
+        logs.push({ level: "info", payload, message });
+      },
+    },
+  };
+
+  try {
+    const result = await verifyTurnstile(config, request, reply, "token-value");
+
+    assert.equal(reply.statusCode, 400);
+    assert.ok(result?.error);
+    assert.equal(config.turnstileLastResult.success, false);
+    assert.deepEqual(config.turnstileLastResult.errorCodes, ["invalid-input-secret"]);
+    assert.equal(config.turnstileLastResult.hostname, "hkai.shop");
+    assert.equal(logs.length, 1);
+    assert.equal(logs[0].level, "warn");
+    assert.deepEqual(logs[0].payload.turnstile.errorCodes, ["invalid-input-secret"]);
+    assert.equal(JSON.stringify(logs).includes("token-value"), false);
+    assert.equal(JSON.stringify(logs).includes("secret-value"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
