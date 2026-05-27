@@ -30,6 +30,13 @@ const scrollToAnchor = id => {
 const asArray = value => Array.isArray(value) ? value : (value ? [value] : []);
 const tutorialAnchor = step => `tutorial-step-${step.n}`;
 const fundingAnchor = index => `funding-item-${String(index + 1).padStart(2, "0")}`;
+const requiresPassport = card => [
+  card.idType,
+  card.lead,
+  card.regions,
+  ...(card.pros || []),
+  ...(card.cons || []),
+].filter(Boolean).join(" ").includes("护照");
 
 const CURRENCY_SYMBOLS = {
   USD: "$", CAD: "C$", AUD: "A$", NZD: "NZ$", EUR: "€", GBP: "£", JPY: "¥",
@@ -210,7 +217,99 @@ function FundingBlock({ item, anchorId }) {
   );
 }
 
-function DetailToc({ steps, funding }) {
+function PassportGuideSidebar() {
+  return (
+    <aside className="passport-guide" aria-label="护照办理教程">
+      <div className="passport-guide-head">
+        <div className="ca-kicker">护照办理教程</div>
+        <h3>普通护照保姆级办理流程</h3>
+        <p>按第一次办理来写，换发、补发也能照着准备。重点是预约、照片、现场排队、回执和取证。</p>
+        <div className="passport-facts">
+          <span>工本费 120 元/本</span>
+          <span>户籍地 7 个工作日左右</span>
+          <span>跨省异地约 20 日</span>
+          <span>成人护照有效期 10 年</span>
+        </div>
+      </div>
+      <ol className="passport-steps">
+        <li>
+          <strong>1. 先确定在哪办</strong>
+          <span>优先选离你最近的公安出入境大厅。内地居民普通护照可全国通办，但每个城市的预约入口、放号时间、周六是否办公不一样，先在地图搜“出入境接待大厅”，再去官方入口预约。</span>
+        </li>
+        <li>
+          <strong>2. 打开预约入口</strong>
+          <span>微信/支付宝搜“移民局 12367”，进入后点“中国公民服务”或“出入境证件预约”。有些城市也能用本地公安出入境公众号、粤省事、随申办、政务服务小程序预约。</span>
+        </li>
+        <li>
+          <strong>3. 选择办证事项</strong>
+          <span>第一次办选“普通护照首次申请”；快到期、签证页快用完选“换发”；遗失、被盗、损毁选“补发”；姓名等记载事项变化才选“加注”。事项选错，到窗口可能会让你重新取号。</span>
+        </li>
+        <li>
+          <strong>4. 填预约信息</strong>
+          <span>按页面填户籍地、现居地、预约大厅、预约日期、预约时段、前往国家/地区、申请事由、手机号和领证方式。信息提交前核对身份证号、姓名拼音和手机号，手机号后面会收进度短信。</span>
+        </li>
+        <li>
+          <strong>5. 准备身份证</strong>
+          <span>成年人带居民身份证原件。身份证正在换领、补领的，带临时居民身份证。多数普通成年人首次办理不用再带户口簿，但当地窗口另有要求时按当地要求来。</span>
+        </li>
+        <li>
+          <strong>6. 照片和回执这样处理</strong>
+          <span>照片是最容易返工的地方。最稳的是到办证大厅现场拍；想节省排队时间，可以提前去官方认可照相点拍，拿“出入境证件数字相片采集回执”。不要美颜、滤镜、翻拍、镜面照、浓妆、帽子、有色镜片，头发不要挡眉眼。</span>
+        </li>
+        <li>
+          <strong>7. 分情况补材料</strong>
+          <span>换发带旧护照；补发准备遗失、被盗或损毁情况说明；未满 16 周岁由监护人陪同，并带出生证明或户口簿等监护关系证明、监护人身份证明；登记备案人员和现役军人提前准备单位或主管部门同意意见。</span>
+        </li>
+        <li>
+          <strong>8. 到场前检查一遍</strong>
+          <span>出门前确认身份证、预约记录、照片回执、旧护照或补充材料都在。建议提前 15-30 分钟到，节假日前后人多；没拍照的先去拍照机或照相窗口，拍完再取号。</span>
+        </li>
+        <li>
+          <strong>9. 进大厅后的顺序</strong>
+          <span>常见顺序是：拍照或取照片回执 → 自助填表/打印申请表 → 取号 → 等叫号 → 窗口交材料。大厅布局不同，但看“照相、填表、取号、受理”这几个牌子走就行。</span>
+        </li>
+        <li>
+          <strong>10. 窗口核验</strong>
+          <span>窗口会核对身份证、照片、申请表和补充材料，并确认本人办理。被问申请事由时，按真实用途说，比如旅游、探亲、留学、商务、工作等，和预约里填写的内容保持一致。</span>
+        </li>
+        <li>
+          <strong>11. 录指纹和签名</strong>
+          <span>窗口受理时会采集人像、指纹和签名。签名写在指定框内，不要压线、连到边框；指纹按工作人员提示录入。如果手指受伤、脱皮或录不上，现场说明即可。</span>
+        </li>
+        <li>
+          <strong>12. 缴费和拿回执</strong>
+          <span>普通护照工本费 120 元/本，现场一般支持扫码或刷卡。缴费后拿好受理回执，上面有受理编号、预计取证日期、查询方式、取证方式，后面查进度和取证都靠它。</span>
+        </li>
+        <li>
+          <strong>13. 选择自取或邮寄</strong>
+          <span>不急可以选邮寄到家，省得再跑一趟；急用就看当地窗口自取速度。邮寄另付邮费，地址要写能签收的地址，别写临时住处或收不到电话的地方。</span>
+        </li>
+        <li>
+          <strong>14. 等待和查进度</strong>
+          <span>户籍地一般 7 个工作日左右，跨省异地一般 20 日左右。可以用“移民局 12367”或当地出入境入口查进度。节假日、补材料、函查、邮寄时间可能让实际拿证更晚。</span>
+        </li>
+        <li>
+          <strong>15. 加急怎么处理</strong>
+          <span>加急不是想加就加，通常要有紧急出境理由，比如奔丧、探望危重病人、签证或入境许可即将到期、紧急会议谈判、留学报到临近等，并按窗口要求提交证明材料。</span>
+        </li>
+        <li>
+          <strong>16. 拿到护照后检查</strong>
+          <span>当场核对姓名、拼音、性别、出生日期、出生地、签发地、有效期。银行卡或海外平台 KYC 填英文名时，按护照拼音来，大小写无所谓，拼写不要差一个字母。</span>
+        </li>
+        <li>
+          <strong>17. 后续保管</strong>
+          <span>护照信息页拍照备份一份，原件单独放好。不要把护照照片、证件号、出生日期随便发群里；做 KYC 上传时确认是官网吗，别发给陌生客服。</span>
+        </li>
+      </ol>
+      <div className="passport-guide-foot">
+        <a href="https://www.nia.gov.cn/n741440/n741587/n1316094/n1355872/c1614514/content.html" target="_blank" rel="noopener">国家移民管理局</a>
+        <span>具体材料以当地出入境窗口为准</span>
+      </div>
+    </aside>
+  );
+}
+
+function DetailToc({ steps, funding, passport = false }) {
   return (
     <section className="toc-section" aria-label="目录">
       <div className="wrap">
@@ -222,7 +321,7 @@ function DetailToc({ steps, funding }) {
             </div>
             <span className="ca-meta">{steps.length} 章开卡教程{funding.length ? ` / ${funding.length} 条入金方式` : ""}</span>
           </div>
-          <div className="toc-grid">
+          <div className={`toc-grid ${passport ? "toc-grid--passport" : ""}`}>
             <div className="toc-group">
               <h3 className="toc-group-title">开卡教程</h3>
               <ol className="toc-list">
@@ -259,6 +358,7 @@ function DetailToc({ steps, funding }) {
                 </ol>
               </div>
             )}
+            {passport && <PassportGuideSidebar />}
           </div>
         </div>
       </div>
@@ -324,6 +424,7 @@ function CardDetail({ slug }) {
   const others = window.CARDS.filter(c => c.slug !== slug).slice(0, 3);
   const applyUrl = dCardApplyHref(card);
   const applyTarget = externalTargetFor(applyUrl);
+  const passportRequired = requiresPassport(card);
 
   return (
     <div className="detail">
@@ -362,7 +463,7 @@ function CardDetail({ slug }) {
         </div>
       </section>
 
-      <DetailToc steps={steps} funding={funding} />
+      <DetailToc steps={steps} funding={funding} passport={passportRequired} />
 
       {/* 开卡教程 */}
       <section className="k-section" id="tutorial">
