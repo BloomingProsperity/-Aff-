@@ -2111,6 +2111,22 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   font-size: 12px;
   line-height: 1.6;
 }
+.sms-turnstile-help {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.sms-turnstile-retry {
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0;
+}
 .sms-turnstile {
   min-height: 65px;
   margin-top: 14px;
@@ -2763,6 +2779,26 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   margin: -4px 0 12px;
   color: #8a93b0;
   font-size: 12px;
+}
+.adm-turnstile-help {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.adm-turnstile-help .adm-turnstile-hint {
+  margin: 0;
+}
+.adm-turnstile-retry {
+  border: 0;
+  background: transparent;
+  color: #2b79d9;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0;
 }
 .adm-search-row { display: flex; gap: 10px; margin-bottom: 16px; max-width: 420px; }
 .adm-search-row .adm-input { flex: 1; }

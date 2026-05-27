@@ -160,9 +160,23 @@ function SmsCountryPanel({ countries, country, setCountry }) {
   );
 }
 
-function SmsOrderPanel({ user, product, country, countries, currentProduct, busy, onBuy, onLoadOrders, message, turnstileSiteKey, turnstileToken, setTurnstileToken, turnstileResetKey }) {
+function turnstileHint(status, hasToken, actionText = "提交") {
+  if (hasToken) return "";
+  if (status === "error") return "验证没有通过，请重新验证。";
+  if (status === "expired" || status === "timeout") return "验证已过期，请重新验证。";
+  if (status === "unsupported") return "当前浏览器不支持验证，请换个浏览器。";
+  if (status === "script-error") return "验证加载失败，请刷新页面或关闭拦截插件。";
+  return `人机验证通过后可${actionText}。`;
+}
+
+function shouldShowTurnstileRetry(status) {
+  return ["error", "expired", "timeout", "unsupported", "script-error"].includes(status);
+}
+
+function SmsOrderPanel({ user, product, country, countries, currentProduct, busy, onBuy, onLoadOrders, message, turnstileSiteKey, turnstileToken, setTurnstileToken, turnstileResetKey, turnstileStatus, onTurnstileStatus, onResetTurnstile }) {
   const countryLabel = countries.find(x => x.code === country);
   const needTurnstile = Boolean(turnstileSiteKey && !turnstileToken);
+  const hint = turnstileHint(turnstileStatus, Boolean(turnstileToken), "购买");
   return (
     <div className="sms-tp sms-tp--order">
       <div className="sms-tp-head">
@@ -190,8 +204,15 @@ function SmsOrderPanel({ user, product, country, countries, currentProduct, busy
       </div>
       {user ? (
         <div className="sms-tp-actions">
-          <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} />
-          {needTurnstile && <p className="sms-turnstile-hint">人机验证通过后可购买。</p>}
+          <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} onStatus={onTurnstileStatus} />
+          {needTurnstile && (
+            <div className="sms-turnstile-help">
+              <p className="sms-turnstile-hint">{hint}</p>
+              {shouldShowTurnstileRetry(turnstileStatus) && (
+                <button type="button" className="sms-turnstile-retry" onClick={onResetTurnstile}>重新验证</button>
+              )}
+            </div>
+          )}
           <button className="ca-button ca-button--primary ca-button--lg sms-buy-btn"
             onClick={onBuy}
             disabled={busy || needTurnstile || !product || Number(user.balance || 0) <= 0}>
@@ -210,13 +231,14 @@ function SmsOrderPanel({ user, product, country, countries, currentProduct, busy
   );
 }
 
-function TurnstileBox({ siteKey, onToken, resetKey }) {
+function TurnstileBox({ siteKey, onToken, resetKey, onStatus }) {
   const boxRef = React.useRef(null);
   const widgetRef = React.useRef(null);
 
   React.useEffect(() => {
     if (!siteKey || !boxRef.current) return undefined;
     let cancelled = false;
+    onStatus?.("loading");
 
     const render = () => {
       if (cancelled || widgetRef.current || !window.turnstile || !boxRef.current) return;
@@ -226,17 +248,43 @@ function TurnstileBox({ siteKey, onToken, resetKey }) {
         size: "normal",
         appearance: "always",
         language: "zh-cn",
-        callback: token => onToken(token),
-        "expired-callback": () => onToken(""),
-        "error-callback": () => onToken(""),
+        retry: "never",
+        "refresh-expired": "auto",
+        "refresh-timeout": "manual",
+        callback: token => {
+          onToken(token);
+          onStatus?.("ready");
+        },
+        "expired-callback": () => {
+          onToken("");
+          onStatus?.("expired");
+        },
+        "timeout-callback": () => {
+          onToken("");
+          onStatus?.("timeout");
+        },
+        "error-callback": () => {
+          onToken("");
+          onStatus?.("error");
+          return true;
+        },
+        "unsupported-callback": () => {
+          onToken("");
+          onStatus?.("unsupported");
+        },
       });
+      onStatus?.("rendered");
     };
 
     render();
     const timer = window.setInterval(render, 250);
+    const failTimer = window.setTimeout(() => {
+      if (!cancelled && !widgetRef.current) onStatus?.("script-error");
+    }, 8000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
+      window.clearTimeout(failTimer);
       if (widgetRef.current && window.turnstile?.remove) {
         try { window.turnstile.remove(widgetRef.current); } catch {}
       }
@@ -247,6 +295,7 @@ function TurnstileBox({ siteKey, onToken, resetKey }) {
   React.useEffect(() => {
     if (!widgetRef.current || !window.turnstile?.reset) return;
     onToken("");
+    onStatus?.("loading");
     try { window.turnstile.reset(widgetRef.current); } catch {}
   }, [resetKey]);
 
@@ -275,6 +324,7 @@ function SmsDesk() {
   const [message, setMessage] = useState("注册或登录后开始接码。");
   const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileStatus, setTurnstileStatus] = useState("idle");
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const api = async (path, options = {}) => {
@@ -318,6 +368,7 @@ function SmsDesk() {
 
   const resetTurnstile = () => {
     setTurnstileToken("");
+    setTurnstileStatus("loading");
     setTurnstileResetKey(value => value + 1);
   };
 
@@ -535,6 +586,8 @@ function SmsDesk() {
             onBuy={buyNumber} onLoadOrders={loadOrders} message={message}
             turnstileSiteKey={turnstileSiteKey} turnstileToken={turnstileToken}
             setTurnstileToken={setTurnstileToken} turnstileResetKey={turnstileResetKey}
+            turnstileStatus={turnstileStatus} onTurnstileStatus={setTurnstileStatus}
+            onResetTurnstile={resetTurnstile}
           />
         </div>
       </section>
@@ -674,6 +727,7 @@ function LoginDesk() {
   const [message, setMessage]   = useState("");
   const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
   const [turnstileToken, setTurnstileToken]     = useState("");
+  const [turnstileStatus, setTurnstileStatus]   = useState("idle");
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const nextPath = new URLSearchParams(window.location.search).get("next") || "/sms";
@@ -711,6 +765,7 @@ function LoginDesk() {
 
   const resetTurnstile = () => {
     setTurnstileToken("");
+    setTurnstileStatus("loading");
     setTurnstileResetKey(v => v + 1);
   };
 
@@ -738,6 +793,7 @@ function LoginDesk() {
   };
 
   const needTurnstile = Boolean(turnstileSiteKey && !turnstileToken);
+  const hint = turnstileHint(turnstileStatus, Boolean(turnstileToken));
 
   return (
     <div className="detail login-page">
@@ -768,8 +824,15 @@ function LoginDesk() {
                 </button>
               </div>
             </label>
-            <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} />
-            {needTurnstile && <p className="sms-turnstile-hint">人机验证通过后可提交。</p>}
+            <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} onStatus={setTurnstileStatus} />
+            {needTurnstile && (
+              <div className="sms-turnstile-help">
+                <p className="sms-turnstile-hint">{hint}</p>
+                {shouldShowTurnstileRetry(turnstileStatus) && (
+                  <button type="button" className="sms-turnstile-retry" onClick={resetTurnstile}>重新验证</button>
+                )}
+              </div>
+            )}
             <div className="sms-actions">
               <button className="ca-button ca-button--primary ca-button--lg"
                 onClick={submit} disabled={busy || needTurnstile}>

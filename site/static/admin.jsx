@@ -30,13 +30,27 @@
     });
   }
 
-  function AdminTurnstileBox({ siteKey, onToken, resetKey }) {
+  function admTurnstileHint(status, hasToken, actionText = "提交") {
+    if (hasToken) return "";
+    if (status === "error") return "验证没有通过，请重新验证。";
+    if (status === "expired" || status === "timeout") return "验证已过期，请重新验证。";
+    if (status === "unsupported") return "当前浏览器不支持验证，请换个浏览器。";
+    if (status === "script-error") return "验证加载失败，请刷新页面或关闭拦截插件。";
+    return `人机验证通过后可${actionText}。`;
+  }
+
+  function admShowTurnstileRetry(status) {
+    return ["error", "expired", "timeout", "unsupported", "script-error"].includes(status);
+  }
+
+  function AdminTurnstileBox({ siteKey, onToken, resetKey, onStatus }) {
     const boxRef = React.useRef(null);
     const widgetRef = React.useRef(null);
 
     useEffect(() => {
       if (!siteKey || !boxRef.current) return undefined;
       let cancelled = false;
+      onStatus?.("loading");
       const render = () => {
         if (cancelled || widgetRef.current || !window.turnstile || !boxRef.current) return;
         widgetRef.current = window.turnstile.render(boxRef.current, {
@@ -45,16 +59,42 @@
           size: "normal",
           appearance: "always",
           language: "zh-cn",
-          callback: token => onToken(token),
-          "expired-callback": () => onToken(""),
-          "error-callback": () => onToken(""),
+          retry: "never",
+          "refresh-expired": "auto",
+          "refresh-timeout": "manual",
+          callback: token => {
+            onToken(token);
+            onStatus?.("ready");
+          },
+          "expired-callback": () => {
+            onToken("");
+            onStatus?.("expired");
+          },
+          "timeout-callback": () => {
+            onToken("");
+            onStatus?.("timeout");
+          },
+          "error-callback": () => {
+            onToken("");
+            onStatus?.("error");
+            return true;
+          },
+          "unsupported-callback": () => {
+            onToken("");
+            onStatus?.("unsupported");
+          },
         });
+        onStatus?.("rendered");
       };
       render();
       const timer = window.setInterval(render, 250);
+      const failTimer = window.setTimeout(() => {
+        if (!cancelled && !widgetRef.current) onStatus?.("script-error");
+      }, 8000);
       return () => {
         cancelled = true;
         window.clearInterval(timer);
+        window.clearTimeout(failTimer);
         if (widgetRef.current && window.turnstile?.remove) {
           try { window.turnstile.remove(widgetRef.current); } catch {}
         }
@@ -65,6 +105,7 @@
     useEffect(() => {
       if (!widgetRef.current || !window.turnstile?.reset) return;
       onToken("");
+      onStatus?.("loading");
       try { window.turnstile.reset(widgetRef.current); } catch {}
     }, [resetKey]);
 
@@ -195,6 +236,7 @@
     const [err,        setErr]        = useState(null);
     const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
     const [turnstileToken,   setTurnstileToken]   = useState("");
+    const [turnstileStatus,  setTurnstileStatus]  = useState("idle");
     const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
     useEffect(() => {
@@ -205,6 +247,7 @@
 
     function resetTurnstile() {
       setTurnstileToken("");
+      setTurnstileStatus("loading");
       setTurnstileResetKey(v => v + 1);
     }
 
@@ -251,8 +294,15 @@
                   onChange={e => setNote(e.target.value)} />
               </div>
               <AdminTurnstileBox siteKey={turnstileSiteKey}
-                onToken={setTurnstileToken} resetKey={turnstileResetKey} />
-              {turnstileSiteKey && !turnstileToken && <div className="adm-turnstile-hint">人机验证通过后可确认。</div>}
+                onToken={setTurnstileToken} resetKey={turnstileResetKey} onStatus={setTurnstileStatus} />
+              {turnstileSiteKey && !turnstileToken && (
+                <div className="adm-turnstile-help">
+                  <div className="adm-turnstile-hint">{admTurnstileHint(turnstileStatus, Boolean(turnstileToken), "确认")}</div>
+                  {admShowTurnstileRetry(turnstileStatus) && (
+                    <button type="button" className="adm-turnstile-retry" onClick={resetTurnstile}>重新验证</button>
+                  )}
+                </div>
+              )}
               {err && <div className="adm-err" style={{ marginBottom: 10 }}>{err}</div>}
               <div className="adm-modal-foot">
                 <button type="button" className="adm-btn adm-btn--outline" onClick={onClose}>取消</button>
@@ -501,6 +551,7 @@
     const [msg,     setMsg]     = useState(null);
     const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
     const [turnstileToken,   setTurnstileToken]   = useState("");
+    const [turnstileStatus,  setTurnstileStatus]  = useState("idle");
     const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
     useEffect(() => {
@@ -518,6 +569,7 @@
 
     function resetTurnstile() {
       setTurnstileToken("");
+      setTurnstileStatus("loading");
       setTurnstileResetKey(v => v + 1);
     }
 
@@ -618,8 +670,15 @@
             </div>
           )}
           <AdminTurnstileBox siteKey={turnstileSiteKey}
-            onToken={setTurnstileToken} resetKey={turnstileResetKey} />
-          {turnstileSiteKey && !turnstileToken && <div className="adm-turnstile-hint">人机验证通过后可保存。</div>}
+            onToken={setTurnstileToken} resetKey={turnstileResetKey} onStatus={setTurnstileStatus} />
+          {turnstileSiteKey && !turnstileToken && (
+            <div className="adm-turnstile-help">
+              <div className="adm-turnstile-hint">{admTurnstileHint(turnstileStatus, Boolean(turnstileToken), "保存")}</div>
+              {admShowTurnstileRetry(turnstileStatus) && (
+                <button type="button" className="adm-turnstile-retry" onClick={resetTurnstile}>重新验证</button>
+              )}
+            </div>
+          )}
           <div className="adm-settings-actions">
             <button type="submit" className="adm-btn adm-btn--primary" disabled={saving || Boolean(turnstileSiteKey && !turnstileToken)}>
               {saving ? "保存中…" : "保存设置"}
