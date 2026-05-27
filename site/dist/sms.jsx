@@ -411,6 +411,7 @@ function SmsDesk() {
   const [authMode, setAuthMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [refCode, setRefCode] = useState(new URLSearchParams(window.location.search).get("ref") || "");
   const [countries, setCountries] = useState(SMS_COUNTRY_FALLBACK);
   const [products, setProducts] = useState([]);
   const [country, setCountry] = useState("usa");
@@ -419,6 +420,8 @@ function SmsDesk() {
   const [serviceQuery, setServiceQuery] = useState("");
   const [order, setOrder] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [referral, setReferral] = useState(null);
   const [adminUsers, setAdminUsers] = useState([]);
   const [creditUserId, setCreditUserId] = useState("");
   const [creditAmount, setCreditAmount] = useState("");
@@ -429,6 +432,9 @@ function SmsDesk() {
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileStatus, setTurnstileStatus] = useState("idle");
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const [voucherTurnstileToken, setVoucherTurnstileToken] = useState("");
+  const [voucherTurnstileStatus, setVoucherTurnstileStatus] = useState("idle");
+  const [voucherTurnstileResetKey, setVoucherTurnstileResetKey] = useState(0);
 
   const api = async (path, options = {}) => {
     const res = await fetch(smsApiUrl(path), {
@@ -462,6 +468,12 @@ function SmsDesk() {
     setOrders(data.orders || []);
   };
 
+  const loadReferral = async () => {
+    if (!user) return;
+    const data = await api("/api/referrals/me");
+    setReferral(data);
+  };
+
   const loadAdminUsers = async () => {
     if (user?.role !== "admin") return;
     const data = await api("/api/admin/users");
@@ -473,6 +485,12 @@ function SmsDesk() {
     setTurnstileToken("");
     setTurnstileStatus("loading");
     setTurnstileResetKey(value => value + 1);
+  };
+
+  const resetVoucherTurnstile = () => {
+    setVoucherTurnstileToken("");
+    setVoucherTurnstileStatus("loading");
+    setVoucherTurnstileResetKey(value => value + 1);
   };
 
   React.useEffect(() => {
@@ -533,6 +551,7 @@ function SmsDesk() {
   React.useEffect(() => {
     if (!user) return;
     loadOrders().catch(() => {});
+    loadReferral().catch(() => {});
     loadAdminUsers().catch(() => {});
   }, [user?.id, user?.role]);
 
@@ -545,7 +564,7 @@ function SmsDesk() {
     try {
       const data = await api(`/api/auth/${authMode}`, {
         method: "POST",
-        body: JSON.stringify({ email, password, turnstileToken }),
+        body: JSON.stringify({ email, password, ref: authMode === "register" ? refCode : "", turnstileToken }),
       });
       setUser(data.user);
       setPassword("");
@@ -595,6 +614,38 @@ function SmsDesk() {
       resetTurnstile();
       setBusy(false);
     }
+  };
+
+  const redeemVoucher = async () => {
+    if (!voucherCode.trim()) {
+      setMessage("请输入兑换码。");
+      return;
+    }
+    if (turnstileSiteKey && !voucherTurnstileToken) {
+      setMessage("请先等人机验证完成。");
+      return;
+    }
+    setBusy(true);
+    try {
+      const data = await api("/api/vouchers/redeem", {
+        method: "POST",
+        body: JSON.stringify({ code: voucherCode, turnstileToken: voucherTurnstileToken }),
+      });
+      setUser(prev => prev ? { ...prev, balance: data.balance } : prev);
+      setVoucherCode("");
+      setMessage(`兑换成功，余额增加 ${yuan(data.amount)}。`);
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      resetVoucherTurnstile();
+      setBusy(false);
+    }
+  };
+
+  const copyReferral = async () => {
+    if (!referral?.referralLink) return;
+    await navigator.clipboard.writeText(referral.referralLink);
+    setMessage("邀请链接已复制。");
   };
 
   const checkOrder = async (target = order) => {
@@ -726,6 +777,52 @@ function SmsDesk() {
             </div>
           </section>
 
+          <section className="k-section">
+            <div className="wrap sms-account-grid">
+              <div className="sms-panel sms-panel--compact">
+                <div className="grid-head">
+                  <h2 className="ca-h2">余额充值</h2>
+                  <span className="ca-meta">兑换码充值</span>
+                </div>
+                <label className="sms-field">
+                  <span>兑换码</span>
+                  <input value={voucherCode} onChange={e => setVoucherCode(e.target.value)}
+                    placeholder="输入充值兑换码" />
+                </label>
+                <TurnstileBox siteKey={turnstileSiteKey} onToken={setVoucherTurnstileToken}
+                  resetKey={voucherTurnstileResetKey} onStatus={setVoucherTurnstileStatus} />
+                {turnstileSiteKey && !voucherTurnstileToken && (
+                  <div className="sms-turnstile-help">
+                    <p className="sms-turnstile-hint">{turnstileHint(voucherTurnstileStatus, Boolean(voucherTurnstileToken), "兑换")}</p>
+                    {shouldShowTurnstileRetry(voucherTurnstileStatus) && (
+                      <button type="button" className="sms-turnstile-retry" onClick={resetVoucherTurnstile}>重新验证</button>
+                    )}
+                  </div>
+                )}
+                <button className="ca-button ca-button--primary ca-button--lg sms-buy-btn"
+                  onClick={redeemVoucher}
+                  disabled={busy || !voucherCode.trim() || Boolean(turnstileSiteKey && !voucherTurnstileToken)}>
+                  立即兑换
+                </button>
+              </div>
+              <div className="sms-panel sms-panel--compact">
+                <div className="grid-head">
+                  <h2 className="ca-h2">邀请好友</h2>
+                  <span className="ca-meta">首单返佣 10%</span>
+                </div>
+                <div className="sms-referral-stats">
+                  <div><span>邀请码</span><strong>{referral?.referralCode || user.referralCode || "—"}</strong></div>
+                  <div><span>已邀请</span><strong>{referral ? `${referral.invitedCount} 人` : "—"}</strong></div>
+                  <div><span>奖励余额</span><strong>{referral ? yuan(referral.rewardTotal) : "—"}</strong></div>
+                </div>
+                <div className="sms-referral-link">
+                  <span>{referral?.referralLink || "加载中…"}</span>
+                  <button className="ca-button ca-button--outline" onClick={copyReferral} disabled={!referral?.referralLink}>复制链接</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* 当前号码详情（购买成功后显示） */}
           {order && (
             <section className="k-section">
@@ -831,9 +928,11 @@ function SmsDesk() {
 
 // ── 独立登录页 ──────────────────────────────────────────
 function LoginDesk() {
-  const [authMode, setAuthMode] = useState("login");
+  const initialRefCode = new URLSearchParams(window.location.search).get("ref") || "";
+  const [authMode, setAuthMode] = useState(initialRefCode ? "register" : "login");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
+  const [refCode, setRefCode]   = useState(initialRefCode);
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy]         = useState(false);
   const [message, setMessage]   = useState("");
@@ -890,7 +989,7 @@ function LoginDesk() {
     try {
       const data = await api(`/api/auth/${authMode}`, {
         method: "POST",
-        body: JSON.stringify({ email, password, turnstileToken }),
+        body: JSON.stringify({ email, password, ref: authMode === "register" ? refCode : "", turnstileToken }),
       });
       if (data.user) {
         window.history.replaceState({}, "", nextPath);
@@ -936,6 +1035,13 @@ function LoginDesk() {
                 </button>
               </div>
             </label>
+            {authMode === "register" && refCode && (
+              <label className="sms-field">
+                <span>邀请码</span>
+                <input value={refCode} onChange={e => setRefCode(e.target.value)}
+                  placeholder="邀请码" />
+              </label>
+            )}
             <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} onStatus={setTurnstileStatus} />
             {needTurnstile && (
               <div className="sms-turnstile-help">

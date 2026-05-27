@@ -163,6 +163,11 @@
     deduct:    ["adm-badge--err",   "扣除"],
     refund:    ["adm-badge--warn",  "退款"],
     order:     ["adm-badge--muted", "下单扣费"],
+    voucher:   ["adm-badge--ok",    "充值券"],
+    referral:  ["adm-badge--ok",    "邀请奖励"],
+    active:    ["adm-badge--ok",    "可用"],
+    redeemed:  ["adm-badge--muted", "已兑换"],
+    void:      ["adm-badge--err",   "已作废"],
   };
   function AdmBadge({ s }) {
     const [cls, label] = BADGE_MAP[s] || ["adm-badge--muted", s || "—"];
@@ -576,6 +581,161 @@
     );
   }
 
+  /* ─── Vouchers ───────────────────────────────────────────── */
+  const VOUCHER_FILTERS = [
+    ["", "全部"], ["active", "可用"], ["redeemed", "已兑换"], ["void", "已作废"],
+  ];
+
+  function AdminVouchers() {
+    const [vouchers, setVouchers] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [page, setPage] = useState(1);
+    const [status, setStatus] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [amount, setAmount] = useState("50");
+    const [count, setCount] = useState("10");
+    const [expiresAt, setExpiresAt] = useState("");
+    const [note, setNote] = useState("");
+    const [generated, setGenerated] = useState(null);
+    const [msg, setMsg] = useState("");
+
+    function load(p, s) {
+      setLoading(true);
+      const qs = s ? `&status=${encodeURIComponent(s)}` : "";
+      admApi(`/admin/vouchers?page=${p}${qs}`)
+        .then(d => { setVouchers(d.vouchers || []); setTotal(d.total || 0); })
+        .catch(() => setMsg("加载失败，请稍后重试"))
+        .finally(() => setLoading(false));
+    }
+
+    useEffect(() => { load(1, ""); }, []);
+
+    function createBatch(e) {
+      e.preventDefault();
+      setMsg("");
+      setGenerated(null);
+      admApi("/admin/voucher-batches", {
+        method: "POST",
+        body: JSON.stringify({ amount, count, expiresAt, note }),
+      })
+        .then(d => {
+          setGenerated(d);
+          setMsg(`已生成 ${d.count} 张充值券。`);
+          setPage(1);
+          load(1, status);
+        })
+        .catch(() => setMsg("生成失败，请检查金额和数量"));
+    }
+
+    function voidVoucher(voucher) {
+      admApi(`/admin/vouchers/${voucher.id}/void`, { method: "POST" })
+        .then(() => {
+          setMsg("已作废。");
+          load(page, status);
+        })
+        .catch(() => setMsg("作废失败"));
+    }
+
+    async function copyGenerated() {
+      if (!generated?.codes?.length) return;
+      await navigator.clipboard.writeText(generated.codes.join("\n"));
+      setMsg("兑换码已复制。");
+    }
+
+    return (
+      <div className="adm-content-inner">
+        <div className="adm-page-head">
+          <h2 className="adm-page-title">充值券</h2>
+          <span className="adm-count">共 {fmt(total)} 张</span>
+        </div>
+
+        <form className="adm-card adm-voucher-form" onSubmit={createBatch}>
+          <div className="adm-card-head">生成充值券</div>
+          <div className="adm-settings-grid">
+            <div className="adm-field">
+              <label>单张金额（元）</label>
+              <input className="adm-input" type="number" step="0.01" min="0.01"
+                value={amount} onChange={e => setAmount(e.target.value)} />
+            </div>
+            <div className="adm-field">
+              <label>数量</label>
+              <input className="adm-input" type="number" min="1" max="200"
+                value={count} onChange={e => setCount(e.target.value)} />
+            </div>
+            <div className="adm-field">
+              <label>过期时间</label>
+              <input className="adm-input" type="datetime-local"
+                value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
+            </div>
+            <div className="adm-field">
+              <label>备注</label>
+              <input className="adm-input" value={note}
+                onChange={e => setNote(e.target.value)} placeholder="例如：老客户补贴" />
+            </div>
+          </div>
+          <div className="adm-settings-actions">
+            <button className="adm-btn adm-btn--primary" type="submit">生成兑换码</button>
+          </div>
+          {generated?.codes?.length ? (
+            <div className="adm-generated">
+              <div className="adm-generated-head">
+                <strong>{generated.batchId}</strong>
+                <button className="adm-btn adm-btn--sm adm-btn--outline" type="button" onClick={copyGenerated}>复制全部</button>
+              </div>
+              <textarea className="adm-input adm-generated-codes" readOnly value={generated.codes.join("\n")} />
+            </div>
+          ) : null}
+          {msg && <div className="adm-field-hint">{msg}</div>}
+        </form>
+
+        <div className="adm-filter-row">
+          {VOUCHER_FILTERS.map(([s, label]) => (
+            <button key={s}
+              className={`adm-filter-btn${status === s ? " is-active" : ""}`}
+              onClick={() => { setStatus(s); setPage(1); load(1, s); }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="adm-card adm-card--table">
+          <table className="adm-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>批次</th><th>尾号</th><th>金额</th>
+                <th>状态</th><th>兑换用户</th><th>过期时间</th><th>创建时间</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan={9} className="adm-empty">加载中…</td></tr>}
+              {!loading && vouchers.length === 0 && <tr><td colSpan={9} className="adm-empty">暂无数据</td></tr>}
+              {vouchers.map(v => (
+                <tr key={v.id}>
+                  <td className="adm-td--mono">#{v.id}</td>
+                  <td className="adm-td--mono">{v.batchId}</td>
+                  <td className="adm-td--mono">••••{v.codeSuffix}</td>
+                  <td>{fmtCny(v.amount)}</td>
+                  <td><AdmBadge s={v.status} /></td>
+                  <td className="adm-td--email">{v.redeemedBy || "—"}</td>
+                  <td className="adm-td--date">{fmtDate(v.expiresAt)}</td>
+                  <td className="adm-td--date">{fmtDate(v.createdAt)}</td>
+                  <td>
+                    {v.status === "active"
+                      ? <button className="adm-btn adm-btn--sm adm-btn--outline" onClick={() => voidVoucher(v)}>作废</button>
+                      : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <AdmPager page={page} hasMore={vouchers.length >= 30}
+            onPrev={() => { const p = page - 1; setPage(p); load(p, status); }}
+            onNext={() => { const p = page + 1; setPage(p); load(p, status); }} />
+        </div>
+      </div>
+    );
+  }
+
   /* ─── Settings ───────────────────────────────────────────── */
   function AdminSettings() {
     const [cfg,     setCfg]     = useState({
@@ -763,6 +923,7 @@
     { id: "users",    label: "用户管理" },
     { id: "orders",   label: "订单管理" },
     { id: "logs",     label: "余额流水" },
+    { id: "vouchers", label: "充值券" },
     { id: "settings", label: "系统设置" },
   ];
 
@@ -835,6 +996,7 @@
           {tab === "users"     && <AdminUsers />}
           {tab === "orders"    && <AdminOrders />}
           {tab === "logs"      && <AdminLogs />}
+          {tab === "vouchers"  && <AdminVouchers />}
           {tab === "settings"  && <AdminSettings />}
         </main>
       </div>

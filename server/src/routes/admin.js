@@ -21,6 +21,8 @@ function adminUser(row) {
 function logType(row) {
   if (row.reason === "sms_order") return "order";
   if (row.reason === "refund") return "refund";
+  if (row.reason === "voucher_redeem") return "voucher";
+  if (row.reason === "referral_reward") return "referral";
   if (row.reason === "admin_adjust" && Number(row.delta_cents || 0) >= 0) return "topup";
   if (row.reason === "admin_adjust") return "deduct";
   return row.reason || "order";

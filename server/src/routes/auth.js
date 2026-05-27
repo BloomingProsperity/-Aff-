@@ -1,6 +1,7 @@
 import { adminRoleForNewUser, clearSessionCookie, createSession, currentUser, destroySession, hashPassword, passwordNeedsRehash, publicUser, verifyPassword } from "../lib/auth.js";
 import { cleanEmail, isAllowedAuthEmail } from "../lib/common.js";
 import { exec, one } from "../lib/db.js";
+import { findReferrerByCode, generateReferralCode, normalizeReferralCode } from "../lib/referrals.js";
 import { enforceRateLimit, verifyTurnstile } from "../lib/security.js";
 
 export async function authRoutes(app) {
@@ -45,24 +46,32 @@ export async function authRoutes(app) {
 
     const hashed = hashPassword(password);
     const role = await adminRoleForNewUser(app.db, app.config, email);
-    try {
-      const result = await one(
-        app.db,
-        `INSERT INTO users (email, password_hash, password_salt, role)
-         VALUES ($1, $2, $3, $4)
-         RETURNING *`,
-        [email, hashed.hash, hashed.salt, role],
-      );
-      const session = await createSession(app.db, result.id, app.config);
-      reply.header("set-cookie", session.header);
-      return { user: publicUser(result) };
-    } catch (error) {
-      if (error.code === "23505") {
-        reply.code(409);
-        return { error: "这个邮箱已经注册。" };
+    const referrer = await findReferrerByCode(app.db, normalizeReferralCode(body.ref || body.referralCode), email);
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      try {
+        const result = await one(
+          app.db,
+          `INSERT INTO users
+             (email, password_hash, password_salt, role, referral_code, referred_by_user_id, referred_at)
+           VALUES ($1, $2, $3, $4, $5, $6, CASE WHEN $6::bigint IS NULL THEN NULL ELSE now() END)
+           RETURNING *`,
+          [email, hashed.hash, hashed.salt, role, generateReferralCode(), referrer?.id || null],
+        );
+        const session = await createSession(app.db, result.id, app.config);
+        reply.header("set-cookie", session.header);
+        return { user: publicUser(result) };
+      } catch (error) {
+        if (error.code === "23505" && String(error.constraint || "").includes("referral_code")) continue;
+        if (error.code === "23505") {
+          reply.code(409);
+          return { error: "这个邮箱已经注册。" };
+        }
+        throw error;
       }
-      throw error;
     }
+    reply.code(500);
+    return { error: "注册失败，请稍后重试。" };
   });
 
   app.post("/api/auth/login", async (request, reply) => {

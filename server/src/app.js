@@ -9,6 +9,7 @@ import { authRoutes } from "./routes/auth.js";
 import { configRoutes } from "./routes/config.js";
 import { smsRoutes } from "./routes/sms.js";
 import { statsRoutes } from "./routes/stats.js";
+import { voucherRoutes } from "./routes/vouchers.js";
 
 function allowOrigin(config, origin, callback) {
   if (!origin) {
@@ -65,6 +66,7 @@ export async function buildApp({ db, config, fivesimClient = fivesim, logger = t
   await app.register(configRoutes);
   await app.register(authRoutes);
   await app.register(smsRoutes);
+  await app.register(voucherRoutes);
   await app.register(statsRoutes);
   await app.register(adminRoutes);
 

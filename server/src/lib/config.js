@@ -43,6 +43,7 @@ export function loadConfig(env = process.env) {
     host: env.HOST || "127.0.0.1",
     databaseUrl: env.DATABASE_URL || "",
     publicUrl,
+    siteUrl: env.SITE_URL || env.PUBLIC_SITE_URL || "https://hkai.shop",
     corsOrigins,
     cookieDomain: env.COOKIE_DOMAIN || "",
     cookieSecure: parseBool(env.COOKIE_SECURE, cookieSecureDefault),

@@ -17,6 +17,7 @@ export function publicUser(user) {
     email: user.email,
     role: user.role,
     balance: centsToAmount(user.balance_cents),
+    referralCode: user.referral_code || "",
     createdAt: toIso(user.created_at),
   };
 }

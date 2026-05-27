@@ -1982,6 +1982,54 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   font-size: 20px;
   line-height: 1.2;
 }
+.sms-account-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  gap: 14px;
+  align-items: stretch;
+}
+.sms-panel--compact {
+  min-height: 100%;
+}
+.sms-referral-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.sms-referral-stats div {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: #f7fbff;
+  display: grid;
+  gap: 6px;
+}
+.sms-referral-stats span,
+.sms-referral-link span {
+  color: var(--fg-3);
+  font-size: 12px;
+}
+.sms-referral-stats strong {
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+.sms-referral-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 10px;
+}
+.sms-referral-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .sms-auth-layout {
   display: grid;
   grid-template-columns: minmax(340px, .72fr) minmax(0, 1.28fr);
@@ -2495,6 +2543,9 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   .sms-hero-inner,
   .sms-auth-layout,
   .sms-summary-grid,
+  .sms-account-grid,
+  .sms-referral-stats,
+  .sms-referral-link,
   .sms-grid,
   .sms-field-row,
   .sms-admin-grid,
@@ -2780,6 +2831,31 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
 .adm-settings-actions {
   display: flex;
   justify-content: flex-end;
+}
+.adm-voucher-form {
+  max-width: 1120px;
+}
+.adm-generated {
+  margin-top: 16px;
+  border-top: 1px solid #e4eaf7;
+  padding-top: 14px;
+}
+.adm-generated-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.adm-generated-head strong {
+  color: #111a38;
+  font-size: 13px;
+}
+.adm-generated-codes {
+  min-height: 150px;
+  resize: vertical;
+  font-family: "SF Mono", Consolas, monospace;
+  line-height: 1.6;
 }
 .adm-turnstile {
   min-height: 65px;

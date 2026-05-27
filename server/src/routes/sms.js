@@ -3,6 +3,7 @@ import { centsToAmount, cleanOrderId, cleanPart, toIso } from "../lib/common.js"
 import { exec, many, one } from "../lib/db.js";
 import { fivesimHttpError } from "../lib/fivesim.js";
 import { quoteCharge } from "../lib/pricing.js";
+import { maybeGrantReferralReward } from "../lib/referrals.js";
 import { enforceRateLimit, verifyTurnstile } from "../lib/security.js";
 import {
   buySmsProvider,
@@ -339,6 +340,9 @@ export async function smsRoutes(app) {
       ],
     );
     const updated = await one(app.db, "SELECT * FROM sms_orders WHERE id = $1", [row.id]);
+    if (["finished", "completed"].includes(String(updated?.status || "").toLowerCase())) {
+      await maybeGrantReferralReward(app.db, updated.id);
+    }
     return { order: normalizeOrder(updated) };
   });
 
@@ -384,6 +388,9 @@ export async function smsRoutes(app) {
         ],
       );
       const updated = await one(app.db, "SELECT * FROM sms_orders WHERE id = $1", [row.id]);
+      if (["finish", "completed"].includes(action) || ["finished", "completed"].includes(String(updated?.status || "").toLowerCase())) {
+        await maybeGrantReferralReward(app.db, updated.id);
+      }
       return { order: normalizeOrder(updated) };
     });
   }
