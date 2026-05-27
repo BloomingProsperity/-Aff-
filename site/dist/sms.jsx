@@ -270,9 +270,17 @@ function TurnstileBox({ siteKey, onToken, resetKey, onStatus }) {
         "refresh-expired": "auto",
         "refresh-timeout": "manual",
         callback: token => {
+          const value = String(token || "").trim();
+          if (!value) {
+            tokenReadyRef.current = false;
+            clearPendingTimer();
+            onToken("");
+            onStatus?.("error");
+            return;
+          }
           tokenReadyRef.current = true;
           clearPendingTimer();
-          onToken(token);
+          onToken(value);
           onStatus?.("ready");
         },
         "expired-callback": () => {
