@@ -212,6 +212,7 @@
       e.preventDefault();
       const n = Number(amount);
       if (!amount || isNaN(n) || n === 0) return setErr("请输入有效金额（正数充值 / 负数扣除）");
+      if (turnstileSiteKey && !turnstileToken) return setErr("请先等人机验证完成。");
       setSubmitting(true);
       setErr(null);
       admApi("/admin/credit", {
@@ -251,10 +252,11 @@
               </div>
               <AdminTurnstileBox siteKey={turnstileSiteKey}
                 onToken={setTurnstileToken} resetKey={turnstileResetKey} />
+              {turnstileSiteKey && !turnstileToken && <div className="adm-turnstile-hint">人机验证通过后可确认。</div>}
               {err && <div className="adm-err" style={{ marginBottom: 10 }}>{err}</div>}
               <div className="adm-modal-foot">
                 <button type="button" className="adm-btn adm-btn--outline" onClick={onClose}>取消</button>
-                <button type="submit" className="adm-btn adm-btn--primary" disabled={submitting}>
+                <button type="submit" className="adm-btn adm-btn--primary" disabled={submitting || Boolean(turnstileSiteKey && !turnstileToken)}>
                   {submitting ? "处理中…" : "确认"}
                 </button>
               </div>
@@ -521,6 +523,10 @@
 
     function save(e) {
       e.preventDefault();
+      if (turnstileSiteKey && !turnstileToken) {
+        setMsg({ ok: false, text: "请先等人机验证完成。" });
+        return;
+      }
       setSaving(true);
       setMsg(null);
       admApi("/admin/settings", {
@@ -613,8 +619,9 @@
           )}
           <AdminTurnstileBox siteKey={turnstileSiteKey}
             onToken={setTurnstileToken} resetKey={turnstileResetKey} />
+          {turnstileSiteKey && !turnstileToken && <div className="adm-turnstile-hint">人机验证通过后可保存。</div>}
           <div className="adm-settings-actions">
-            <button type="submit" className="adm-btn adm-btn--primary" disabled={saving}>
+            <button type="submit" className="adm-btn adm-btn--primary" disabled={saving || Boolean(turnstileSiteKey && !turnstileToken)}>
               {saving ? "保存中…" : "保存设置"}
             </button>
           </div>

@@ -162,6 +162,7 @@ function SmsCountryPanel({ countries, country, setCountry }) {
 
 function SmsOrderPanel({ user, product, country, countries, currentProduct, busy, onBuy, onLoadOrders, message, turnstileSiteKey, turnstileToken, setTurnstileToken, turnstileResetKey }) {
   const countryLabel = countries.find(x => x.code === country);
+  const needTurnstile = Boolean(turnstileSiteKey && !turnstileToken);
   return (
     <div className="sms-tp sms-tp--order">
       <div className="sms-tp-head">
@@ -190,9 +191,10 @@ function SmsOrderPanel({ user, product, country, countries, currentProduct, busy
       {user ? (
         <div className="sms-tp-actions">
           <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} />
+          {needTurnstile && <p className="sms-turnstile-hint">人机验证通过后可购买。</p>}
           <button className="ca-button ca-button--primary ca-button--lg sms-buy-btn"
             onClick={onBuy}
-            disabled={busy || !product || Number(user.balance || 0) <= 0}>
+            disabled={busy || needTurnstile || !product || Number(user.balance || 0) <= 0}>
             {busy ? '处理中…' : '购买号码'}
           </button>
           <button className="ca-button ca-button--outline" onClick={onLoadOrders} disabled={busy}>刷新订单</button>
@@ -374,6 +376,10 @@ function SmsDesk() {
   }, [user?.id, user?.role]);
 
   const submitAuth = async () => {
+    if (turnstileSiteKey && !turnstileToken) {
+      setMessage("请先等人机验证完成。");
+      return;
+    }
     setBusy(true);
     try {
       const data = await api(`/api/auth/${authMode}`, {
@@ -408,6 +414,10 @@ function SmsDesk() {
   };
 
   const buyNumber = async () => {
+    if (turnstileSiteKey && !turnstileToken) {
+      setMessage("请先等人机验证完成。");
+      return;
+    }
     setBusy(true);
     try {
       const data = await api("/api/sms/buy", {
@@ -705,6 +715,10 @@ function LoginDesk() {
   };
 
   const submit = async () => {
+    if (turnstileSiteKey && !turnstileToken) {
+      setMessage("请先等人机验证完成。");
+      return;
+    }
     setBusy(true);
     try {
       const data = await api(`/api/auth/${authMode}`, {
@@ -722,6 +736,8 @@ function LoginDesk() {
       setBusy(false);
     }
   };
+
+  const needTurnstile = Boolean(turnstileSiteKey && !turnstileToken);
 
   return (
     <div className="detail login-page">
@@ -753,9 +769,10 @@ function LoginDesk() {
               </div>
             </label>
             <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} />
+            {needTurnstile && <p className="sms-turnstile-hint">人机验证通过后可提交。</p>}
             <div className="sms-actions">
               <button className="ca-button ca-button--primary ca-button--lg"
-                onClick={submit} disabled={busy}>
+                onClick={submit} disabled={busy || needTurnstile}>
                 {authMode === "login" ? "登录" : "注册"}
               </button>
               <button className="ca-button ca-button--outline ca-button--lg"

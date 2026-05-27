@@ -2105,6 +2105,12 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   margin: 14px 0 0;
   line-height: 1.6;
 }
+.sms-turnstile-hint {
+  margin: 6px 0 0;
+  color: var(--fg-3);
+  font-size: 12px;
+  line-height: 1.6;
+}
 .sms-turnstile {
   min-height: 65px;
   margin-top: 14px;
@@ -2752,6 +2758,11 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
 .adm-turnstile {
   min-height: 65px;
   margin: 12px 0;
+}
+.adm-turnstile-hint {
+  margin: -4px 0 12px;
+  color: #8a93b0;
+  font-size: 12px;
 }
 .adm-search-row { display: flex; gap: 10px; margin-bottom: 16px; max-width: 420px; }
 .adm-search-row .adm-input { flex: 1; }

@@ -216,7 +216,7 @@ function Hero({ featured }) {
       <div className="wrap hero-inner">
         <div className="hero-text">
           <h1 className="hero-h1">
-            <span className="hero-h1-line"><span className="hero-h1-jade">海外银行卡</span>，一站买齐。</span>
+            <span className="hero-h1-line"><span className="hero-h1-jade">海外银行卡</span>，攻略齐全。</span>
           </h1>
           <div className="hero-cta">
             <a className="ca-button ca-button--primary ca-button--lg" href="/cards">浏览银行卡</a>
