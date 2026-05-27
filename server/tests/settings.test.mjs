@@ -7,6 +7,8 @@ test("admin settings view never exposes secret values", () => {
     smsUsdCnyRate: 7.2,
     smsMarginCny: 10,
     fivesimApiKey: "abc123456789",
+    smspoolApiKey: "pool123456789",
+    beeSmsApiToken: "bee123456789",
     turnstileSiteKey: "0x4AAAA-site",
     turnstileSecretKey: "secret-987654",
   });
@@ -15,8 +17,12 @@ test("admin settings view never exposes secret values", () => {
   assert.equal(view.settings.SMS_MARGIN_CNY, "10");
   assert.equal(view.settings.TURNSTILE_SITE_KEY, "0x4AAAA-site");
   assert.equal("FIVESIM_API_KEY" in view.settings, false);
+  assert.equal("SMSPOOL_API_KEY" in view.settings, false);
+  assert.equal("BEESMS_API_TOKEN" in view.settings, false);
   assert.equal("TURNSTILE_SECRET_KEY" in view.settings, false);
   assert.deepEqual(view.secrets.FIVESIM_API_KEY, { configured: true, masked: "••••6789" });
+  assert.deepEqual(view.secrets.SMSPOOL_API_KEY, { configured: true, masked: "••••6789" });
+  assert.deepEqual(view.secrets.BEESMS_API_TOKEN, { configured: true, masked: "••••6789" });
   assert.deepEqual(view.secrets.TURNSTILE_SECRET_KEY, { configured: true, masked: "••••7654" });
 });
 
@@ -42,10 +48,14 @@ test("runtime key settings can be applied without restart", () => {
   const config = {};
 
   assert.equal(applySettingToConfig(config, "FIVESIM_API_KEY", "new-5sim-key"), true);
+  assert.equal(applySettingToConfig(config, "SMSPOOL_API_KEY", "new-pool-key"), true);
+  assert.equal(applySettingToConfig(config, "BEESMS_API_TOKEN", "new-bee-token"), true);
   assert.equal(applySettingToConfig(config, "TURNSTILE_SITE_KEY", "site-key"), true);
   assert.equal(applySettingToConfig(config, "TURNSTILE_SECRET_KEY", "secret-key"), true);
 
   assert.equal(config.fivesimApiKey, "new-5sim-key");
+  assert.equal(config.smspoolApiKey, "new-pool-key");
+  assert.equal(config.beeSmsApiToken, "new-bee-token");
   assert.equal(config.turnstileSiteKey, "site-key");
   assert.equal(config.turnstileSecretKey, "secret-key");
 });

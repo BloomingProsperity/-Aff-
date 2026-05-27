@@ -4,11 +4,13 @@ const SETTING_DEFS = {
   SMS_USD_CNY_RATE: { prop: "smsUsdCnyRate", type: "number" },
   SMS_MARGIN_CNY: { prop: "smsMarginCny", type: "number" },
   FIVESIM_API_KEY: { prop: "fivesimApiKey", type: "secret" },
+  SMSPOOL_API_KEY: { prop: "smspoolApiKey", type: "secret" },
+  BEESMS_API_TOKEN: { prop: "beeSmsApiToken", type: "secret" },
   TURNSTILE_SITE_KEY: { prop: "turnstileSiteKey", type: "text" },
   TURNSTILE_SECRET_KEY: { prop: "turnstileSecretKey", type: "secret" },
 };
 
-const SECRET_KEYS = ["FIVESIM_API_KEY", "TURNSTILE_SECRET_KEY"];
+const SECRET_KEYS = ["FIVESIM_API_KEY", "SMSPOOL_API_KEY", "BEESMS_API_TOKEN", "TURNSTILE_SECRET_KEY"];
 
 function maskSecret(value) {
   const raw = String(value || "");

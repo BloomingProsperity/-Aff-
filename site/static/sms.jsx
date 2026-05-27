@@ -1,3 +1,5 @@
+const SMS_DEFAULT_OPERATORS = [{ code: "any", name: "任意运营商" }];
+
 const SMS_COUNTRY_FALLBACK = [
   { code: "usa", name: "美国", dial: "+1" },
   { code: "england", name: "英国", dial: "+44" },
@@ -11,7 +13,7 @@ const SMS_COUNTRY_FALLBACK = [
   { code: "philippines", name: "菲律宾", dial: "+63" },
   { code: "malaysia", name: "马来西亚", dial: "+60" },
   { code: "indonesia", name: "印度尼西亚", dial: "+62" },
-];
+].map(item => ({ ...item, operators: SMS_DEFAULT_OPERATORS }));
 
 const SMS_PRODUCT_FALLBACK = [
   "telegram", "whatsapp", "google", "microsoft", "apple", "facebook",
@@ -39,6 +41,20 @@ const SMS_PRODUCT_LABELS = {
 };
 
 const SMS_PRODUCT_PRIORITY = new Map(SMS_PRODUCT_FALLBACK.map((code, index) => [code, index]));
+const SMS_COUNTRY_META_KEYS = new Set(["iso", "prefix", "text_en", "text_ru", "text_zh", "name", "virtual"]);
+const SMS_OPERATOR_LABELS = {
+  any: "任意运营商",
+  virtual: "虚拟运营商",
+  ee: "EE",
+  o2: "O2",
+  vodafone: "Vodafone",
+  tmobile: "T-Mobile",
+  verizon: "Verizon",
+  att: "AT&T",
+  orange: "Orange",
+  bouygues: "Bouygues",
+  free: "Free",
+};
 
 function money(value) {
   return Number(value || 0).toFixed(2);
@@ -50,6 +66,19 @@ function yuan(value) {
 
 function productLabel(code) {
   return SMS_PRODUCT_LABELS[code] || code.replace(/[-_]/g, " ").replace(/\b\w/g, x => x.toUpperCase());
+}
+
+function operatorLabel(code) {
+  const value = String(code || "any");
+  return SMS_OPERATOR_LABELS[value] || value.replace(/[-_]/g, " ").replace(/\b\w/g, x => x.toUpperCase());
+}
+
+function countryOperators(info) {
+  const rows = Object.entries(info || {})
+    .filter(([key, value]) => !SMS_COUNTRY_META_KEYS.has(key) && value && typeof value === "object")
+    .map(([code]) => ({ code, name: operatorLabel(code) }));
+  const hasAny = rows.some(item => item.code === "any");
+  return hasAny ? rows : [...SMS_DEFAULT_OPERATORS, ...rows];
 }
 
 function smsApiBase() {
@@ -116,7 +145,7 @@ function SmsServicePanel({ products, product, setProduct, serviceQuery, setServi
     return !q || item.code.toLowerCase().includes(q) || productLabel(item.code).toLowerCase().includes(q);
   });
   return (
-    <div className="sms-tp">
+    <div className="sms-tp sms-tp--service">
       <div className="sms-tp-head">
         <h3>选择服务</h3>
         <input value={serviceQuery} onChange={e => setServiceQuery(e.target.value)} placeholder="搜索服务..." className="sms-tp-search" />
@@ -137,9 +166,34 @@ function SmsServicePanel({ products, product, setProduct, serviceQuery, setServi
   );
 }
 
+function SmsOperatorPanel({ operators, operator, setOperator }) {
+  const list = operators?.length ? operators : SMS_DEFAULT_OPERATORS;
+  return (
+    <div className="sms-tp sms-tp--operator">
+      <div className="sms-tp-head">
+        <h3>选择运营商</h3>
+      </div>
+      <div className="sms-tp-list">
+        {list.map(item => (
+          <button key={item.code} type="button"
+            className={`sms-tp-row ${item.code === operator ? 'is-active' : ''}`}
+            onClick={() => setOperator(item.code)}>
+            <span className="sms-tp-name">{item.name || operatorLabel(item.code)}</span>
+            <span className="sms-tp-meta">{item.code}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SmsCountryPanel({ countries, country, setCountry }) {
   const [q, setQ] = React.useState('');
-  const filtered = countries.filter(c => !q || c.name.includes(q) || c.code.includes(q));
+  const query = q.trim().toLowerCase();
+  const filtered = countries.filter(c => !query
+    || c.name.toLowerCase().includes(query)
+    || c.code.toLowerCase().includes(query)
+    || String(c.dial || "").includes(query));
   return (
     <div className="sms-tp">
       <div className="sms-tp-head">
@@ -174,10 +228,11 @@ function shouldShowTurnstileRetry(status) {
   return ["error", "expired", "timeout", "unsupported", "script-error"].includes(status);
 }
 
-function SmsOrderPanel({ user, product, country, countries, currentProduct, busy, onBuy, onLoadOrders, message, turnstileSiteKey, turnstileToken, setTurnstileToken, turnstileResetKey, turnstileStatus, onTurnstileStatus, onResetTurnstile }) {
+function SmsOrderPanel({ user, product, country, operator, countries, currentProduct, busy, onBuy, onLoadOrders, message, turnstileSiteKey, turnstileToken, setTurnstileToken, turnstileResetKey, turnstileStatus, onTurnstileStatus, onResetTurnstile }) {
   const countryLabel = countries.find(x => x.code === country);
   const needTurnstile = Boolean(turnstileSiteKey && !turnstileToken);
   const hint = turnstileHint(turnstileStatus, Boolean(turnstileToken), "购买");
+  const productAvailable = Boolean(currentProduct && Number(currentProduct.charge || 0) > 0 && Number(currentProduct.count || 0) > 0);
   return (
     <div className="sms-tp sms-tp--order">
       <div className="sms-tp-head">
@@ -191,6 +246,14 @@ function SmsOrderPanel({ user, product, country, countries, currentProduct, busy
         <div className="sms-order-row">
           <span>国家</span>
           <strong>{countryLabel?.name || country}</strong>
+        </div>
+        <div className="sms-order-row">
+          <span>运营商</span>
+          <strong>{operatorLabel(operator)}</strong>
+        </div>
+        <div className="sms-order-row">
+          <span>库存</span>
+          <strong>{currentProduct ? (currentProduct.count ?? "—") : "—"}</strong>
         </div>
         <div className="sms-order-row">
           <span>价格</span>
@@ -216,8 +279,8 @@ function SmsOrderPanel({ user, product, country, countries, currentProduct, busy
           )}
           <button className="ca-button ca-button--primary ca-button--lg sms-buy-btn"
             onClick={onBuy}
-            disabled={busy || needTurnstile || !product || Number(user.balance || 0) <= 0}>
-            {busy ? '处理中…' : '购买号码'}
+            disabled={busy || needTurnstile || !productAvailable || Number(user.balance || 0) <= 0}>
+            {busy ? '处理中…' : productAvailable ? '购买号码' : '当前不可买'}
           </button>
           <button className="ca-button ca-button--outline" onClick={onLoadOrders} disabled={busy}>刷新订单</button>
           {message && <p className="sms-message">{message}</p>}
@@ -429,11 +492,18 @@ function SmsDesk() {
           dial: info?.prefix && typeof info.prefix === "object"
             ? Object.keys(info.prefix)[0]
             : (info?.prefix ? `+${String(info.prefix).replace(/^\+/, "")}` : ""),
+          operators: countryOperators(info),
         })).sort((a, b) => a.name.localeCompare(b.name));
         if (list.length) setCountries(list);
       })
       .catch(() => {});
   }, []);
+
+  React.useEffect(() => {
+    const selected = countries.find(x => x.code === country);
+    const list = selected?.operators?.length ? selected.operators : SMS_DEFAULT_OPERATORS;
+    if (!list.some(item => item.code === operator)) setOperator(list[0]?.code || "any");
+  }, [country, countries, operator]);
 
   React.useEffect(() => {
     api(`/api/sms/products?country=${encodeURIComponent(country)}&operator=${encodeURIComponent(operator)}`)
@@ -588,6 +658,7 @@ function SmsDesk() {
 
   const currentProduct = products.find(x => x.code === product);
   const countryLabel = countries.find(x => x.code === country);
+  const operators = countryLabel?.operators?.length ? countryLabel.operators : SMS_DEFAULT_OPERATORS;
   const smsList = order?.sms || [];
   const guestBuyUrl = "https://t.me/Whohaoe";
 
@@ -615,13 +686,14 @@ function SmsDesk() {
       {/* 三栏选择器：始终可见 */}
       <section className="k-section sms-three-section">
         <div className="wrap sms-three-grid">
+          <SmsCountryPanel countries={countries} country={country} setCountry={setCountry} />
+          <SmsOperatorPanel operators={operators} operator={operator} setOperator={setOperator} />
           <SmsServicePanel
             products={products} product={product} setProduct={setProduct}
             serviceQuery={serviceQuery} setServiceQuery={setServiceQuery}
           />
-          <SmsCountryPanel countries={countries} country={country} setCountry={setCountry} />
           <SmsOrderPanel
-            user={user} product={product} country={country} countries={countries}
+            user={user} product={product} country={country} operator={operator} countries={countries}
             currentProduct={currentProduct} busy={busy}
             onBuy={buyNumber} onLoadOrders={loadOrders} message={message}
             turnstileSiteKey={turnstileSiteKey} turnstileToken={turnstileToken}

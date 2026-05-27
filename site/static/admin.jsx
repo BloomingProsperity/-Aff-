@@ -584,6 +584,8 @@
       TURNSTILE_SITE_KEY: "",
       TURNSTILE_SECRET_KEY: "",
       FIVESIM_API_KEY: "",
+      SMSPOOL_API_KEY: "",
+      BEESMS_API_TOKEN: "",
     });
     const [secrets, setSecrets] = useState({});
     const [loading, setLoading] = useState(true);
@@ -630,6 +632,8 @@
             ...c,
             ...(d.settings || {}),
             FIVESIM_API_KEY: "",
+            SMSPOOL_API_KEY: "",
+            BEESMS_API_TOKEN: "",
             TURNSTILE_SECRET_KEY: "",
           }));
           setSecrets(d.secrets || {});
@@ -679,6 +683,30 @@
                 <div className="adm-field-hint">
                   {secrets.FIVESIM_API_KEY?.configured
                     ? `当前 ${secrets.FIVESIM_API_KEY.masked}`
+                    : "当前未设置"}
+                </div>
+              </div>
+              <div className="adm-field">
+                <label>SMSPool API 密钥</label>
+                <input className="adm-input" type="password"
+                  value={cfg.SMSPOOL_API_KEY || ""}
+                  onChange={e => setCfg(c => ({ ...c, SMSPOOL_API_KEY: e.target.value }))}
+                  placeholder={secrets.SMSPOOL_API_KEY?.configured ? "已设置，填新密钥后替换" : "未设置"} />
+                <div className="adm-field-hint">
+                  {secrets.SMSPOOL_API_KEY?.configured
+                    ? `当前 ${secrets.SMSPOOL_API_KEY.masked}`
+                    : "当前未设置"}
+                </div>
+              </div>
+              <div className="adm-field">
+                <label>Bee-SMS API Token</label>
+                <input className="adm-input" type="password"
+                  value={cfg.BEESMS_API_TOKEN || ""}
+                  onChange={e => setCfg(c => ({ ...c, BEESMS_API_TOKEN: e.target.value }))}
+                  placeholder={secrets.BEESMS_API_TOKEN?.configured ? "已设置，填新 Token 后替换" : "未设置"} />
+                <div className="adm-field-hint">
+                  {secrets.BEESMS_API_TOKEN?.configured
+                    ? `当前 ${secrets.BEESMS_API_TOKEN.masked}`
                     : "当前未设置"}
                 </div>
               </div>

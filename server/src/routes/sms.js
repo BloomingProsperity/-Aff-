@@ -4,6 +4,15 @@ import { exec, many, one } from "../lib/db.js";
 import { fivesimHttpError } from "../lib/fivesim.js";
 import { quoteCharge } from "../lib/pricing.js";
 import { enforceRateLimit, verifyTurnstile } from "../lib/security.js";
+import {
+  buySmsProvider,
+  changeSmsProviderOrder,
+  checkSmsProviderOrder,
+  providerOrderKey,
+  quoteSmsProviders,
+  smsProviderHttpError,
+  sortBuyableQuotes,
+} from "../lib/smsProviders.js";
 
 const PRODUCT_CACHE_SECONDS = 60;
 
@@ -14,6 +23,7 @@ function normalizeOrder(row) {
   return {
     id: Number(row.id),
     fivesimId: row.fivesim_id,
+    provider: row.provider || "5sim",
     country: row.country,
     operator: row.operator,
     product: row.product,
@@ -173,11 +183,6 @@ export async function smsRoutes(app) {
     const auth = await requireUser(app.db, request, reply);
     if (auth.response) return auth.response;
 
-    if (!app.config.fivesimApiKey) {
-      reply.code(503);
-      return { error: "5sim 密钥未设置。" };
-    }
-
     const limited = await enforceRateLimit(app.db, request, reply, {
       scope: "sms:buy",
       extra: `user:${auth.user.id}`,
@@ -199,44 +204,52 @@ export async function smsRoutes(app) {
       return { error: "请选择服务。" };
     }
 
-    const estimateCost = await estimatedPrice(app, country, operator, product);
-    if (estimateCost <= 0) {
+    const quotes = await quoteSmsProviders(app, { country, operator, product });
+    const candidates = sortBuyableQuotes(quotes);
+    if (!candidates.length) {
       reply.code(400);
-      return { error: "当前服务暂不可购买，请刷新后重试。" };
-    }
-    const estimate = quoteCharge(app.config, estimateCost);
-    const reservedUser = await reserveBalance(app.db, auth.user.id, estimate.chargeCents);
-    if (!reservedUser) {
-      reply.code(402);
-      return { error: `余额不足，预计需要 ${estimate.charge} 元。` };
+      return { error: "当前服务暂不可购买，请稍后重试。" };
     }
 
-    let reservedCents = estimate.chargeCents;
+    let reservedCents = 0;
+    let bought = null;
+    let chosen = null;
+    let lastError = null;
     const note = `${country}/${operator}/${product}`;
-    const bought = await app.fivesim(
-      `/user/buy/activation/${country}/${operator}/${product}`,
-      app.config.fivesimApiKey,
-    );
-    if (!bought.ok) {
-      await refundBalance(app.db, auth.user.id, reservedCents);
-      return fivesimHttpError(reply, bought);
+
+    for (const candidate of candidates) {
+      const quote = quoteCharge(app.config, candidate.cost);
+      if (quote.chargeCents > reservedCents) {
+        const extra = await reserveBalance(app.db, auth.user.id, quote.chargeCents - reservedCents);
+        if (!extra) {
+          if (reservedCents > 0) await refundBalance(app.db, auth.user.id, reservedCents);
+          reply.code(402);
+          return { error: `余额不足，预计需要 ${quote.charge} 元。` };
+        }
+        reservedCents = quote.chargeCents;
+      }
+
+      const attempt = await buySmsProvider(app, candidate);
+      if (attempt.ok) {
+        bought = attempt;
+        chosen = candidate;
+        break;
+      }
+      lastError = attempt;
     }
 
-    const fivesimId = Number(bought.data?.id);
-    if (!Number.isInteger(fivesimId) || fivesimId <= 0) {
-      await refundBalance(app.db, auth.user.id, reservedCents);
-      reply.code(502);
-      return { error: "上游返回的订单编号无效，请稍后重试。" };
+    if (!bought || !chosen) {
+      if (reservedCents > 0) await refundBalance(app.db, auth.user.id, reservedCents);
+      return smsProviderHttpError(reply, lastError || { status: 502 });
     }
 
-    const realQuote = quoteCharge(app.config, bought.data?.price || bought.data?.cost || estimateCost || 0);
+    const realQuote = quoteCharge(app.config, bought.cost || chosen.cost || 0);
     const realCost = realQuote.chargeCents;
 
     if (realCost > reservedCents) {
-      const extraCents = realCost - reservedCents;
-      const extra = await reserveBalance(app.db, auth.user.id, extraCents);
+      const extra = await reserveBalance(app.db, auth.user.id, realCost - reservedCents);
       if (!extra) {
-        await app.fivesim(`/user/cancel/${fivesimId}`, app.config.fivesimApiKey);
+        await changeSmsProviderOrder(app, { ...bought, provider: chosen.provider, fivesim_id: providerOrderKey(chosen.provider, bought.id) }, "cancel");
         await refundBalance(app.db, auth.user.id, reservedCents);
         reply.code(402);
         return { error: "余额不足，号码已取消。" };
@@ -248,7 +261,7 @@ export async function smsRoutes(app) {
     }
 
     if (realCost <= 0) {
-      await app.fivesim(`/user/cancel/${fivesimId}`, app.config.fivesimApiKey);
+      await changeSmsProviderOrder(app, { ...bought, provider: chosen.provider, fivesim_id: providerOrderKey(chosen.provider, bought.id) }, "cancel");
       await refundBalance(app.db, auth.user.id, reservedCents);
       reply.code(402);
       return { error: "余额不足，号码已取消。" };
@@ -258,19 +271,20 @@ export async function smsRoutes(app) {
     await exec(
       app.db,
       `INSERT INTO sms_orders
-        (user_id, fivesim_id, country, operator, product, phone, price_cents, status, sms_json, raw_json)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        (user_id, fivesim_id, provider, country, operator, product, phone, price_cents, status, sms_json, raw_json)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [
         auth.user.id,
-        String(fivesimId),
+        providerOrderKey(chosen.provider, bought.id),
+        chosen.provider,
         country,
         operator,
         product,
-        bought.data.phone || bought.data.number || "",
+        bought.phone || "",
         realCost,
-        bought.data.status || "received",
-        JSON.stringify(bought.data.sms || []),
-        JSON.stringify(bought.data || {}),
+        bought.status || "received",
+        JSON.stringify(bought.sms || []),
+        JSON.stringify({ provider: chosen.provider, providerName: chosen.providerName, data: bought.raw || {} }),
       ],
     );
     await exec(
@@ -280,17 +294,13 @@ export async function smsRoutes(app) {
       [auth.user.id, -realCost, updatedUser.balance_cents, "sms_order", note],
     );
 
-    const row = await one(app.db, "SELECT * FROM sms_orders WHERE fivesim_id = $1", [String(fivesimId)]);
+    const row = await one(app.db, "SELECT * FROM sms_orders WHERE fivesim_id = $1", [providerOrderKey(chosen.provider, bought.id)]);
     return { order: normalizeOrder(row), balance: centsToAmount(updatedUser.balance_cents), pricing: realQuote };
   });
 
   app.get("/api/sms/check/:id", async (request, reply) => {
     const auth = await requireUser(app.db, request, reply);
     if (auth.response) return auth.response;
-    if (!app.config.fivesimApiKey) {
-      reply.code(503);
-      return { error: "5sim 密钥未设置。" };
-    }
 
     const id = cleanOrderId(request.params.id || request.query.id);
     if (!id) {
@@ -312,18 +322,18 @@ export async function smsRoutes(app) {
     });
     if (limited) return limited;
 
-    const checked = await app.fivesim(`/user/check/${row.fivesim_id}`, app.config.fivesimApiKey);
-    if (!checked.ok) return fivesimHttpError(reply, checked);
+    const checked = await checkSmsProviderOrder(app, row);
+    if (!checked.ok) return smsProviderHttpError(reply, checked);
     await exec(
       app.db,
       `UPDATE sms_orders
           SET phone = $1, status = $2, sms_json = $3, raw_json = $4, updated_at = now()
         WHERE id = $5 AND user_id = $6`,
       [
-        checked.data.phone || checked.data.number || row.phone || "",
-        checked.data.status || row.status,
-        JSON.stringify(checked.data.sms || []),
-        JSON.stringify(checked.data || {}),
+        checked.phone || row.phone || "",
+        checked.status || row.status,
+        JSON.stringify(checked.sms || []),
+        JSON.stringify({ provider: checked.provider || row.provider || "5sim", data: checked.raw || {} }),
         row.id,
         auth.user.id,
       ],
@@ -336,10 +346,6 @@ export async function smsRoutes(app) {
     app.post(`/api/sms/${action}`, async (request, reply) => {
       const auth = await requireUser(app.db, request, reply);
       if (auth.response) return auth.response;
-      if (!app.config.fivesimApiKey) {
-        reply.code(503);
-        return { error: "5sim 密钥未设置。" };
-      }
 
       const body = request.body || {};
       const id = cleanOrderId(body.id || request.params?.id);
@@ -362,17 +368,17 @@ export async function smsRoutes(app) {
       });
       if (limited) return limited;
 
-      const changed = await app.fivesim(`/user/${action}/${row.fivesim_id}`, app.config.fivesimApiKey);
-      if (!changed.ok) return fivesimHttpError(reply, changed);
+      const changed = await changeSmsProviderOrder(app, row, action);
+      if (!changed.ok) return smsProviderHttpError(reply, changed);
       await exec(
         app.db,
         `UPDATE sms_orders
             SET status = $1, sms_json = $2, raw_json = $3, updated_at = now()
           WHERE id = $4 AND user_id = $5`,
         [
-          changed.data.status || action,
-          JSON.stringify(changed.data.sms || []),
-          JSON.stringify(changed.data || {}),
+          changed.status || action,
+          JSON.stringify(changed.sms || []),
+          JSON.stringify({ provider: row.provider || "5sim", data: changed.raw || {} }),
           row.id,
           auth.user.id,
         ],

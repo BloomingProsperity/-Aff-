@@ -49,6 +49,8 @@ export function loadConfig(env = process.env) {
     trustProxyHeaders: parseBool(env.TRUST_PROXY_HEADERS, false),
     adminEmail: env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL,
     fivesimApiKey: env.FIVESIM_API_KEY || env.FIVESIM_TOKEN || "",
+    smspoolApiKey: env.SMSPOOL_API_KEY || env.SMSPOOL_TOKEN || "",
+    beeSmsApiToken: env.BEESMS_API_TOKEN || env.BEE_SMS_API_TOKEN || env.BEESMS_TOKEN || "",
     smsUsdCnyRate: Number(env.SMS_USD_CNY_RATE || env.SMS_PRICE_RATE || 7.2),
     smsMarginCny: Number(env.SMS_MARGIN_CNY || env.SMS_PRICE_FIXED || 10),
     turnstileSiteKey: env.TURNSTILE_SITE_KEY || env.TURNSTILE_SITEKEY || "",
