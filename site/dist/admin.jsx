@@ -1,4 +1,4 @@
-// admin.jsx — 花开SHOP 后台管理面板
+// admin.jsx — Blooming 后台管理面板
 // 路由 /admin → window.AdminDesk
 
 (function () {
@@ -671,9 +671,9 @@
         {/* ── 侧边栏 ── */}
         <aside className="adm-sidebar">
           <div className="adm-sidebar-brand">
-            <span className="adm-brand-mark">花</span>
+            <span className="adm-brand-mark"><img src="/images/brand/blue-cat.svg" alt="" aria-hidden="true" /></span>
             <div>
-              <div className="adm-brand-name">花开SHOP</div>
+              <div className="adm-brand-name">Blooming</div>
               <div className="adm-brand-sub">后台管理</div>
             </div>
           </div>

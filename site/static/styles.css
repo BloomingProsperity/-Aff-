@@ -1,4 +1,4 @@
-/* 花开SHOP — 商品站样式
+/* Blooming — 商品站样式
    设计 token 来自 tokens.css（China Atlas 系统）。本文件只做组合。 */
 
 @import url("tokens.css");
@@ -98,13 +98,22 @@ a { color: inherit; text-decoration: none; }
 .brand .ca-brand-mark {
   width: 30px;
   height: 30px;
-  border-radius: 9px;
-  background: #6aa9ff;
-  color: #fff;
-  box-shadow: 0 10px 20px rgb(106 169 255 / .18);
+  border-radius: 10px;
+  background: #eaf5ff;
+  color: transparent;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgb(106 169 255 / .22);
+}
+.brand .ca-brand-mark img,
+.ftr-mark img,
+.adm-brand-mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
 }
 .brand-word { display: flex; flex-direction: column; line-height: 1.05; }
-.brand-zh { font-size: 17px; font-weight: 700; letter-spacing: 0; color: #111a38; }
+.brand-zh { font-size: 18px; font-weight: 800; letter-spacing: .01em; color: #111a38; }
 .brand-en { font-size: 10px; font-weight: 700; color: #7b86a6; letter-spacing: .1em; }
 
 .hdr-nav { display: flex; gap: 36px; margin-left: auto; }
@@ -2548,12 +2557,14 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
 }
 .adm-brand-mark {
   width: 34px; height: 34px;
-  border-radius: 9px;
-  background: #6aa9ff;
-  color: #fff;
+  border-radius: 10px;
+  background: #eaf5ff;
+  color: transparent;
+  overflow: hidden;
   font-size: 16px; font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 10px 20px rgb(106 169 255 / .16);
 }
 .adm-brand-name { font-size: 14px; font-weight: 700; color: #111a38; line-height: 1.2; }
 .adm-brand-sub  { font-size: 11px; color: #8a93b0; margin-top: 1px; }

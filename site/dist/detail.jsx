@@ -1,4 +1,4 @@
-/* 花开SHOP — 详情视图：/cards/<slug> 银行卡 + /shop/<slug> 礼品卡。
+/* Blooming — 详情视图：/cards/<slug> 银行卡 + /shop/<slug> 礼品卡。
    卡面用 img + SVG mock 作 fallback；若 data.js 里的卡有 officialArt 字段则用它。 */
 
 const CARDS_BY_SLUG = Object.fromEntries(window.CARDS.map(c => [c.slug, c]));
@@ -438,10 +438,9 @@ function DetailHeader({ back = "/", backLabel = "全部产品" }) {
     <header className="hdr hdr--detail">
       <div className="hdr-inner">
         <a href="/" className="brand">
-          <span className="ca-brand-mark">花</span>
+          <span className="ca-brand-mark"><img src="/images/brand/blue-cat.svg" alt="" aria-hidden="true" /></span>
           <span className="brand-word">
-            <span className="brand-zh">花开SHOP</span>
-            <span className="brand-en">HKAI SHOP</span>
+            <span className="brand-zh">Blooming</span>
           </span>
         </a>
         <nav className="hdr-nav">
