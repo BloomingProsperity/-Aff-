@@ -81,6 +81,11 @@ test("secure cookies default on for production and https public url", () => {
   assert.equal(loadConfig({ COOKIE_SECURE: "false", NODE_ENV: "production" }).cookieSecure, false);
 });
 
+test("api server binds to localhost unless explicitly changed", () => {
+  assert.equal(loadConfig({}).host, "127.0.0.1");
+  assert.equal(loadConfig({ HOST: "0.0.0.0" }).host, "0.0.0.0");
+});
+
 test("turnstile is optional until a secret is configured", () => {
   assert.equal(turnstileEnabled({}), false);
   assert.equal(turnstileEnabled({ turnstileSecretKey: "secret" }), true);

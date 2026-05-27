@@ -40,6 +40,7 @@ export function loadConfig(env = process.env) {
   return {
     nodeEnv: env.NODE_ENV || "development",
     port: Number(env.PORT || 8788),
+    host: env.HOST || "127.0.0.1",
     databaseUrl: env.DATABASE_URL || "",
     publicUrl,
     corsOrigins,
