@@ -36,7 +36,15 @@ export async function authRoutes(app) {
 
     const body = request.body || {};
     const turnstile = await verifyTurnstile(app.config, request, reply, body.turnstileToken);
-    if (turnstile) return turnstile;
+    if (turnstile) {
+      await writeAuditLog(app.db, request, {
+        action: "auth.register",
+        status: "failed",
+        httpStatus: reply.statusCode || 400,
+        metadata: { reason: "turnstile_failed" },
+      });
+      return turnstile;
+    }
 
     const email = cleanEmail(body.email);
     const password = String(body.password || "");
@@ -134,7 +142,15 @@ export async function authRoutes(app) {
 
     const body = request.body || {};
     const turnstile = await verifyTurnstile(app.config, request, reply, body.turnstileToken);
-    if (turnstile) return turnstile;
+    if (turnstile) {
+      await writeAuditLog(app.db, request, {
+        action: "auth.login",
+        status: "failed",
+        httpStatus: reply.statusCode || 400,
+        metadata: { reason: "turnstile_failed" },
+      });
+      return turnstile;
+    }
 
     const email = cleanEmail(body.email);
     const password = String(body.password || "");

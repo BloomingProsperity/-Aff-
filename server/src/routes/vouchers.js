@@ -51,7 +51,18 @@ export async function voucherRoutes(app) {
 
     const body = request.body || {};
     const turnstile = await verifyTurnstile(app.config, request, reply, body.turnstileToken);
-    if (turnstile) return turnstile;
+    if (turnstile) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: auth.user.id,
+        action: "voucher.redeem",
+        resourceType: "voucher",
+        status: "failed",
+        httpStatus: reply.statusCode || 400,
+        metadata: { reason: "turnstile_failed" },
+      });
+      return turnstile;
+    }
 
     const code = normalizeVoucherCode(body.code);
     if (code.length < 8) {

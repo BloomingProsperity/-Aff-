@@ -202,7 +202,10 @@ export async function smsRoutes(app) {
 
     const body = request.body || {};
     const turnstile = await verifyTurnstile(app.config, request, reply, body.turnstileToken);
-    if (turnstile) return turnstile;
+    if (turnstile) {
+      await auditSmsBuy(app, request, auth, "failed", reply.statusCode || 400, { reason: "turnstile_failed" });
+      return turnstile;
+    }
 
     const country = cleanPart(body.country || "usa");
     const operator = cleanPart(body.operator || "any");

@@ -141,7 +141,17 @@ export async function adminRoutes(app) {
 
     const body = request.body || {};
     const turnstile = await verifyTurnstile(app.config, request, reply, body.turnstileToken);
-    if (turnstile) return turnstile;
+    if (turnstile) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.balance.adjust",
+        resourceType: "balance",
+        status: "failed",
+        httpStatus: reply.statusCode || 400,
+        metadata: { reason: "turnstile_failed" },
+      });
+      return turnstile;
+    }
 
     const userId = Number(body.userId);
     const delta = amountToCents(body.amount);
@@ -305,7 +315,17 @@ export async function adminRoutes(app) {
 
     const input = request.body?.settings || {};
     const turnstile = await verifyTurnstile(app.config, request, reply, request.body?.turnstileToken);
-    if (turnstile) return turnstile;
+    if (turnstile) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.settings.update",
+        resourceType: "settings",
+        status: "failed",
+        httpStatus: reply.statusCode || 400,
+        metadata: { reason: "turnstile_failed" },
+      });
+      return turnstile;
+    }
 
     const allowed = settingKeys();
     const changedKeys = [];
