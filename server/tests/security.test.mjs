@@ -124,6 +124,36 @@ test("api hook blocks cross-site browser mutations before route handlers", async
   }
 });
 
+test("api hook rejects non-json mutation bodies before route handlers", async () => {
+  const calls = [];
+  const db = {
+    query: async (sql, params = []) => {
+      calls.push({ sql, params });
+      if (sql.includes("FROM app_settings")) return { rows: [] };
+      throw new Error(`Non-json mutation reached database: ${sql}`);
+    },
+  };
+  const app = await buildApp({ db, config: loadConfig({ PUBLIC_URL: "https://hkai.shop" }), logger: false });
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/auth/logout",
+      headers: {
+        host: "api.hkai.shop",
+        "content-type": "text/plain",
+        origin: "https://hkai.shop",
+      },
+      payload: "not-json",
+    });
+
+    assert.equal(response.statusCode, 415);
+    assert.ok(response.json().error);
+    assert.equal(calls.some(call => !call.sql.includes("FROM app_settings")), false);
+  } finally {
+    await app.close();
+  }
+});
+
 test("api hook blocks direct IP host scans before route handlers", async () => {
   const db = { query: async () => ({ rows: [] }) };
   const app = await buildApp({

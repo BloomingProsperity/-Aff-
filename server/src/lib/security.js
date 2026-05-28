@@ -100,6 +100,16 @@ export function isMutatingRequest(request) {
   return !SAFE_METHODS.has(String(request.method || "GET").toUpperCase());
 }
 
+export function isAllowedMutationContentType(request) {
+  if (!isMutatingRequest(request)) return true;
+  const rawType = String(header(request, "content-type") || "").trim().toLowerCase();
+  const type = rawType.split(";")[0].trim();
+  const contentLength = Number(header(request, "content-length") || 0);
+  const hasBody = contentLength > 0 || Boolean(header(request, "transfer-encoding"));
+  if (!type) return !hasBody;
+  return type === "application/json";
+}
+
 export async function rateLimitKey(request, scope, extra = "", config = {}) {
   const fingerprint = sha256Hex(`${clientIdentity(request, config)}|${extra}`);
   return `${scope}:${fingerprint}`;
