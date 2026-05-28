@@ -1,5 +1,6 @@
 export const RATE_LIMIT_GRACE_SECONDS = 3600;
 export const PRODUCT_CACHE_GRACE_SECONDS = 86400;
+export const PAGE_VIEW_RETENTION_DAYS = 90;
 
 function epochNow(value) {
   const n = Number(value || 0);
@@ -18,12 +19,17 @@ export async function cleanupOperationalData(db, { nowEpoch } = {}) {
     [now - PRODUCT_CACHE_GRACE_SECONDS],
   );
   const operationLocks = await db.query("DELETE FROM operation_locks WHERE expires_at <= now()");
+  const pageViews = await db.query(
+    "DELETE FROM page_views WHERE view_date < CURRENT_DATE - ($1::int * INTERVAL '1 day')",
+    [PAGE_VIEW_RETENTION_DAYS],
+  );
 
   return {
     sessions: Number(sessions.rowCount || 0),
     rateLimits: Number(rateLimits.rowCount || 0),
     productCache: Number(productCache.rowCount || 0),
     operationLocks: Number(operationLocks.rowCount || 0),
+    pageViews: Number(pageViews.rowCount || 0),
   };
 }
 
@@ -36,7 +42,7 @@ export function startHousekeeping(app, options = {}) {
     state.running = true;
     try {
       const summary = await cleanupOperationalData(app.db, options);
-      if (summary.sessions || summary.rateLimits || summary.productCache || summary.operationLocks) {
+      if (summary.sessions || summary.rateLimits || summary.productCache || summary.operationLocks || summary.pageViews) {
         app.log?.info?.({ summary }, "temporary data cleaned");
       }
       return summary;
