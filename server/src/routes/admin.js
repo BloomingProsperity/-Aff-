@@ -252,6 +252,16 @@ export async function adminRoutes(app) {
     }
     if (userId === Number(auth.user.id) && status === "suspended") {
       reply.code(400);
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: userId,
+        action: "admin.user.status",
+        resourceType: "user",
+        resourceId: userId,
+        status: "failed",
+        httpStatus: 400,
+        metadata: { reason: "self_suspend_blocked", status },
+      });
       return { error: "不能暂停自己的管理员账号。" };
     }
 
@@ -305,6 +315,20 @@ export async function adminRoutes(app) {
     if (!userId) {
       reply.code(400);
       return { error: "用户不存在。" };
+    }
+    if (userId === Number(auth.user.id)) {
+      reply.code(400);
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: userId,
+        action: "admin.user.sessions.revoke",
+        resourceType: "session",
+        resourceId: userId,
+        status: "failed",
+        httpStatus: 400,
+        metadata: { reason: "self_session_revoke_blocked" },
+      });
+      return { error: "不能在用户管理里撤销自己的管理员会话。" };
     }
     const target = await one(app.db, "SELECT id, email FROM users WHERE id = $1", [userId]);
     if (!target) {

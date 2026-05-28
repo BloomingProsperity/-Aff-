@@ -379,7 +379,7 @@
   }
 
   /* ─── Users ──────────────────────────────────────────────── */
-  function AdminUsers() {
+  function AdminUsers({ currentUser }) {
     const [users,     setUsers]     = useState([]);
     const [total,     setTotal]     = useState(0);
     const [page,      setPage]      = useState(1);
@@ -429,6 +429,9 @@
         .finally(() => setBusyUserId(null));
     }
 
+    const currentAdminId = Number(currentUser?.id || 0);
+    const currentAdminEmail = String(currentUser?.email || "").toLowerCase();
+
     return (
       <div className="adm-content-inner">
         <div className="adm-page-head">
@@ -459,31 +462,41 @@
               {!loading && users.length === 0 && (
                 <tr><td colSpan={6} className="adm-empty">暂无数据</td></tr>
               )}
-              {users.map(u => (
-                <tr key={u.id}>
-                  <td className="adm-td--mono">{u.id}</td>
-                  <td className="adm-td--email">{u.email}</td>
-                  <td><AdmBadge s={u.status || "active"} /></td>
-                  <td>{fmtCny(u.balance)}</td>
-                  <td className="adm-td--date">{fmtDate(u.created_at)}</td>
-                  <td className="adm-actions-cell">
-                    <button className="adm-btn adm-btn--sm adm-btn--outline"
-                      onClick={() => setTopupUser(u)}>调整余额</button>
-                    {u.status === "suspended" ? (
+              {users.map(u => {
+                const isCurrentAdminUser = Number(u.id) === currentAdminId
+                  || String(u.email || "").toLowerCase() === currentAdminEmail;
+                return (
+                  <tr key={u.id}>
+                    <td className="adm-td--mono">{u.id}</td>
+                    <td className="adm-td--email">{u.email}</td>
+                    <td><AdmBadge s={u.status || "active"} /></td>
+                    <td>{fmtCny(u.balance)}</td>
+                    <td className="adm-td--date">{fmtDate(u.created_at)}</td>
+                    <td className="adm-actions-cell">
                       <button className="adm-btn adm-btn--sm adm-btn--outline"
-                        disabled={busyUserId === u.id}
-                        onClick={() => setUserStatus(u, "active")}>恢复</button>
-                    ) : (
-                      <button className="adm-btn adm-btn--sm adm-btn--outline"
-                        disabled={busyUserId === u.id}
-                        onClick={() => setUserStatus(u, "suspended")}>暂停</button>
-                    )}
-                    <button className="adm-btn adm-btn--sm adm-btn--outline"
-                      disabled={busyUserId === u.id}
-                      onClick={() => revokeSessions(u)}>清会话</button>
-                  </td>
-                </tr>
-              ))}
+                        onClick={() => setTopupUser(u)}>调整余额</button>
+                      {isCurrentAdminUser ? (
+                        <span className="adm-badge adm-badge--muted">当前管理员</span>
+                      ) : (
+                        <>
+                          {u.status === "suspended" ? (
+                            <button className="adm-btn adm-btn--sm adm-btn--outline"
+                              disabled={busyUserId === u.id}
+                              onClick={() => setUserStatus(u, "active")}>恢复</button>
+                          ) : (
+                            <button className="adm-btn adm-btn--sm adm-btn--outline"
+                              disabled={busyUserId === u.id}
+                              onClick={() => setUserStatus(u, "suspended")}>暂停</button>
+                          )}
+                          <button className="adm-btn adm-btn--sm adm-btn--outline"
+                            disabled={busyUserId === u.id}
+                            onClick={() => revokeSessions(u)}>清会话</button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           <AdmPager page={page} hasMore={users.length >= 20}
@@ -1412,7 +1425,7 @@
         <main className="adm-main">
           {tab === "announcements" && <AdminAnnouncements />}
           {tab === "overview"  && <AdminOverview />}
-          {tab === "users"     && <AdminUsers />}
+          {tab === "users"     && <AdminUsers currentUser={user} />}
           {tab === "orders"    && <AdminOrders />}
           {tab === "logs"      && <AdminLogs />}
           {tab === "audit"     && <AdminAuditLogs />}
