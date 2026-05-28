@@ -109,8 +109,11 @@ export function isAllowedMutationContentType(request) {
   return type === "application/json";
 }
 
-export async function rateLimitKey(request, scope, extra = "", config = {}) {
-  const fingerprint = sha256Hex(`${clientIdentity(request, config)}|${extra}`);
+export async function rateLimitKey(request, scope, extra = "", config = {}, options = {}) {
+  const identity = options.identity === "extra"
+    ? `extra:${String(extra || "")}`
+    : `${clientIdentity(request, config)}|${extra}`;
+  const fingerprint = sha256Hex(identity);
   return `${scope}:${fingerprint}`;
 }
 
@@ -120,7 +123,9 @@ export async function enforceRateLimit(db, request, reply, options) {
   const windowSeconds = Math.max(1, Number(options.windowSeconds || 60));
   const now = Math.floor(Date.now() / 1000);
   const resetAt = now + windowSeconds;
-  const key = await rateLimitKey(request, scope, options.extra || "", options.config || {});
+  const key = await rateLimitKey(request, scope, options.extra || "", options.config || {}, {
+    identity: options.identity,
+  });
 
   const row = await one(
     db,

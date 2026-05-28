@@ -327,6 +327,50 @@ test("account-level login rate limits are written to audit logs", async () => {
   }
 });
 
+test("account-level login rate limit follows the email across different ips", async () => {
+  const calls = [];
+  const db = {
+    async query(sql, params = []) {
+      calls.push({ sql, params });
+      if (sql.includes("FROM app_settings")) return { rows: [] };
+      if (sql.includes("INTO rate_limits")) return { rows: [{ count: 1, reset_at: Math.floor(Date.now() / 1000) + 60 }] };
+      if (sql.includes("INTO audit_logs")) return { rows: [], rowCount: 1 };
+      if (sql.includes("SELECT * FROM users WHERE email = $1")) return { rows: [] };
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+  const app = await buildApp({
+    db,
+    logger: false,
+    config: loadConfig({ PUBLIC_URL: "https://hkai.shop" }),
+  });
+
+  try {
+    for (const ip of ["203.0.113.10", "203.0.113.99"]) {
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/auth/login",
+        headers: {
+          host: "api.hkai.shop",
+          "cf-connecting-ip": ip,
+        },
+        payload: { email: "huakaifugui2.0@gmail.com", password: "wrong-password" },
+      });
+      assert.equal(response.statusCode, 401);
+    }
+
+    const emailLimitKeys = calls
+      .filter(call => call.sql.includes("INTO rate_limits"))
+      .map(call => String(call.params[0] || ""))
+      .filter(key => key.startsWith("auth:login-email:"));
+
+    assert.equal(emailLimitKeys.length, 2);
+    assert.equal(emailLimitKeys[0], emailLimitKeys[1]);
+  } finally {
+    await app.close();
+  }
+});
+
 test("rate-limited registration attempts are written to audit logs", async () => {
   const calls = [];
   const app = await buildRateLimitedAuthApp(calls);

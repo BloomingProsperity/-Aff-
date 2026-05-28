@@ -196,6 +196,7 @@ export async function authRoutes(app) {
     const accountLimited = await enforceRateLimit(app.db, request, reply, {
       scope: "auth:login-email",
       extra: email,
+      identity: "extra",
       limit: 20,
       windowSeconds: 3600,
       config: app.config,
