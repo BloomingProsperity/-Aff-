@@ -1,4 +1,4 @@
-import { adminRoleForNewUser, clearSessionCookie, createSession, currentUser, destroySession, hashPassword, passwordNeedsRehash, publicUser, verifyPassword } from "../lib/auth.js";
+import { adminRoleForNewUser, clearSessionCookie, createSession, currentUser, destroySession, hashPassword, passwordNeedsRehash, publicUser, validatePasswordInput, verifyPassword } from "../lib/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
 import { cleanEmail, isAllowedAuthEmail } from "../lib/common.js";
 import { exec, one } from "../lib/db.js";
@@ -48,6 +48,7 @@ export async function authRoutes(app) {
 
     const email = cleanEmail(body.email);
     const password = String(body.password || "");
+    const passwordInput = validatePasswordInput(password);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       reply.code(400);
       await writeAuditLog(app.db, request, {
@@ -68,18 +69,17 @@ export async function authRoutes(app) {
       });
       return { error: "只支持 QQ、163、Gmail 邮箱。" };
     }
-    if (password.length < 8) {
+    if (!passwordInput.ok) {
       reply.code(400);
       await writeAuditLog(app.db, request, {
         action: "auth.register",
         status: "failed",
         httpStatus: 400,
-        metadata: { email, reason: "weak_password" },
+        metadata: { email, reason: passwordInput.reason },
       });
-      return { error: "密码至少 8 位。" };
+      return { error: passwordInput.error };
     }
-
-    const hashed = hashPassword(password);
+    const hashed = hashPassword(passwordInput.value);
     const role = await adminRoleForNewUser(app.db, app.config, email);
     const referrer = await findReferrerByCode(app.db, normalizeReferralCode(body.ref || body.referralCode), email);
 
@@ -154,6 +154,7 @@ export async function authRoutes(app) {
 
     const email = cleanEmail(body.email);
     const password = String(body.password || "");
+    const passwordInput = validatePasswordInput(password);
     if (!isAllowedAuthEmail(email)) {
       reply.code(400);
       await writeAuditLog(app.db, request, {
@@ -163,6 +164,17 @@ export async function authRoutes(app) {
         metadata: { email, reason: "unsupported_email_domain" },
       });
       return { error: "只支持 QQ、163、Gmail 邮箱。" };
+    }
+
+    if (!passwordInput.ok) {
+      reply.code(400);
+      await writeAuditLog(app.db, request, {
+        action: "auth.login",
+        status: "failed",
+        httpStatus: 400,
+        metadata: { email, reason: passwordInput.reason },
+      });
+      return { error: passwordInput.error };
     }
 
     const accountLimited = await enforceRateLimit(app.db, request, reply, {
@@ -175,7 +187,7 @@ export async function authRoutes(app) {
     if (accountLimited) return accountLimited;
 
     const user = await one(app.db, "SELECT * FROM users WHERE email = $1", [email]);
-    if (!user || !verifyPassword(password, user.password_salt, user.password_hash)) {
+    if (!user || !verifyPassword(passwordInput.value, user.password_salt, user.password_hash)) {
       reply.code(401);
       await writeAuditLog(app.db, request, {
         actorUserId: user?.id || null,
@@ -190,8 +202,8 @@ export async function authRoutes(app) {
       return { error: "邮箱或密码不正确。" };
     }
 
-    if (passwordNeedsRehash(password, user.password_salt, user.password_hash)) {
-      const hashed = hashPassword(password);
+    if (passwordNeedsRehash(passwordInput.value, user.password_salt, user.password_hash)) {
+      const hashed = hashPassword(passwordInput.value);
       await exec(
         app.db,
         "UPDATE users SET password_hash = $1, password_salt = $2, updated_at = now() WHERE id = $3",

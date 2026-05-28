@@ -3,6 +3,8 @@ import { cleanEmail, centsToAmount, toIso } from "./common.js";
 import { exec, one } from "./db.js";
 
 const SESSION_DAYS = 14;
+export const MIN_PASSWORD_LENGTH = 8;
+export const MAX_PASSWORD_LENGTH = 128;
 const CURRENT_PASSWORD_ITERATIONS = 600000;
 const LEGACY_PASSWORD_ITERATIONS = [120000];
 const USER_STATUSES = new Set(["active", "suspended"]);
@@ -32,6 +34,17 @@ export function normalizeUserStatus(value) {
 
 export function canUsePaidFeatures(user) {
   return normalizeUserStatus(user?.status) === "active";
+}
+
+export function validatePasswordInput(password) {
+  const value = String(password || "");
+  if (value.length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, reason: "too_short", error: "密码至少 8 位。" };
+  }
+  if (value.length > MAX_PASSWORD_LENGTH) {
+    return { ok: false, reason: "too_long", error: "密码最多 128 位。" };
+  }
+  return { ok: true, value };
 }
 
 export function hashPassword(password, saltBase64, iterations = CURRENT_PASSWORD_ITERATIONS) {

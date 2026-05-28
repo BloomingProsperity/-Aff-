@@ -1014,6 +1014,7 @@ function LoginDesk() {
               <div className="sms-password-wrap">
                 <input type={showPassword ? "text" : "password"} value={password}
                   onChange={e => setPassword(e.target.value)}
+                  maxLength={128}
                   placeholder="至少 8 位"
                   onKeyDown={e => e.key === "Enter" && !busy && submit()} />
                 <button type="button" className="sms-password-toggle"

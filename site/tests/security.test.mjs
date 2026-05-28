@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { isAllowedAuthEmail } from "../../server/src/lib/common.js";
 import { rateLimitKey, turnstileEnabled, verifyTurnstile } from "../../server/src/lib/security.js";
 
@@ -31,5 +32,8 @@ assert.equal(isAllowedAuthEmail("user@mail.qq.com"), false);
 assert.equal(turnstileEnabled({}), false);
 assert.equal(turnstileEnabled({ turnstileSecretKey: "secret" }), true);
 assert.equal(await verifyTurnstile({}, request, {}, ""), null);
+
+const smsSource = await readFile(new URL("../static/sms.jsx", import.meta.url), "utf8");
+assert.match(smsSource, /className="sms-password-wrap"[\s\S]*maxLength=\{128\}/);
 
 console.log("security tests passed");

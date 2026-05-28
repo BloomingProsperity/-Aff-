@@ -9,8 +9,10 @@ import {
   normalizeUserStatus,
   passwordNeedsRehash,
   requirePaidUser,
+  validatePasswordInput,
   verifyPassword,
 } from "../src/lib/auth.js";
+import { buildApp } from "../src/app.js";
 import { loadConfig } from "../src/lib/config.js";
 
 test("public registration never grants admin role automatically", async () => {
@@ -36,6 +38,23 @@ test("admin access requires both admin role and configured owner email", () => {
   assert.equal(isConfiguredAdmin({ email: "huakaifugui2.0@gmail.com", role: "admin" }, config), true);
   assert.equal(isConfiguredAdmin({ email: "other@gmail.com", role: "admin" }, config), false);
   assert.equal(isConfiguredAdmin({ email: "huakaifugui2.0@gmail.com", role: "user" }, config), false);
+});
+
+test("password input rejects oversized values before expensive hashing", () => {
+  assert.deepEqual(validatePasswordInput("1234567"), {
+    ok: false,
+    reason: "too_short",
+    error: "密码至少 8 位。",
+  });
+  assert.deepEqual(validatePasswordInput("x".repeat(128)), {
+    ok: true,
+    value: "x".repeat(128),
+  });
+  assert.deepEqual(validatePasswordInput("x".repeat(129)), {
+    ok: false,
+    reason: "too_long",
+    error: "密码最多 128 位。",
+  });
 });
 
 test("user account status defaults to active and blocks suspended buyers", () => {
@@ -105,4 +124,40 @@ test("new password hashes do not require rehash", () => {
 
   assert.equal(verifyPassword("correct horse battery staple", current.salt, current.hash), true);
   assert.equal(passwordNeedsRehash("correct horse battery staple", current.salt, current.hash), false);
+});
+
+test("auth routes reject oversized passwords before account lookup", async () => {
+  const calls = [];
+  const db = {
+    async query(sql, params = []) {
+      calls.push({ sql, params });
+      if (sql.includes("FROM app_settings")) return { rows: [] };
+      if (sql.includes("INTO rate_limits")) return { rows: [{ count: 1, reset_at: 1_800_000_000 }] };
+      if (sql.includes("INTO audit_logs")) return { rows: [], rowCount: 1 };
+      if (sql.includes("FROM users")) throw new Error("oversized password reached user lookup");
+      if (sql.includes("INTO users")) throw new Error("oversized password reached user insert");
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+
+  const app = await buildApp({
+    db,
+    logger: false,
+    config: loadConfig({ PUBLIC_URL: "https://hkai.shop" }),
+  });
+
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      headers: { host: "api.hkai.shop" },
+      payload: { email: "buyer@gmail.com", password: "x".repeat(129) },
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.json().error, "密码最多 128 位。");
+    assert.equal(calls.some(call => call.sql.includes("FROM users") || call.sql.includes("INTO users")), false);
+  } finally {
+    await app.close();
+  }
 });
