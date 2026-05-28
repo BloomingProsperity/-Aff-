@@ -19,6 +19,19 @@
       return s;
     }
   }
+  function toDateTimeLocal(s) {
+    if (!s) return "";
+    const date = new Date(s);
+    if (!Number.isFinite(date.getTime())) return "";
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 16);
+  }
+  function fromDateTimeLocal(s) {
+    const value = String(s || "").trim();
+    if (!value) return "";
+    const date = new Date(value);
+    return Number.isFinite(date.getTime()) ? date.toISOString() : "";
+  }
   function admApi(path, opts) {
     const init = { credentials: "include", ...opts };
     if (opts && opts.body) {
@@ -930,7 +943,16 @@
 
   /* ─── Settings ───────────────────────────────────────────── */
   function AdminAnnouncements() {
-    const emptyForm = { title: "", body: "", linkLabel: "", linkUrl: "", priority: "0", status: "active" };
+    const emptyForm = {
+      title: "",
+      body: "",
+      linkLabel: "",
+      linkUrl: "",
+      priority: "0",
+      status: "active",
+      startsAt: "",
+      endsAt: "",
+    };
     const [items, setItems] = useState([]);
     const [form, setForm] = useState(emptyForm);
     const [editingId, setEditingId] = useState(null);
@@ -965,6 +987,8 @@
         linkUrl: item.linkUrl || "",
         priority: String(item.priority || 0),
         status: item.status || "active",
+        startsAt: toDateTimeLocal(item.startsAt),
+        endsAt: toDateTimeLocal(item.endsAt),
       });
       setMsg("");
     }
@@ -973,14 +997,40 @@
       e.preventDefault();
       const path = editingId ? `/admin/announcements/${editingId}` : "/admin/announcements";
       const method = editingId ? "PATCH" : "POST";
+      const payload = {
+        ...form,
+        startsAt: fromDateTimeLocal(form.startsAt),
+        endsAt: fromDateTimeLocal(form.endsAt),
+      };
       setMsg("");
-      admApi(path, { method, body: JSON.stringify(form) })
+      admApi(path, { method, body: JSON.stringify(payload) })
         .then(() => {
           setMsg(editingId ? "公告已更新" : "公告已发布");
           resetForm();
           load();
         })
         .catch(() => setMsg("保存失败，请检查标题、内容和链接"));
+    }
+
+    function pause(item) {
+      admApi(`/admin/announcements/${item.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          title: item.title,
+          body: item.body,
+          linkLabel: item.linkLabel,
+          linkUrl: item.linkUrl,
+          priority: item.priority,
+          status: "paused",
+          startsAt: item.startsAt,
+          endsAt: item.endsAt,
+        }),
+      })
+        .then(() => {
+          setMsg("公告已下线");
+          load();
+        })
+        .catch(() => setMsg("下线失败，请稍后重试"));
     }
 
     function remove(item) {
@@ -1033,6 +1083,16 @@
               <input className="adm-input" value={form.linkUrl}
                 onChange={e => updateField("linkUrl", e.target.value)} placeholder="/sms 或 https://hkai.shop/sms" />
             </div>
+            <div className="adm-field">
+              <label>开始显示</label>
+              <input className="adm-input" type="datetime-local" value={form.startsAt}
+                onChange={e => updateField("startsAt", e.target.value)} />
+            </div>
+            <div className="adm-field">
+              <label>结束显示</label>
+              <input className="adm-input" type="datetime-local" value={form.endsAt}
+                onChange={e => updateField("endsAt", e.target.value)} />
+            </div>
             <div className="adm-field adm-field--wide">
               <label>内容</label>
               <textarea className="adm-input" rows="4" value={form.body}
@@ -1050,22 +1110,26 @@
           <table className="adm-table">
             <thead>
               <tr>
-                <th>ID</th><th>标题</th><th>状态</th><th>优先级</th><th>链接</th><th>更新时间</th><th>操作</th>
+                <th>ID</th><th>标题</th><th>状态</th><th>优先级</th><th>展示时间</th><th>链接</th><th>更新时间</th><th>操作</th>
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={7} className="adm-empty">加载中...</td></tr>}
-              {!loading && items.length === 0 && <tr><td colSpan={7} className="adm-empty">暂无公告</td></tr>}
+              {loading && <tr><td colSpan={8} className="adm-empty">加载中...</td></tr>}
+              {!loading && items.length === 0 && <tr><td colSpan={8} className="adm-empty">暂无公告</td></tr>}
               {items.map(item => (
                 <tr key={item.id}>
                   <td className="adm-td--mono">#{item.id}</td>
                   <td>{item.title}</td>
                   <td><AdmBadge s={item.status} /></td>
                   <td>{item.priority}</td>
+                  <td className="adm-td--date">{fmtDate(item.startsAt)} 至 {fmtDate(item.endsAt)}</td>
                   <td>{item.linkUrl || "—"}</td>
                   <td className="adm-td--date">{fmtDate(item.updatedAt || item.createdAt)}</td>
                   <td>
                     <button className="adm-btn adm-btn--sm adm-btn--outline" type="button" onClick={() => edit(item)}>编辑</button>
+                    {item.status === "active" && (
+                      <button className="adm-btn adm-btn--sm adm-btn--outline" type="button" onClick={() => pause(item)}>下线</button>
+                    )}
                     <button className="adm-btn adm-btn--sm adm-btn--outline" type="button" onClick={() => remove(item)}>删除</button>
                   </td>
                 </tr>

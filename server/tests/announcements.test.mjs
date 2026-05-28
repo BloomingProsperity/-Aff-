@@ -21,6 +21,8 @@ test("announcement input is bounded and safe for public display", () => {
       linkUrl: "https://hkai.shop/sms",
       priority: 7,
       status: "active",
+      startsAt: null,
+      endsAt: null,
     },
   });
 
@@ -55,4 +57,32 @@ test("public announcement shape exposes no admin fields", () => {
     endsAt: "",
   });
   assert.equal(JSON.stringify(item).includes("created_by"), false);
+});
+
+test("announcement input accepts optional publish window", () => {
+  const input = normalizeAnnouncementInput({
+    title: "Maintenance",
+    body: "SMS service maintenance tonight.",
+    startsAt: "2026-06-01T12:30",
+    endsAt: "2026-06-02T01:00",
+  });
+
+  assert.equal(input.ok, true);
+  assert.equal(input.value.startsAt, "2026-06-01T12:30:00.000Z");
+  assert.equal(input.value.endsAt, "2026-06-02T01:00:00.000Z");
+
+  const invalidDate = normalizeAnnouncementInput({
+    title: "Maintenance",
+    body: "SMS service maintenance tonight.",
+    startsAt: "not-a-date",
+  });
+  assert.equal(invalidDate.ok, false);
+
+  const invalidWindow = normalizeAnnouncementInput({
+    title: "Maintenance",
+    body: "SMS service maintenance tonight.",
+    startsAt: "2026-06-02T01:00",
+    endsAt: "2026-06-01T12:30",
+  });
+  assert.equal(invalidWindow.ok, false);
 });

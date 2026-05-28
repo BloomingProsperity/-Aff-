@@ -57,10 +57,20 @@ export async function announcementRoutes(app) {
     const row = await one(
       app.db,
       `INSERT INTO announcements
-         (title, body, link_label, link_url, priority, status, created_by_user_id, updated_by_user_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
+         (title, body, link_label, link_url, priority, status, starts_at, ends_at, created_by_user_id, updated_by_user_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
        RETURNING *`,
-      [value.title, value.body, value.linkLabel, value.linkUrl, value.priority, value.status, auth.user.id],
+      [
+        value.title,
+        value.body,
+        value.linkLabel,
+        value.linkUrl,
+        value.priority,
+        value.status,
+        value.startsAt,
+        value.endsAt,
+        auth.user.id,
+      ],
     );
     await writeAuditLog(app.db, request, {
       actorUserId: auth.user.id,
@@ -109,11 +119,24 @@ export async function announcementRoutes(app) {
               link_url = $4,
               priority = $5,
               status = $6,
-              updated_by_user_id = $7,
+              starts_at = $7,
+              ends_at = $8,
+              updated_by_user_id = $9,
               updated_at = now()
-        WHERE id = $8
+        WHERE id = $10
         RETURNING *`,
-      [value.title, value.body, value.linkLabel, value.linkUrl, value.priority, value.status, auth.user.id, id],
+      [
+        value.title,
+        value.body,
+        value.linkLabel,
+        value.linkUrl,
+        value.priority,
+        value.status,
+        value.startsAt,
+        value.endsAt,
+        auth.user.id,
+        id,
+      ],
     );
     if (!row) {
       reply.code(404);
