@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fivesimHttpError } from "../src/lib/fivesim.js";
+import { fivesim, fivesimHttpError } from "../src/lib/fivesim.js";
 
 test("5sim http errors do not expose upstream details", () => {
   const reply = {
@@ -22,4 +22,27 @@ test("5sim http errors do not expose upstream details", () => {
   assert.equal(JSON.stringify(body).includes("5sim"), false);
   assert.equal(JSON.stringify(body).includes("secret"), false);
   assert.equal(JSON.stringify(body).includes("raw upstream body"), false);
+});
+
+test("5sim requests include an abort signal timeout", async () => {
+  const originalFetch = globalThis.fetch;
+  const signals = [];
+
+  globalThis.fetch = async (url, init = {}) => {
+    signals.push(init.signal);
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  try {
+    const result = await fivesim("/guest/products/usa/any", "");
+
+    assert.equal(result.ok, true);
+    assert.equal(signals.length, 1);
+    assert.equal(signals[0] instanceof AbortSignal, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
