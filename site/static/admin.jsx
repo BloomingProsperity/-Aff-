@@ -908,6 +908,154 @@
   }
 
   /* ─── Settings ───────────────────────────────────────────── */
+  function AdminAnnouncements() {
+    const emptyForm = { title: "", body: "", linkLabel: "", linkUrl: "", priority: "0", status: "active" };
+    const [items, setItems] = useState([]);
+    const [form, setForm] = useState(emptyForm);
+    const [editingId, setEditingId] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [msg, setMsg] = useState("");
+
+    function load() {
+      setLoading(true);
+      admApi("/admin/announcements")
+        .then(d => setItems(d.announcements || []))
+        .catch(() => setMsg("公告加载失败，请稍后重试"))
+        .finally(() => setLoading(false));
+    }
+
+    useEffect(() => { load(); }, []);
+
+    function updateField(key, value) {
+      setForm(prev => ({ ...prev, [key]: value }));
+    }
+
+    function resetForm() {
+      setForm(emptyForm);
+      setEditingId(null);
+    }
+
+    function edit(item) {
+      setEditingId(item.id);
+      setForm({
+        title: item.title || "",
+        body: item.body || "",
+        linkLabel: item.linkLabel || "",
+        linkUrl: item.linkUrl || "",
+        priority: String(item.priority || 0),
+        status: item.status || "active",
+      });
+      setMsg("");
+    }
+
+    function save(e) {
+      e.preventDefault();
+      const path = editingId ? `/admin/announcements/${editingId}` : "/admin/announcements";
+      const method = editingId ? "PATCH" : "POST";
+      setMsg("");
+      admApi(path, { method, body: JSON.stringify(form) })
+        .then(() => {
+          setMsg(editingId ? "公告已更新" : "公告已发布");
+          resetForm();
+          load();
+        })
+        .catch(() => setMsg("保存失败，请检查标题、内容和链接"));
+    }
+
+    function remove(item) {
+      if (!window.confirm(`删除公告：${item.title}？`)) return;
+      admApi(`/admin/announcements/${item.id}`, { method: "DELETE" })
+        .then(() => {
+          setMsg("公告已删除");
+          if (editingId === item.id) resetForm();
+          load();
+        })
+        .catch(() => setMsg("删除失败，请稍后重试"));
+    }
+
+    return (
+      <div className="adm-content-inner">
+        <div className="adm-page-head">
+          <h2 className="adm-page-title">公告管理</h2>
+          <span className="adm-count">共 {fmt(items.length)} 条</span>
+        </div>
+
+        <form className="adm-card adm-voucher-form" onSubmit={save}>
+          <div className="adm-card-head">{editingId ? "编辑公告" : "发布公告"}</div>
+          <div className="adm-settings-grid">
+            <div className="adm-field">
+              <label>标题</label>
+              <input className="adm-input" value={form.title}
+                onChange={e => updateField("title", e.target.value)} placeholder="例如：接码服务维护通知" />
+            </div>
+            <div className="adm-field">
+              <label>状态</label>
+              <select className="adm-input" value={form.status}
+                onChange={e => updateField("status", e.target.value)}>
+                <option value="active">启用</option>
+                <option value="paused">暂停</option>
+                <option value="draft">草稿</option>
+              </select>
+            </div>
+            <div className="adm-field">
+              <label>优先级</label>
+              <input className="adm-input" type="number" min="0" max="100"
+                value={form.priority} onChange={e => updateField("priority", e.target.value)} />
+            </div>
+            <div className="adm-field">
+              <label>按钮文字</label>
+              <input className="adm-input" value={form.linkLabel}
+                onChange={e => updateField("linkLabel", e.target.value)} placeholder="可不填" />
+            </div>
+            <div className="adm-field">
+              <label>按钮链接</label>
+              <input className="adm-input" value={form.linkUrl}
+                onChange={e => updateField("linkUrl", e.target.value)} placeholder="/sms 或 https://hkai.shop/sms" />
+            </div>
+            <div className="adm-field adm-field--wide">
+              <label>内容</label>
+              <textarea className="adm-input" rows="4" value={form.body}
+                onChange={e => updateField("body", e.target.value)} placeholder="写给用户看的公告内容" />
+            </div>
+          </div>
+          <div className="adm-settings-actions">
+            <button className="adm-btn adm-btn--primary" type="submit">{editingId ? "保存公告" : "发布公告"}</button>
+            {editingId && <button className="adm-btn adm-btn--outline" type="button" onClick={resetForm}>取消编辑</button>}
+          </div>
+          {msg && <div className="adm-field-hint">{msg}</div>}
+        </form>
+
+        <div className="adm-card adm-card--table">
+          <table className="adm-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>标题</th><th>状态</th><th>优先级</th><th>链接</th><th>更新时间</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && <tr><td colSpan={7} className="adm-empty">加载中...</td></tr>}
+              {!loading && items.length === 0 && <tr><td colSpan={7} className="adm-empty">暂无公告</td></tr>}
+              {items.map(item => (
+                <tr key={item.id}>
+                  <td className="adm-td--mono">#{item.id}</td>
+                  <td>{item.title}</td>
+                  <td><AdmBadge s={item.status} /></td>
+                  <td>{item.priority}</td>
+                  <td>{item.linkUrl || "—"}</td>
+                  <td className="adm-td--date">{fmtDate(item.updatedAt || item.createdAt)}</td>
+                  <td>
+                    <button className="adm-btn adm-btn--sm adm-btn--outline" type="button" onClick={() => edit(item)}>编辑</button>
+                    <button className="adm-btn adm-btn--sm adm-btn--outline" type="button" onClick={() => remove(item)}>删除</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
   function AdminSettings() {
     const [cfg,     setCfg]     = useState({
       SMS_USD_CNY_RATE: "",
@@ -1102,6 +1250,7 @@
 
   /* ─── AdminDesk shell ────────────────────────────────────── */
   const ADM_NAV = [
+    { id: "announcements", label: "公告管理" },
     { id: "overview", label: "概览" },
     { id: "users",    label: "用户管理" },
     { id: "orders",   label: "订单管理" },
@@ -1176,6 +1325,7 @@
 
         {/* ── 内容区 ── */}
         <main className="adm-main">
+          {tab === "announcements" && <AdminAnnouncements />}
           {tab === "overview"  && <AdminOverview />}
           {tab === "users"     && <AdminUsers />}
           {tab === "orders"    && <AdminOrders />}

@@ -131,6 +131,37 @@ function CardFace({ card, large = false }) {
 
 // ── 顶部小公告 ───────────────────────────────────────────
 function PromoBar() {
+  const [announcement, setAnnouncement] = React.useState(null);
+
+  React.useEffect(() => {
+    fetch("/api/announcements", { credentials: "include" })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        const item = d?.announcements?.[0];
+        if (item?.title || item?.body) setAnnouncement(item);
+      })
+      .catch(() => {});
+  }, []);
+
+  if (announcement) {
+    const href = announcement.linkUrl || "";
+    const external = /^https?:\/\//i.test(href);
+    return (
+      <div className="promo">
+        <div className="wrap promo-inner">
+          <span className="promo-tag">{announcement.title}</span>
+          <span>{announcement.body}</span>
+          {href && (
+            <a href={href} className="promo-link" target={external ? "_blank" : undefined}
+              rel={external ? "noreferrer" : undefined}>
+              {announcement.linkLabel || "查看"}
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="promo">
       <div className="wrap promo-inner">

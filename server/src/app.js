@@ -5,6 +5,7 @@ import { fivesim } from "./lib/fivesim.js";
 import { applyRuntimeSettings } from "./lib/settings.js";
 import { isAllowedFetchSite, isAllowedRequestOrigin, isMutatingRequest } from "./lib/security.js";
 import { adminRoutes } from "./routes/admin.js";
+import { announcementRoutes } from "./routes/announcements.js";
 import { authRoutes } from "./routes/auth.js";
 import { configRoutes } from "./routes/config.js";
 import { smsRoutes } from "./routes/sms.js";
@@ -68,6 +69,7 @@ export async function buildApp({ db, config, fivesimClient = fivesim, logger = t
   });
 
   await app.register(configRoutes);
+  await app.register(announcementRoutes);
   await app.register(authRoutes);
   await app.register(smsRoutes);
   await app.register(voucherRoutes);
