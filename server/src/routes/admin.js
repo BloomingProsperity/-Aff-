@@ -819,16 +819,30 @@ export async function adminRoutes(app) {
     }
 
     const changedKeys = [];
-    for (const item of normalizedSettings) {
-      applySettingToConfig(app.config, item.key, item.value);
-      changedKeys.push(item.key);
-      await exec(
-        app.db,
-        `INSERT INTO app_settings (key, value, updated_at)
-         VALUES ($1, $2, now())
-         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
-        [item.key, item.value],
-      );
+    if (normalizedSettings.length > 0) {
+      const client = await app.db.connect();
+      try {
+        await client.query("BEGIN");
+        for (const item of normalizedSettings) {
+          await client.query(
+            `INSERT INTO app_settings (key, value, updated_at)
+             VALUES ($1, $2, now())
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+            [item.key, item.value],
+          );
+        }
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK").catch(() => {});
+        throw error;
+      } finally {
+        client.release();
+      }
+
+      for (const item of normalizedSettings) {
+        applySettingToConfig(app.config, item.key, item.value);
+        changedKeys.push(item.key);
+      }
     }
     await writeAuditLog(app.db, request, {
       actorUserId: auth.user.id,
