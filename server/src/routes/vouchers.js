@@ -60,7 +60,23 @@ export async function voucherRoutes(app) {
       windowSeconds: 600,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      const submittedCode = normalizeVoucherCode(request.body?.code);
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: auth.user.id,
+        action: "voucher.redeem",
+        resourceType: "voucher",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: {
+          reason: "rate_limited",
+          codeLength: submittedCode.length,
+          codeSuffix: submittedCode ? voucherSuffix(submittedCode) : "",
+        },
+      });
+      return limited;
+    }
 
     const body = request.body || {};
 
