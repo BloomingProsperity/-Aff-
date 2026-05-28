@@ -3,7 +3,7 @@ import { publicUser, requireAdmin, requireUser } from "../lib/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
 import { amountToCents, centsToAmount, cleanOrderId, toIso } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
-import { enforceRateLimit, verifyTurnstile } from "../lib/security.js";
+import { enforceRateLimit } from "../lib/security.js";
 import { generateVoucherCode, hashVoucherCode, normalizeVoucherCode, voucherSuffix } from "../lib/vouchers.js";
 
 function batchId() {
@@ -50,19 +50,6 @@ export async function voucherRoutes(app) {
     if (limited) return limited;
 
     const body = request.body || {};
-    const turnstile = await verifyTurnstile(app.config, request, reply, body.turnstileToken);
-    if (turnstile) {
-      await writeAuditLog(app.db, request, {
-        actorUserId: auth.user.id,
-        targetUserId: auth.user.id,
-        action: "voucher.redeem",
-        resourceType: "voucher",
-        status: "failed",
-        httpStatus: reply.statusCode || 400,
-        metadata: { reason: "turnstile_failed" },
-      });
-      return turnstile;
-    }
 
     const code = normalizeVoucherCode(body.code);
     if (code.length < 8) {

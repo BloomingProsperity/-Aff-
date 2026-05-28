@@ -228,10 +228,8 @@ function shouldShowTurnstileRetry(status) {
   return ["error", "expired", "timeout", "unsupported", "script-error"].includes(status);
 }
 
-function SmsOrderPanel({ user, product, country, operator, countries, currentProduct, busy, onBuy, onLoadOrders, message, turnstileSiteKey, turnstileToken, setTurnstileToken, turnstileResetKey, turnstileStatus, onTurnstileStatus, onResetTurnstile }) {
+function SmsOrderPanel({ user, product, country, operator, countries, currentProduct, busy, onBuy, onLoadOrders, message }) {
   const countryLabel = countries.find(x => x.code === country);
-  const needTurnstile = Boolean(turnstileSiteKey && !turnstileToken);
-  const hint = turnstileHint(turnstileStatus, Boolean(turnstileToken), "购买");
   const productAvailable = Boolean(currentProduct && Number(currentProduct.charge || 0) > 0 && Number(currentProduct.count || 0) > 0);
   return (
     <div className="sms-tp sms-tp--order">
@@ -268,18 +266,9 @@ function SmsOrderPanel({ user, product, country, operator, countries, currentPro
       </div>
       {user ? (
         <div className="sms-tp-actions">
-          <TurnstileBox siteKey={turnstileSiteKey} onToken={setTurnstileToken} resetKey={turnstileResetKey} onStatus={onTurnstileStatus} />
-          {needTurnstile && (
-            <div className="sms-turnstile-help">
-              <p className="sms-turnstile-hint">{hint}</p>
-              {shouldShowTurnstileRetry(turnstileStatus) && (
-                <button type="button" className="sms-turnstile-retry" onClick={onResetTurnstile}>重新验证</button>
-              )}
-            </div>
-          )}
           <button className="ca-button ca-button--primary ca-button--lg sms-buy-btn"
             onClick={onBuy}
-            disabled={busy || needTurnstile || !productAvailable || Number(user.balance || 0) <= 0}>
+            disabled={busy || !productAvailable || Number(user.balance || 0) <= 0}>
             {busy ? '处理中…' : productAvailable ? '购买号码' : '当前不可买'}
           </button>
           <button className="ca-button ca-button--outline" onClick={onLoadOrders} disabled={busy}>刷新订单</button>
@@ -432,9 +421,6 @@ function SmsDesk() {
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileStatus, setTurnstileStatus] = useState("idle");
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
-  const [voucherTurnstileToken, setVoucherTurnstileToken] = useState("");
-  const [voucherTurnstileStatus, setVoucherTurnstileStatus] = useState("idle");
-  const [voucherTurnstileResetKey, setVoucherTurnstileResetKey] = useState(0);
 
   const api = async (path, options = {}) => {
     const res = await fetch(smsApiUrl(path), {
@@ -485,12 +471,6 @@ function SmsDesk() {
     setTurnstileToken("");
     setTurnstileStatus("loading");
     setTurnstileResetKey(value => value + 1);
-  };
-
-  const resetVoucherTurnstile = () => {
-    setVoucherTurnstileToken("");
-    setVoucherTurnstileStatus("loading");
-    setVoucherTurnstileResetKey(value => value + 1);
   };
 
   React.useEffect(() => {
@@ -594,15 +574,11 @@ function SmsDesk() {
   };
 
   const buyNumber = async () => {
-    if (turnstileSiteKey && !turnstileToken) {
-      setMessage("请先等人机验证完成。");
-      return;
-    }
     setBusy(true);
     try {
       const data = await api("/api/sms/buy", {
         method: "POST",
-        body: JSON.stringify({ country, operator, product, turnstileToken }),
+        body: JSON.stringify({ country, operator, product }),
       });
       setOrder(data.order);
       setUser(prev => prev ? { ...prev, balance: data.balance } : prev);
@@ -611,7 +587,6 @@ function SmsDesk() {
     } catch (err) {
       setMessage(err.message);
     } finally {
-      resetTurnstile();
       setBusy(false);
     }
   };
@@ -621,15 +596,11 @@ function SmsDesk() {
       setMessage("请输入兑换码。");
       return;
     }
-    if (turnstileSiteKey && !voucherTurnstileToken) {
-      setMessage("请先等人机验证完成。");
-      return;
-    }
     setBusy(true);
     try {
       const data = await api("/api/vouchers/redeem", {
         method: "POST",
-        body: JSON.stringify({ code: voucherCode, turnstileToken: voucherTurnstileToken }),
+        body: JSON.stringify({ code: voucherCode }),
       });
       setUser(prev => prev ? { ...prev, balance: data.balance } : prev);
       setVoucherCode("");
@@ -637,7 +608,6 @@ function SmsDesk() {
     } catch (err) {
       setMessage(err.message);
     } finally {
-      resetVoucherTurnstile();
       setBusy(false);
     }
   };
@@ -747,10 +717,6 @@ function SmsDesk() {
             user={user} product={product} country={country} operator={operator} countries={countries}
             currentProduct={currentProduct} busy={busy}
             onBuy={buyNumber} onLoadOrders={loadOrders} message={message}
-            turnstileSiteKey={turnstileSiteKey} turnstileToken={turnstileToken}
-            setTurnstileToken={setTurnstileToken} turnstileResetKey={turnstileResetKey}
-            turnstileStatus={turnstileStatus} onTurnstileStatus={setTurnstileStatus}
-            onResetTurnstile={resetTurnstile}
           />
         </div>
       </section>
@@ -789,19 +755,9 @@ function SmsDesk() {
                   <input value={voucherCode} onChange={e => setVoucherCode(e.target.value)}
                     placeholder="输入充值兑换码" />
                 </label>
-                <TurnstileBox siteKey={turnstileSiteKey} onToken={setVoucherTurnstileToken}
-                  resetKey={voucherTurnstileResetKey} onStatus={setVoucherTurnstileStatus} />
-                {turnstileSiteKey && !voucherTurnstileToken && (
-                  <div className="sms-turnstile-help">
-                    <p className="sms-turnstile-hint">{turnstileHint(voucherTurnstileStatus, Boolean(voucherTurnstileToken), "兑换")}</p>
-                    {shouldShowTurnstileRetry(voucherTurnstileStatus) && (
-                      <button type="button" className="sms-turnstile-retry" onClick={resetVoucherTurnstile}>重新验证</button>
-                    )}
-                  </div>
-                )}
                 <button className="ca-button ca-button--primary ca-button--lg sms-buy-btn"
                   onClick={redeemVoucher}
-                  disabled={busy || !voucherCode.trim() || Boolean(turnstileSiteKey && !voucherTurnstileToken)}>
+                  disabled={busy || !voucherCode.trim()}>
                   立即兑换
                 </button>
               </div>

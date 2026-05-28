@@ -5,7 +5,7 @@ import { exec, many, one } from "../lib/db.js";
 import { fivesimHttpError } from "../lib/fivesim.js";
 import { quoteCharge } from "../lib/pricing.js";
 import { maybeGrantReferralReward } from "../lib/referrals.js";
-import { enforceRateLimit, verifyTurnstile } from "../lib/security.js";
+import { enforceRateLimit } from "../lib/security.js";
 import {
   buySmsProvider,
   changeSmsProviderOrder,
@@ -201,11 +201,6 @@ export async function smsRoutes(app) {
     if (limited) return limited;
 
     const body = request.body || {};
-    const turnstile = await verifyTurnstile(app.config, request, reply, body.turnstileToken);
-    if (turnstile) {
-      await auditSmsBuy(app, request, auth, "failed", reply.statusCode || 400, { reason: "turnstile_failed" });
-      return turnstile;
-    }
 
     const country = cleanPart(body.country || "usa");
     const operator = cleanPart(body.operator || "any");

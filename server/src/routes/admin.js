@@ -2,7 +2,7 @@ import { publicUser, requireAdmin } from "../lib/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
 import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
-import { enforceRateLimit, verifyTurnstile } from "../lib/security.js";
+import { enforceRateLimit } from "../lib/security.js";
 import { adminSettingsView, applySettingToConfig, normalizeAdminSetting, settingKeys } from "../lib/settings.js";
 
 function pageParams(query = {}) {
@@ -96,8 +96,40 @@ export async function adminRoutes(app) {
         ORDER BY total DESC
         LIMIT 20`,
     );
+    let risk = {
+      failedActions24h: 0,
+      failedLogins24h: 0,
+      failedPurchases24h: 0,
+      uniqueFailedIps24h: 0,
+      riskyIps24h: 0,
+    };
+    try {
+      risk = await one(
+        app.db,
+        `WITH recent AS (
+           SELECT *
+             FROM audit_logs
+            WHERE created_at >= now() - INTERVAL '24 hours'
+         ),
+         ip_failures AS (
+           SELECT ip, COUNT(*)::int AS total
+             FROM recent
+            WHERE status = 'failed' AND COALESCE(ip, '') <> ''
+            GROUP BY ip
+         )
+         SELECT
+           COUNT(*) FILTER (WHERE status = 'failed')::int AS "failedActions24h",
+           COUNT(*) FILTER (WHERE status = 'failed' AND action = 'auth.login')::int AS "failedLogins24h",
+           COUNT(*) FILTER (WHERE status = 'failed' AND action = 'sms.buy')::int AS "failedPurchases24h",
+           COUNT(DISTINCT ip) FILTER (WHERE status = 'failed' AND COALESCE(ip, '') <> '')::int AS "uniqueFailedIps24h",
+           (SELECT COUNT(*)::int FROM ip_failures WHERE total >= 10) AS "riskyIps24h"
+          FROM recent`,
+      );
+    } catch (error) {
+      if (error.code !== "42P01") throw error;
+    }
 
-    return { users, orders, revenue, pageviews };
+    return { users, orders, revenue, pageviews, risk };
   });
 
   app.get("/api/admin/users", async (request, reply) => {
@@ -140,18 +172,6 @@ export async function adminRoutes(app) {
     if (limited) return limited;
 
     const body = request.body || {};
-    const turnstile = await verifyTurnstile(app.config, request, reply, body.turnstileToken);
-    if (turnstile) {
-      await writeAuditLog(app.db, request, {
-        actorUserId: auth.user.id,
-        action: "admin.balance.adjust",
-        resourceType: "balance",
-        status: "failed",
-        httpStatus: reply.statusCode || 400,
-        metadata: { reason: "turnstile_failed" },
-      });
-      return turnstile;
-    }
 
     const userId = Number(body.userId);
     const delta = amountToCents(body.amount);
@@ -314,18 +334,6 @@ export async function adminRoutes(app) {
     if (limited) return limited;
 
     const input = request.body?.settings || {};
-    const turnstile = await verifyTurnstile(app.config, request, reply, request.body?.turnstileToken);
-    if (turnstile) {
-      await writeAuditLog(app.db, request, {
-        actorUserId: auth.user.id,
-        action: "admin.settings.update",
-        resourceType: "settings",
-        status: "failed",
-        httpStatus: reply.statusCode || 400,
-        metadata: { reason: "turnstile_failed" },
-      });
-      return turnstile;
-    }
 
     const allowed = settingKeys();
     const changedKeys = [];

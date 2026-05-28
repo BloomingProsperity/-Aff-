@@ -30,129 +30,6 @@
     });
   }
 
-  function admTurnstileHint(status, hasToken, actionText = "提交") {
-    if (hasToken) return "";
-    if (status === "error") return "验证没有通过，请重新验证。";
-    if (status === "expired") return "验证已过期，请重新验证。";
-    if (status === "timeout") return "验证时间过长，请重新验证。";
-    if (status === "unsupported") return "当前浏览器不支持验证，请换个浏览器。";
-    if (status === "script-error") return "验证加载失败，请刷新页面或关闭拦截插件。";
-    return `人机验证通过后可${actionText}。`;
-  }
-
-  function admShowTurnstileRetry(status) {
-    return ["error", "expired", "timeout", "unsupported", "script-error"].includes(status);
-  }
-
-  function AdminTurnstileBox({ siteKey, onToken, resetKey, onStatus }) {
-    const boxRef = React.useRef(null);
-    const widgetRef = React.useRef(null);
-    const pendingTimerRef = React.useRef(null);
-    const tokenReadyRef = React.useRef(false);
-
-    const clearPendingTimer = () => {
-      if (pendingTimerRef.current) {
-        window.clearTimeout(pendingTimerRef.current);
-        pendingTimerRef.current = null;
-      }
-    };
-
-    const armPendingTimer = () => {
-      clearPendingTimer();
-      pendingTimerRef.current = window.setTimeout(() => {
-        if (!tokenReadyRef.current) onStatus?.("timeout");
-      }, 18000);
-    };
-
-    useEffect(() => {
-      if (!siteKey || !boxRef.current) return undefined;
-      let cancelled = false;
-      tokenReadyRef.current = false;
-      onStatus?.("loading");
-      const render = () => {
-        if (cancelled || widgetRef.current || !window.turnstile || !boxRef.current) return;
-        widgetRef.current = window.turnstile.render(boxRef.current, {
-          sitekey: siteKey,
-          theme: "light",
-          size: "normal",
-          appearance: "always",
-          language: "zh-cn",
-          retry: "never",
-          "refresh-expired": "auto",
-          "refresh-timeout": "manual",
-          callback: token => {
-            const value = String(token || "").trim();
-            if (!value) {
-              tokenReadyRef.current = false;
-              clearPendingTimer();
-              onToken("");
-              onStatus?.("error");
-              return;
-            }
-            tokenReadyRef.current = true;
-            clearPendingTimer();
-            onToken(value);
-            onStatus?.("ready");
-          },
-          "expired-callback": () => {
-            tokenReadyRef.current = false;
-            clearPendingTimer();
-            onToken("");
-            onStatus?.("expired");
-          },
-          "timeout-callback": () => {
-            tokenReadyRef.current = false;
-            clearPendingTimer();
-            onToken("");
-            onStatus?.("timeout");
-          },
-          "error-callback": () => {
-            tokenReadyRef.current = false;
-            clearPendingTimer();
-            onToken("");
-            onStatus?.("error");
-            return true;
-          },
-          "unsupported-callback": () => {
-            tokenReadyRef.current = false;
-            clearPendingTimer();
-            onToken("");
-            onStatus?.("unsupported");
-          },
-        });
-        onStatus?.("rendered");
-        armPendingTimer();
-      };
-      render();
-      const timer = window.setInterval(render, 250);
-      const failTimer = window.setTimeout(() => {
-        if (!cancelled && !widgetRef.current) onStatus?.("script-error");
-      }, 8000);
-      return () => {
-        cancelled = true;
-        window.clearInterval(timer);
-        window.clearTimeout(failTimer);
-        clearPendingTimer();
-        if (widgetRef.current && window.turnstile?.remove) {
-          try { window.turnstile.remove(widgetRef.current); } catch {}
-        }
-        widgetRef.current = null;
-      };
-    }, [siteKey]);
-
-    useEffect(() => {
-      if (!widgetRef.current || !window.turnstile?.reset) return;
-      onToken("");
-      tokenReadyRef.current = false;
-      onStatus?.("loading");
-      try { window.turnstile.reset(widgetRef.current); } catch {}
-      armPendingTimer();
-    }, [resetKey]);
-
-    if (!siteKey) return null;
-    return <div className="adm-turnstile" ref={boxRef} />;
-  }
-
   /* ─── AdmBadge ───────────────────────────────────────────── */
   const BADGE_MAP = {
     completed: ["adm-badge--ok",    "已完成"],
@@ -217,7 +94,7 @@
     if (err)   return <div className="adm-err adm-err--block">{err}</div>;
     if (!data) return <div className="adm-loading">加载中…</div>;
 
-    const { users = {}, orders = {}, revenue = {}, pageviews = [] } = data;
+    const { users = {}, orders = {}, revenue = {}, pageviews = [], risk = {} } = data;
     const page_views = pageviews;
     const maxPv = Math.max(...page_views.map(x => Number(x.total) || 0), 1);
 
@@ -269,6 +146,17 @@
             }
           </div>
         </div>
+
+        <div className="adm-card">
+          <div className="adm-card-head">运营风险</div>
+          <div className="adm-stat-grid adm-stat-grid--inner">
+            <AdmStatCard label="24h 失败动作" value={fmt(risk.failedActions24h || 0)} />
+            <AdmStatCard label="24h 登录失败" value={fmt(risk.failedLogins24h || 0)} />
+            <AdmStatCard label="24h 购买失败" value={fmt(risk.failedPurchases24h || 0)} />
+            <AdmStatCard label="高频失败 IP" value={fmt(risk.riskyIps24h || 0)}
+              sub={`失败来源 ${fmt(risk.uniqueFailedIps24h || 0)} 个`} accent />
+          </div>
+        </div>
       </div>
     );
   }
@@ -279,38 +167,20 @@
     const [note,       setNote]       = useState("手动充值");
     const [submitting, setSubmitting] = useState(false);
     const [err,        setErr]        = useState(null);
-    const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
-    const [turnstileToken,   setTurnstileToken]   = useState("");
-    const [turnstileStatus,  setTurnstileStatus]  = useState("idle");
-    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
-
-    useEffect(() => {
-      admApi("/config")
-        .then(d => setTurnstileSiteKey(d.turnstileEnabled ? d.turnstileSiteKey : ""))
-        .catch(() => {});
-    }, []);
-
-    function resetTurnstile() {
-      setTurnstileToken("");
-      setTurnstileStatus("loading");
-      setTurnstileResetKey(v => v + 1);
-    }
 
     function submit(e) {
       e.preventDefault();
       const n = Number(amount);
       if (!amount || isNaN(n) || n === 0) return setErr("请输入有效金额（正数充值 / 负数扣除）");
-      if (turnstileSiteKey && !turnstileToken) return setErr("请先等人机验证完成。");
       setSubmitting(true);
       setErr(null);
       admApi("/admin/credit", {
         method: "POST",
-        body: JSON.stringify({ userId: user.id, amount: n, note, turnstileToken }),
+        body: JSON.stringify({ userId: user.id, amount: n, note }),
       })
         .then(() => onDone())
         .catch(e => setErr("操作失败：" + e.message))
         .finally(() => {
-          resetTurnstile();
           setSubmitting(false);
         });
     }
@@ -338,20 +208,10 @@
                 <input className="adm-input" value={note}
                   onChange={e => setNote(e.target.value)} />
               </div>
-              <AdminTurnstileBox siteKey={turnstileSiteKey}
-                onToken={setTurnstileToken} resetKey={turnstileResetKey} onStatus={setTurnstileStatus} />
-              {turnstileSiteKey && !turnstileToken && (
-                <div className="adm-turnstile-help">
-                  <div className="adm-turnstile-hint">{admTurnstileHint(turnstileStatus, Boolean(turnstileToken), "确认")}</div>
-                  {admShowTurnstileRetry(turnstileStatus) && (
-                    <button type="button" className="adm-turnstile-retry" onClick={resetTurnstile}>重新验证</button>
-                  )}
-                </div>
-              )}
               {err && <div className="adm-err" style={{ marginBottom: 10 }}>{err}</div>}
               <div className="adm-modal-foot">
                 <button type="button" className="adm-btn adm-btn--outline" onClick={onClose}>取消</button>
-                <button type="submit" className="adm-btn adm-btn--primary" disabled={submitting || Boolean(turnstileSiteKey && !turnstileToken)}>
+                <button type="submit" className="adm-btn adm-btn--primary" disabled={submitting}>
                   {submitting ? "处理中…" : "确认"}
                 </button>
               </div>
@@ -858,10 +718,6 @@
     const [loading, setLoading] = useState(true);
     const [saving,  setSaving]  = useState(false);
     const [msg,     setMsg]     = useState(null);
-    const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
-    const [turnstileToken,   setTurnstileToken]   = useState("");
-    const [turnstileStatus,  setTurnstileStatus]  = useState("idle");
-    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
     useEffect(() => {
       admApi("/admin/settings")
@@ -871,28 +727,15 @@
           setLoading(false);
         })
         .catch(() => setLoading(false));
-      admApi("/config")
-        .then(d => setTurnstileSiteKey(d.turnstileEnabled ? d.turnstileSiteKey : ""))
-        .catch(() => {});
     }, []);
-
-    function resetTurnstile() {
-      setTurnstileToken("");
-      setTurnstileStatus("loading");
-      setTurnstileResetKey(v => v + 1);
-    }
 
     function save(e) {
       e.preventDefault();
-      if (turnstileSiteKey && !turnstileToken) {
-        setMsg({ ok: false, text: "请先等人机验证完成。" });
-        return;
-      }
       setSaving(true);
       setMsg(null);
       admApi("/admin/settings", {
         method: "POST",
-        body: JSON.stringify({ settings: cfg, turnstileToken }),
+        body: JSON.stringify({ settings: cfg }),
       })
         .then(d => {
           setCfg(c => ({
@@ -908,7 +751,6 @@
         })
         .catch(() => setMsg({ ok: false, text: "保存失败，请重试" }))
         .finally(() => {
-          resetTurnstile();
           setSaving(false);
         });
     }
@@ -1004,18 +846,8 @@
               {msg.text}
             </div>
           )}
-          <AdminTurnstileBox siteKey={turnstileSiteKey}
-            onToken={setTurnstileToken} resetKey={turnstileResetKey} onStatus={setTurnstileStatus} />
-          {turnstileSiteKey && !turnstileToken && (
-            <div className="adm-turnstile-help">
-              <div className="adm-turnstile-hint">{admTurnstileHint(turnstileStatus, Boolean(turnstileToken), "保存")}</div>
-              {admShowTurnstileRetry(turnstileStatus) && (
-                <button type="button" className="adm-turnstile-retry" onClick={resetTurnstile}>重新验证</button>
-              )}
-            </div>
-          )}
           <div className="adm-settings-actions">
-            <button type="submit" className="adm-btn adm-btn--primary" disabled={saving || Boolean(turnstileSiteKey && !turnstileToken)}>
+            <button type="submit" className="adm-btn adm-btn--primary" disabled={saving}>
               {saving ? "保存中…" : "保存设置"}
             </button>
           </div>
