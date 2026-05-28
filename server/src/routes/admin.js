@@ -241,7 +241,24 @@ export async function adminRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      const userId = Number(request.params.id) || "";
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: Number(request.params.id) || null,
+        action: "admin.user.status",
+        resourceType: "user",
+        resourceId: userId,
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: {
+          reason: "rate_limited",
+          requestedStatus: normalizeUserStatus(request.body?.status),
+          hasNote: request.body?.note !== undefined,
+        },
+      });
+      return limited;
+    }
 
     const userId = Number(request.params.id);
     const status = normalizeUserStatus(request.body?.status);
@@ -309,7 +326,20 @@ export async function adminRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      const userId = Number(request.params.id) || "";
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: Number(request.params.id) || null,
+        action: "admin.user.sessions.revoke",
+        resourceType: "session",
+        resourceId: userId,
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "rate_limited" },
+      });
+      return limited;
+    }
 
     const userId = Number(request.params.id);
     if (!userId) {
