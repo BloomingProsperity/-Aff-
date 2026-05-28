@@ -8,7 +8,7 @@ export async function configRoutes(app) {
   }));
 
   app.get("/api/health", async (request, reply) => {
-    const result = await healthStatus(app.db);
+    const result = await healthStatus(app.db, app.config);
     reply.code(result.httpStatus);
     return result.body;
   });

@@ -65,6 +65,8 @@ export function loadConfig(env = process.env) {
 
   return {
     nodeEnv: env.NODE_ENV || "development",
+    appVersion: env.APP_VERSION || "0.1.0",
+    appCommit: env.APP_COMMIT || env.GIT_COMMIT || env.SOURCE_COMMIT || "",
     port: Number(env.PORT || 8788),
     host: env.HOST || "127.0.0.1",
     databaseUrl: env.DATABASE_URL || "",
