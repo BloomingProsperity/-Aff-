@@ -100,6 +100,39 @@ function SmsPriceBox({ currentProduct }) {
   );
 }
 
+function SmsAnnouncements({ announcements }) {
+  const items = Array.isArray(announcements) ? announcements.slice(0, 3) : [];
+  if (!items.length) return null;
+
+  return (
+    <section className="k-section sms-announcements">
+      <div className="wrap">
+        <div className="sms-panel sms-announcements-card">
+          <div className="grid-head">
+            <h2 className="ca-h2">系统公告</h2>
+            <span className="ca-meta">最新通知</span>
+          </div>
+          <div className="sms-announcements-list">
+            {items.map(item => (
+              <div className="sms-announcement-item" key={item.id || `${item.title}-${item.priority}`}>
+                <div>
+                  <strong>{item.title}</strong>
+                  <p>{item.body}</p>
+                </div>
+                {item.linkUrl && (
+                  <a className="ca-button ca-button--outline" href={item.linkUrl}>
+                    {item.linkLabel || "查看"}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function SmsServiceBoard({ products, product, setProduct, serviceQuery, setServiceQuery }) {
   const visibleProducts = products
     .filter(item => {
@@ -436,6 +469,7 @@ function SmsDesk() {
   const [serviceQuery, setServiceQuery] = useState("");
   const [order, setOrder] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [voucherCode, setVoucherCode] = useState("");
   const [referral, setReferral] = useState(null);
   const [adminUsers, setAdminUsers] = useState([]);
@@ -507,6 +541,10 @@ function SmsDesk() {
         if (list.length) setCountries(list);
       })
       .catch(() => {});
+
+    api("/api/announcements")
+      .then(data => setAnnouncements(Array.isArray(data?.announcements) ? data.announcements : []))
+      .catch(() => setAnnouncements([]));
   }, []);
 
   React.useEffect(() => {
@@ -731,6 +769,8 @@ function SmsDesk() {
 
 
       {/* 三栏选择器：始终可见 */}
+      <SmsAnnouncements announcements={announcements} />
+
       <section className="k-section sms-three-section">
         <div className="wrap sms-three-grid">
           <SmsCountryPanel countries={countries} country={country} setCountry={setCountry} />

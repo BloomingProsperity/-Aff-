@@ -3,8 +3,11 @@ import { readFile } from "node:fs/promises";
 
 const appJsx = await readFile(new URL("../static/app.jsx", import.meta.url), "utf8");
 const adminJsx = await readFile(new URL("../static/admin.jsx", import.meta.url), "utf8");
+const smsJsx = await readFile(new URL("../static/sms.jsx", import.meta.url), "utf8");
 
 assert.equal(appJsx.includes("/api/announcements"), true, "home promo bar should load public announcements");
+assert.equal(smsJsx.includes("/api/announcements"), true, "sms user page should load public announcements");
+assert.equal(smsJsx.includes("sms-announcements"), true, "sms user page should render an announcement module");
 assert.equal(adminJsx.includes("AdminAnnouncements"), true, "admin should include announcement management");
 assert.equal(adminJsx.includes("/admin/announcements"), true, "admin should call announcement API");
 assert.equal(adminJsx.includes("开始显示"), true, "admin announcement form should support a start time");

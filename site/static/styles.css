@@ -1991,6 +1991,40 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
 .sms-panel--compact {
   min-height: 100%;
 }
+.sms-announcements {
+  padding: 18px 0 0;
+  border-top: 0;
+}
+.sms-announcements-card {
+  padding: 18px 20px;
+}
+.sms-announcements-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+.sms-announcement-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: #f7fbff;
+  padding: 13px 14px;
+}
+.sms-announcement-item strong {
+  display: block;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.35;
+}
+.sms-announcement-item p {
+  margin: 5px 0 0;
+  color: var(--fg-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
 .sms-referral-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2563,6 +2597,7 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   .sms-grid,
   .sms-field-row,
   .sms-admin-grid,
+  .sms-announcement-item,
   .sms-service-head,
   .sms-service-grid,
   .sms-user-row { grid-template-columns: 1fr; }
