@@ -7,6 +7,7 @@ import {
   isAllowedFetchSite,
   isAllowedRequestHost,
   isAllowedRequestOrigin,
+  enforceRateLimit,
   rateLimitKey,
   turnstileEnabled,
   verifyTurnstile,
@@ -89,6 +90,55 @@ test("rate limit trusts forwarded headers only from local proxy", async () => {
   };
 
   assert.notEqual(await rateLimitKey(proxiedA, "login"), await rateLimitKey(proxiedB, "login"));
+});
+
+test("rate limit uses an in-memory fallback when the database limiter is unavailable", async () => {
+  const db = {
+    async query(sql) {
+      if (sql.includes("rate_limits")) {
+        const error = new Error("rate limiter unavailable");
+        error.code = "57P01";
+        throw error;
+      }
+      return { rows: [] };
+    },
+  };
+  const request = { ip: `198.51.100.${Date.now() % 255}`, headers: {} };
+  const replies = Array.from({ length: 3 }, () => {
+    const reply = {
+      statusCode: 200,
+      headers: {},
+      code(value) {
+        this.statusCode = value;
+        return this;
+      },
+      header(key, value) {
+        this.headers[key.toLowerCase()] = value;
+        return this;
+      },
+    };
+    return reply;
+  });
+
+  assert.equal(await enforceRateLimit(db, request, replies[0], {
+    scope: "fallback-test",
+    limit: 2,
+    windowSeconds: 60,
+  }), null);
+  assert.equal(await enforceRateLimit(db, request, replies[1], {
+    scope: "fallback-test",
+    limit: 2,
+    windowSeconds: 60,
+  }), null);
+  const limited = await enforceRateLimit(db, request, replies[2], {
+    scope: "fallback-test",
+    limit: 2,
+    windowSeconds: 60,
+  });
+
+  assert.deepEqual(limited, { error: "操作太频繁，请稍后再试。" });
+  assert.equal(replies[2].statusCode, 429);
+  assert.ok(Number(replies[2].headers["retry-after"]) > 0);
 });
 
 test("request origin must match configured site origins", () => {

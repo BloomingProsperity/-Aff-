@@ -3,6 +3,29 @@ import { exec, one } from "./db.js";
 
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const fallbackRateLimits = new Map();
+
+function rateLimitError(reply, retryAfter) {
+  reply.header("retry-after", String(Math.max(1, Number(retryAfter || 1))));
+  reply.code(429);
+  return { error: "操作太频繁，请稍后再试。" };
+}
+
+function fallbackRateLimit(key, limit, resetAt, now) {
+  for (const [storedKey, value] of fallbackRateLimits) {
+    if (Number(value.resetAt || 0) <= now) fallbackRateLimits.delete(storedKey);
+  }
+
+  const existing = fallbackRateLimits.get(key);
+  if (!existing || Number(existing.resetAt || 0) <= now) {
+    const entry = { count: 1, resetAt };
+    fallbackRateLimits.set(key, entry);
+    return entry;
+  }
+
+  existing.count = Number(existing.count || 0) + 1;
+  return existing;
+}
 
 function sha256Hex(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -127,23 +150,31 @@ export async function enforceRateLimit(db, request, reply, options) {
     identity: options.identity,
   });
 
-  const row = await one(
-    db,
-    `INSERT INTO rate_limits (key, count, reset_at, updated_at)
-     VALUES ($1, 1, $2, now())
-     ON CONFLICT (key) DO UPDATE SET
-       count = CASE WHEN rate_limits.reset_at <= $3 THEN 1 ELSE rate_limits.count + 1 END,
-       reset_at = CASE WHEN rate_limits.reset_at <= $3 THEN $2 ELSE rate_limits.reset_at END,
-       updated_at = now()
-     RETURNING count, reset_at`,
-    [key, resetAt, now],
-  );
+  let row;
+  try {
+    row = await one(
+      db,
+      `INSERT INTO rate_limits (key, count, reset_at, updated_at)
+       VALUES ($1, 1, $2, now())
+       ON CONFLICT (key) DO UPDATE SET
+         count = CASE WHEN rate_limits.reset_at <= $3 THEN 1 ELSE rate_limits.count + 1 END,
+         reset_at = CASE WHEN rate_limits.reset_at <= $3 THEN $2 ELSE rate_limits.reset_at END,
+         updated_at = now()
+       RETURNING count, reset_at`,
+      [key, resetAt, now],
+    );
+  } catch (error) {
+    request.log?.warn?.({
+      scope,
+      error: error instanceof Error ? error.message : String(error || "unknown"),
+      code: error?.code || "",
+    }, "database rate limiter unavailable; using memory fallback");
+    row = fallbackRateLimit(key, limit, resetAt, now);
+  }
 
   if (Number(row?.count || 0) > limit) {
     const retryAfter = Math.max(1, Number(row.reset_at || resetAt) - now);
-    reply.header("retry-after", String(retryAfter));
-    reply.code(429);
-    return { error: "操作太频繁，请稍后再试。" };
+    return rateLimitError(reply, retryAfter);
   }
 
   return null;
