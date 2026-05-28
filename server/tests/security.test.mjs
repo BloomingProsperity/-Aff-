@@ -103,6 +103,21 @@ test("api hook blocks cross-site browser mutations before route handlers", async
   }
 });
 
+test("api responses disable browser and proxy caching", async () => {
+  const db = { query: async () => ({ rows: [] }) };
+  const app = await buildApp({ db, config: loadConfig({ PUBLIC_URL: "https://hkai.shop" }), logger: false });
+  try {
+    const response = await app.inject({ method: "GET", url: "/api/auth/me" });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.headers["cache-control"], "no-store");
+    assert.equal(response.headers.pragma, "no-cache");
+    assert.equal(response.headers.expires, "0");
+  } finally {
+    await app.close();
+  }
+});
+
 test("secure cookies default on for production and https public url", () => {
   assert.equal(loadConfig({ NODE_ENV: "production" }).cookieSecure, true);
   assert.equal(loadConfig({ PUBLIC_URL: "https://hkai.shop" }).cookieSecure, true);

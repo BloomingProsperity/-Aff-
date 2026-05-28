@@ -61,6 +61,11 @@ export async function buildApp({ db, config, fivesimClient = fivesim, logger = t
   });
 
   app.addHook("onSend", async (request, reply, payload) => {
+    if (request.url.startsWith("/api/")) {
+      reply.header("cache-control", "no-store");
+      reply.header("pragma", "no-cache");
+      reply.header("expires", "0");
+    }
     reply.header("x-content-type-options", "nosniff");
     reply.header("referrer-policy", "same-origin");
     reply.header("x-frame-options", "DENY");
