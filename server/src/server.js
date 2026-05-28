@@ -1,6 +1,7 @@
 import { buildApp } from "./app.js";
 import { loadConfig } from "./lib/config.js";
 import { createPool } from "./lib/db.js";
+import { startHousekeeping } from "./lib/housekeeping.js";
 import { startLogRetention } from "./lib/logRetention.js";
 import { startSmsMaintenance } from "./lib/smsMaintenance.js";
 
@@ -9,10 +10,12 @@ const db = createPool(config);
 const app = await buildApp({ db, config });
 const smsMaintenance = startSmsMaintenance(app);
 const logRetention = startLogRetention(app);
+const housekeeping = startHousekeeping(app);
 
 const close = async () => {
   smsMaintenance.stop();
   logRetention.stop();
+  housekeeping.stop();
   await app.close();
   await db.end();
 };
