@@ -66,3 +66,59 @@ test("admin can manually run log retention cleanup with audit trail", async () =
     await app.close();
   }
 });
+
+test("rate-limited log retention cleanup is audited before returning", async () => {
+  const calls = [];
+  const db = {
+    async query(sql, params = []) {
+      calls.push({ sql: sql.replace(/\s+/g, " ").trim(), params });
+      if (sql.includes("FROM app_settings")) return { rows: [] };
+      if (sql.includes("FROM sessions") && sql.includes("JOIN users")) {
+        return {
+          rows: [{
+            id: 1,
+            email: "huakaifugui2.0@gmail.com",
+            role: "admin",
+            status: "active",
+            balance_cents: 0,
+          }],
+        };
+      }
+      if (sql.includes("INSERT INTO rate_limits")) return { rows: [{ count: 6, reset_at: Math.floor(Date.now() / 1000) + 60 }] };
+      if (sql.includes("INSERT INTO audit_logs")) return { rows: [], rowCount: 1 };
+      if (sql.includes("DELETE FROM audit_logs") || sql.includes("DELETE FROM sms_order_events")) {
+        throw new Error("rate-limited cleanup reached deletion");
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+  const app = await buildApp({
+    db,
+    logger: false,
+    config: loadConfig({ PUBLIC_URL: "https://hkai.shop" }),
+  });
+
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/admin/log-retention/run",
+      cookies: { hkai_session: "session-token" },
+      headers: {
+        "content-type": "application/json",
+        origin: "https://hkai.shop",
+      },
+      payload: {},
+    });
+
+    assert.equal(response.statusCode, 429);
+    assert.equal(calls.some(call => call.sql.includes("DELETE FROM audit_logs")), false);
+    const audit = calls.find(call => call.sql.includes("INSERT INTO audit_logs"));
+    assert.ok(audit);
+    assert.equal(audit.params[2], "admin.log_retention.run");
+    assert.equal(audit.params[5], "failed");
+    assert.equal(audit.params[6], 429);
+    assert.match(audit.params[11], /rate_limited/);
+  } finally {
+    await app.close();
+  }
+});

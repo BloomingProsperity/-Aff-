@@ -52,7 +52,7 @@ test("admin settings update validates the whole batch before writing", async () 
     assert.equal(response.statusCode, 400);
     assert.equal(config.smsUsdCnyRate, 7.2);
     assert.equal(calls.some(call => call.sql.includes("INSERT INTO app_settings")), false);
-    assert.equal(calls.some(call => call.sql.includes("INSERT INTO audit_logs")), false);
+    assert.equal(calls.some(call => call.sql.includes("INSERT INTO audit_logs")), true);
   } finally {
     await app.close();
   }
@@ -124,6 +124,128 @@ test("admin settings database failure leaves runtime config unchanged", async ()
     assert.ok(calls.some(call => call.sql === "ROLLBACK"));
     assert.equal(calls.some(call => call.sql === "COMMIT"), false);
     assert.ok(calls.some(call => call.sql === "release"));
+    const audit = calls.find(call => call.sql.includes("INSERT INTO audit_logs"));
+    assert.ok(audit);
+    assert.equal(audit.params[2], "admin.settings.update");
+    assert.equal(audit.params[5], "failed");
+    assert.equal(audit.params[6], 500);
+    assert.match(audit.params[11], /database_write_failed/);
+  } finally {
+    await app.close();
+  }
+});
+
+test("invalid admin settings updates are audited without raw values", async () => {
+  const calls = [];
+  const config = loadConfig({
+    PUBLIC_URL: "https://hkai.shop",
+    SMS_USD_CNY_RATE: "7.2",
+  });
+  const db = {
+    async query(sql, params = []) {
+      calls.push({ sql: sql.replace(/\s+/g, " ").trim(), params });
+      if (sql.includes("FROM app_settings")) return { rows: [] };
+      if (sql.includes("FROM sessions") && sql.includes("JOIN users")) {
+        return {
+          rows: [{
+            id: 1,
+            email: "huakaifugui2.0@gmail.com",
+            role: "admin",
+            status: "active",
+            balance_cents: 0,
+          }],
+        };
+      }
+      if (sql.includes("INSERT INTO rate_limits")) return { rows: [{ count: 1, reset_at: 1_800_000_000 }] };
+      if (sql.includes("INSERT INTO audit_logs")) return { rows: [], rowCount: 1 };
+      if (sql.includes("INSERT INTO app_settings")) throw new Error("invalid setting reached app_settings");
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+  const app = await buildApp({ db, logger: false, config });
+
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/admin/settings",
+      cookies: { hkai_session: "session-token" },
+      headers: {
+        "content-type": "application/json",
+        origin: "https://hkai.shop",
+      },
+      payload: {
+        settings: {
+          SMS_USD_CNY_RATE: "21",
+        },
+      },
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.equal(config.smsUsdCnyRate, 7.2);
+    assert.equal(calls.some(call => call.sql.includes("INSERT INTO app_settings")), false);
+    const audit = calls.find(call => call.sql.includes("INSERT INTO audit_logs"));
+    assert.ok(audit);
+    assert.equal(audit.params[2], "admin.settings.update");
+    assert.equal(audit.params[5], "failed");
+    assert.equal(audit.params[6], 400);
+    assert.match(audit.params[11], /invalid_setting/);
+    assert.match(audit.params[11], /SMS_USD_CNY_RATE/);
+    assert.equal(audit.params[11].includes("21"), false);
+  } finally {
+    await app.close();
+  }
+});
+
+test("rate-limited admin settings updates are audited", async () => {
+  const calls = [];
+  const config = loadConfig({ PUBLIC_URL: "https://hkai.shop" });
+  const db = {
+    async query(sql, params = []) {
+      calls.push({ sql: sql.replace(/\s+/g, " ").trim(), params });
+      if (sql.includes("FROM app_settings")) return { rows: [] };
+      if (sql.includes("FROM sessions") && sql.includes("JOIN users")) {
+        return {
+          rows: [{
+            id: 1,
+            email: "huakaifugui2.0@gmail.com",
+            role: "admin",
+            status: "active",
+            balance_cents: 0,
+          }],
+        };
+      }
+      if (sql.includes("INSERT INTO rate_limits")) return { rows: [{ count: 11, reset_at: Math.floor(Date.now() / 1000) + 60 }] };
+      if (sql.includes("INSERT INTO audit_logs")) return { rows: [], rowCount: 1 };
+      if (sql.includes("INSERT INTO app_settings")) throw new Error("rate-limited setting reached app_settings");
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+  const app = await buildApp({ db, logger: false, config });
+
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/admin/settings",
+      cookies: { hkai_session: "session-token" },
+      headers: {
+        "content-type": "application/json",
+        origin: "https://hkai.shop",
+      },
+      payload: {
+        settings: {
+          SMS_USD_CNY_RATE: "7.3",
+        },
+      },
+    });
+
+    assert.equal(response.statusCode, 429);
+    assert.equal(calls.some(call => call.sql.includes("INSERT INTO app_settings")), false);
+    const audit = calls.find(call => call.sql.includes("INSERT INTO audit_logs"));
+    assert.ok(audit);
+    assert.equal(audit.params[2], "admin.settings.update");
+    assert.equal(audit.params[5], "failed");
+    assert.equal(audit.params[6], 429);
+    assert.match(audit.params[11], /rate_limited/);
   } finally {
     await app.close();
   }

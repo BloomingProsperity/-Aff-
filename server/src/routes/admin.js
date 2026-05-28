@@ -168,7 +168,17 @@ export async function adminRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.log_retention.run",
+        resourceType: "log_retention",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "rate_limited" },
+      });
+      return limited;
+    }
 
     const summary = app.logRetention?.run
       ? await app.logRetention.run()
@@ -801,7 +811,17 @@ export async function adminRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.settings.update",
+        resourceType: "settings",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "rate_limited" },
+      });
+      return limited;
+    }
 
     const input = request.body?.settings || {};
 
@@ -812,6 +832,14 @@ export async function adminRoutes(app) {
       const normalized = normalizeAdminSetting(key, input[key]);
       if (!normalized.ok) {
         reply.code(400);
+        await writeAuditLog(app.db, request, {
+          actorUserId: auth.user.id,
+          action: "admin.settings.update",
+          resourceType: "settings",
+          status: "failed",
+          httpStatus: 400,
+          metadata: { reason: "invalid_setting", settingKey: key },
+        });
         return { error: normalized.error };
       }
       if (normalized.skip) continue;
@@ -834,6 +862,14 @@ export async function adminRoutes(app) {
         await client.query("COMMIT");
       } catch (error) {
         await client.query("ROLLBACK").catch(() => {});
+        await writeAuditLog(app.db, request, {
+          actorUserId: auth.user.id,
+          action: "admin.settings.update",
+          resourceType: "settings",
+          status: "failed",
+          httpStatus: 500,
+          metadata: { reason: "database_write_failed", changedKeys: normalizedSettings.map(item => item.key) },
+        });
         throw error;
       } finally {
         client.release();
