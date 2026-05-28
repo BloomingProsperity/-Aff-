@@ -6,6 +6,8 @@ const SETTING_DEFS = {
   SMS_ACTIVE_ORDER_LIMIT: { prop: "smsActiveOrderLimit", type: "positive_int" },
   SMS_BUY_COOLDOWN_SECONDS: { prop: "smsBuyCooldownSeconds", type: "non_negative_int" },
   SMS_ORDER_TIMEOUT_MINUTES: { prop: "smsOrderTimeoutMinutes", type: "positive_int" },
+  SMS_MAINTENANCE_INTERVAL_SECONDS: { prop: "smsMaintenanceIntervalSeconds", type: "positive_int" },
+  SMS_MAINTENANCE_BATCH_LIMIT: { prop: "smsMaintenanceBatchLimit", type: "positive_int" },
   FIVESIM_API_KEY: { prop: "fivesimApiKey", type: "secret" },
   SMSPOOL_API_KEY: { prop: "smspoolApiKey", type: "secret" },
   BEESMS_API_TOKEN: { prop: "beeSmsApiToken", type: "secret" },
@@ -89,6 +91,8 @@ export function adminSettingsView(config) {
       SMS_ACTIVE_ORDER_LIMIT: String(config.smsActiveOrderLimit ?? 3),
       SMS_BUY_COOLDOWN_SECONDS: String(config.smsBuyCooldownSeconds ?? 10),
       SMS_ORDER_TIMEOUT_MINUTES: String(config.smsOrderTimeoutMinutes ?? 30),
+      SMS_MAINTENANCE_INTERVAL_SECONDS: String(config.smsMaintenanceIntervalSeconds ?? 60),
+      SMS_MAINTENANCE_BATCH_LIMIT: String(config.smsMaintenanceBatchLimit ?? 100),
       TURNSTILE_SITE_KEY: String(config.turnstileSiteKey || ""),
     },
     secrets: Object.fromEntries(SECRET_KEYS.map(key => {

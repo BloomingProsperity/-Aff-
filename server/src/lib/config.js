@@ -56,6 +56,9 @@ export function loadConfig(env = process.env) {
     smsMarginCny: Number(env.SMS_MARGIN_CNY || env.SMS_PRICE_FIXED || 10),
     smsActiveOrderLimit: Number(env.SMS_ACTIVE_ORDER_LIMIT || 3),
     smsBuyCooldownSeconds: Number(env.SMS_BUY_COOLDOWN_SECONDS || 10),
+    smsOrderTimeoutMinutes: Number(env.SMS_ORDER_TIMEOUT_MINUTES || 30),
+    smsMaintenanceIntervalSeconds: Number(env.SMS_MAINTENANCE_INTERVAL_SECONDS || 60),
+    smsMaintenanceBatchLimit: Number(env.SMS_MAINTENANCE_BATCH_LIMIT || 100),
     turnstileSiteKey: env.TURNSTILE_SITE_KEY || env.TURNSTILE_SITEKEY || "",
     turnstileSecretKey: env.TURNSTILE_SECRET_KEY || env.TURNSTILE_SECRET || "",
   };

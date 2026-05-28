@@ -93,15 +93,31 @@
     const [data, setData] = useState(null);
     const [providers, setProviders] = useState([]);
     const [err,  setErr]  = useState(null);
+    const [maintaining, setMaintaining] = useState(false);
+    const [maintenanceMsg, setMaintenanceMsg] = useState(null);
 
-    useEffect(() => {
+    function loadOverview() {
       admApi("/admin/stats")
         .then(setData)
         .catch(() => setErr("加载失败，请检查网络或稍后重试"));
       admApi("/admin/provider-health")
         .then(d => setProviders(d.providers || []))
         .catch(() => setProviders([]));
-    }, []);
+    }
+
+    useEffect(() => { loadOverview(); }, []);
+
+    function expireStaleOrders() {
+      setMaintaining(true);
+      setMaintenanceMsg(null);
+      admApi("/admin/orders/expire-stale", { method: "POST", body: JSON.stringify({}) })
+        .then(d => {
+          setMaintenanceMsg(`已处理 ${fmt(d.expired || 0)} 单，退款 ${fmtCny(d.refundAmount || 0)}`);
+          loadOverview();
+        })
+        .catch(() => setMaintenanceMsg("处理失败，请稍后重试"))
+        .finally(() => setMaintaining(false));
+    }
 
     if (err)   return <div className="adm-err adm-err--block">{err}</div>;
     if (!data) return <div className="adm-loading">加载中…</div>;
@@ -160,7 +176,14 @@
         </div>
 
         <div className="adm-card">
-          <div className="adm-card-head">运营风险</div>
+          <div className="adm-card-head adm-card-head--split">
+            <span>运营风险</span>
+            <button className="adm-btn adm-btn--sm adm-btn--outline"
+              disabled={maintaining}
+              onClick={expireStaleOrders}>
+              {maintaining ? "处理中" : "清理超时订单"}
+            </button>
+          </div>
           <div className="adm-stat-grid adm-stat-grid--inner">
             <AdmStatCard label="24h 失败动作" value={fmt(risk.failedActions24h || 0)} />
             <AdmStatCard label="24h 登录失败" value={fmt(risk.failedLogins24h || 0)} />
@@ -170,6 +193,7 @@
             <AdmStatCard label="高频失败 IP" value={fmt(risk.riskyIps24h || 0)}
               sub={`失败来源 ${fmt(risk.uniqueFailedIps24h || 0)} 个`} accent />
           </div>
+          {maintenanceMsg && <div className="adm-maintenance-msg">{maintenanceMsg}</div>}
         </div>
 
         <div className="adm-card">
@@ -868,6 +892,8 @@
       SMS_ACTIVE_ORDER_LIMIT: "",
       SMS_BUY_COOLDOWN_SECONDS: "",
       SMS_ORDER_TIMEOUT_MINUTES: "",
+      SMS_MAINTENANCE_INTERVAL_SECONDS: "",
+      SMS_MAINTENANCE_BATCH_LIMIT: "",
       TURNSTILE_SITE_KEY: "",
       TURNSTILE_SECRET_KEY: "",
       FIVESIM_API_KEY: "",
@@ -959,6 +985,20 @@
                   value={cfg.SMS_ORDER_TIMEOUT_MINUTES || ""}
                   onChange={e => setCfg(c => ({ ...c, SMS_ORDER_TIMEOUT_MINUTES: e.target.value }))}
                   placeholder="30" />
+              </div>
+              <div className="adm-field">
+                <label>自动清理间隔（秒）</label>
+                <input className="adm-input" type="number" min="10" step="1"
+                  value={cfg.SMS_MAINTENANCE_INTERVAL_SECONDS || ""}
+                  onChange={e => setCfg(c => ({ ...c, SMS_MAINTENANCE_INTERVAL_SECONDS: e.target.value }))}
+                  placeholder="60" />
+              </div>
+              <div className="adm-field">
+                <label>单次清理上限</label>
+                <input className="adm-input" type="number" min="1" step="1"
+                  value={cfg.SMS_MAINTENANCE_BATCH_LIMIT || ""}
+                  onChange={e => setCfg(c => ({ ...c, SMS_MAINTENANCE_BATCH_LIMIT: e.target.value }))}
+                  placeholder="100" />
               </div>
             </div>
 

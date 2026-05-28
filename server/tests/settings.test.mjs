@@ -9,6 +9,8 @@ test("admin settings view never exposes secret values", () => {
     smsActiveOrderLimit: 4,
     smsBuyCooldownSeconds: 15,
     smsOrderTimeoutMinutes: 45,
+    smsMaintenanceIntervalSeconds: 60,
+    smsMaintenanceBatchLimit: 100,
     fivesimApiKey: "abc123456789",
     smspoolApiKey: "pool123456789",
     beeSmsApiToken: "bee123456789",
@@ -21,6 +23,8 @@ test("admin settings view never exposes secret values", () => {
   assert.equal(view.settings.SMS_ACTIVE_ORDER_LIMIT, "4");
   assert.equal(view.settings.SMS_BUY_COOLDOWN_SECONDS, "15");
   assert.equal(view.settings.SMS_ORDER_TIMEOUT_MINUTES, "45");
+  assert.equal(view.settings.SMS_MAINTENANCE_INTERVAL_SECONDS, "60");
+  assert.equal(view.settings.SMS_MAINTENANCE_BATCH_LIMIT, "100");
   assert.equal(view.settings.TURNSTILE_SITE_KEY, "0x4AAAA-site");
   assert.equal("FIVESIM_API_KEY" in view.settings, false);
   assert.equal("SMSPOOL_API_KEY" in view.settings, false);
@@ -58,6 +62,8 @@ test("runtime key settings can be applied without restart", () => {
   assert.equal(applySettingToConfig(config, "SMS_ACTIVE_ORDER_LIMIT", "5"), true);
   assert.equal(applySettingToConfig(config, "SMS_BUY_COOLDOWN_SECONDS", "20"), true);
   assert.equal(applySettingToConfig(config, "SMS_ORDER_TIMEOUT_MINUTES", "45"), true);
+  assert.equal(applySettingToConfig(config, "SMS_MAINTENANCE_INTERVAL_SECONDS", "90"), true);
+  assert.equal(applySettingToConfig(config, "SMS_MAINTENANCE_BATCH_LIMIT", "120"), true);
   assert.equal(applySettingToConfig(config, "FIVESIM_API_KEY", "new-5sim-key"), true);
   assert.equal(applySettingToConfig(config, "SMSPOOL_API_KEY", "new-pool-key"), true);
   assert.equal(applySettingToConfig(config, "BEESMS_API_TOKEN", "new-bee-token"), true);
@@ -67,6 +73,8 @@ test("runtime key settings can be applied without restart", () => {
   assert.equal(config.smsActiveOrderLimit, 5);
   assert.equal(config.smsBuyCooldownSeconds, 20);
   assert.equal(config.smsOrderTimeoutMinutes, 45);
+  assert.equal(config.smsMaintenanceIntervalSeconds, 90);
+  assert.equal(config.smsMaintenanceBatchLimit, 120);
   assert.equal(config.fivesimApiKey, "new-5sim-key");
   assert.equal(config.smspoolApiKey, "new-pool-key");
   assert.equal(config.beeSmsApiToken, "new-bee-token");
@@ -86,4 +94,6 @@ test("numeric settings reject unsafe values", () => {
   assert.equal(normalizeAdminSetting("SMS_ACTIVE_ORDER_LIMIT", "0").ok, false);
   assert.equal(normalizeAdminSetting("SMS_BUY_COOLDOWN_SECONDS", "-1").ok, false);
   assert.equal(normalizeAdminSetting("SMS_ORDER_TIMEOUT_MINUTES", "0").ok, false);
+  assert.equal(normalizeAdminSetting("SMS_MAINTENANCE_INTERVAL_SECONDS", "0").ok, false);
+  assert.equal(normalizeAdminSetting("SMS_MAINTENANCE_BATCH_LIMIT", "0").ok, false);
 });

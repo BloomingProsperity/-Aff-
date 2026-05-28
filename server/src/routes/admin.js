@@ -4,6 +4,7 @@ import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
 import { enforceRateLimit } from "../lib/security.js";
 import { adminSettingsView, applySettingToConfig, normalizeAdminSetting, settingKeys } from "../lib/settings.js";
+import { expireStaleSmsOrders } from "../lib/smsMaintenance.js";
 import { normalizeSmsOrderEvent, writeSmsOrderEvent } from "../lib/smsEvents.js";
 import { changeSmsProviderOrder, smsProviderHealth } from "../lib/smsProviders.js";
 import { adminClosableSmsOrderStatus, shouldRefundSmsOrder, smsRefundCents, smsRefundNote } from "../lib/smsRefunds.js";
@@ -335,6 +336,43 @@ export async function adminRoutes(app) {
       params,
     );
     return { orders: rows, total: Number(count?.total || 0), page };
+  });
+
+  app.post("/api/admin/orders/expire-stale", async (request, reply) => {
+    const auth = await requireAdmin(app.db, request, reply, app.config);
+    if (auth.response) return auth.response;
+
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "admin:expire-stale-orders",
+      extra: `admin:${auth.user.id}`,
+      limit: 10,
+      windowSeconds: 300,
+      config: app.config,
+    });
+    if (limited) return limited;
+
+    const summary = await expireStaleSmsOrders(app, {
+      actorUserId: auth.user.id,
+      trigger: "admin",
+    });
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      action: "admin.sms_order.expire_stale",
+      resourceType: "sms_order",
+      resourceId: "stale",
+      status: "success",
+      httpStatus: 200,
+      metadata: {
+        scanned: summary.scanned,
+        expired: summary.expired,
+        refunded: summary.refunded,
+        refundAmount: centsToAmount(summary.refundCents),
+      },
+    });
+    return {
+      ...summary,
+      refundAmount: centsToAmount(summary.refundCents),
+    };
   });
 
   app.get("/api/admin/orders/:id/events", async (request, reply) => {

@@ -2760,6 +2760,16 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   text-transform: uppercase; letter-spacing: .08em;
   margin-bottom: 16px;
 }
+.adm-card-head--split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.adm-card-head--split .adm-btn {
+  text-transform: none;
+  letter-spacing: 0;
+}
 
 /* two-column row */
 .adm-row { display: grid; grid-template-columns: 1fr 1.5fr; gap: 16px; margin-bottom: 20px; }
@@ -2983,6 +2993,15 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+.adm-maintenance-msg {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f5fbff;
+  color: #2b79d9;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 /* ── modal ── */
