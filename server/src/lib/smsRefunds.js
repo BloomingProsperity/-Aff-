@@ -6,6 +6,7 @@ const REFUNDABLE_SMS_STATUSES = new Set([
   "canceled",
   "expired",
   "failed",
+  "refunded",
   "timeout",
 ]);
 

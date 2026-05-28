@@ -36,6 +36,7 @@
     pending:   ["adm-badge--warn",  "待处理"],
     failed:    ["adm-badge--err",   "失败"],
     cancelled: ["adm-badge--muted", "已取消"],
+    expired:   ["adm-badge--muted", "已超时"],
     topup:     ["adm-badge--ok",    "充值"],
     deduct:    ["adm-badge--err",   "扣除"],
     refund:    ["adm-badge--warn",  "退款"],
@@ -359,7 +360,7 @@
   /* ─── Orders ─────────────────────────────────────────────── */
   const ORDER_FILTERS = [
     ["", "全部"], ["pending", "待处理"], ["completed", "已完成"],
-    ["failed", "失败"], ["cancelled", "已取消"],
+    ["failed", "失败"], ["cancelled", "已取消"], ["expired", "已超时"],
   ];
 
   function AdminOrders() {
@@ -769,6 +770,7 @@
       SMS_MARGIN_CNY: "",
       SMS_ACTIVE_ORDER_LIMIT: "",
       SMS_BUY_COOLDOWN_SECONDS: "",
+      SMS_ORDER_TIMEOUT_MINUTES: "",
       TURNSTILE_SITE_KEY: "",
       TURNSTILE_SECRET_KEY: "",
       FIVESIM_API_KEY: "",
@@ -853,6 +855,13 @@
                   value={cfg.SMS_BUY_COOLDOWN_SECONDS || ""}
                   onChange={e => setCfg(c => ({ ...c, SMS_BUY_COOLDOWN_SECONDS: e.target.value }))}
                   placeholder="10" />
+              </div>
+              <div className="adm-field">
+                <label>订单超时关闭（分钟）</label>
+                <input className="adm-input" type="number" min="5" step="1"
+                  value={cfg.SMS_ORDER_TIMEOUT_MINUTES || ""}
+                  onChange={e => setCfg(c => ({ ...c, SMS_ORDER_TIMEOUT_MINUTES: e.target.value }))}
+                  placeholder="30" />
               </div>
             </div>
 

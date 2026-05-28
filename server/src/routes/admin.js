@@ -79,15 +79,15 @@ export async function adminRoutes(app) {
       app.db,
       `SELECT COUNT(*)::int AS total,
               COUNT(*) FILTER (WHERE lower(status) IN ('pending', 'received'))::int AS pending,
-              COUNT(*) FILTER (WHERE lower(status) IN ('finished', 'completed'))::int AS completed,
-              COUNT(*) FILTER (WHERE lower(status) IN ('banned', 'failed'))::int AS failed,
-              COUNT(*) FILTER (WHERE lower(status) = 'cancelled')::int AS cancelled
+              COUNT(*) FILTER (WHERE lower(status) IN ('finish', 'finished', 'completed'))::int AS completed,
+              COUNT(*) FILTER (WHERE lower(status) IN ('banned', 'failed', 'expired', 'timeout'))::int AS failed,
+              COUNT(*) FILTER (WHERE lower(status) IN ('cancelled', 'canceled'))::int AS cancelled
          FROM sms_orders`,
     );
     const revenue = await one(
       app.db,
       `SELECT COALESCE(SUM(price_cents) FILTER (
-                WHERE lower(status) IN ('finished', 'completed', 'received', 'pending')
+                WHERE lower(status) IN ('finish', 'finished', 'completed', 'received', 'pending')
               ), 0)::bigint AS total_cents
          FROM sms_orders`,
     );

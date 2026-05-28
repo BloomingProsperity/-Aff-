@@ -145,6 +145,15 @@ async function auditSmsBuy(app, request, auth, status, httpStatus, metadata = {}
   });
 }
 
+function providerFailureMetadata(result = {}, row = {}) {
+  return {
+    provider: result.provider || row.provider || "",
+    status: result.status || null,
+    apiCode: result.apiCode || null,
+    publicCode: result.publicCode || "unavailable",
+  };
+}
+
 async function refundSmsOrderIfNeeded(app, request, auth, orderId, triggerAction) {
   const client = await app.db.connect();
   let result = { refunded: false, order: null, balanceCents: null };
@@ -213,6 +222,67 @@ async function refundSmsOrderIfNeeded(app, request, auth, orderId, triggerAction
   }
 
   return result;
+}
+
+async function expireStaleSmsOrdersForUser(app, request, auth, { limit = 20 } = {}) {
+  const settings = smsRiskSettings(app.config);
+  const rows = await many(
+    app.db,
+    `SELECT *
+       FROM sms_orders
+      WHERE user_id = $1
+        AND lower(status) = ANY($2)
+        AND COALESCE(updated_at, created_at) <= now() - ($3::int * INTERVAL '1 minute')
+      ORDER BY id ASC
+      LIMIT $4`,
+    [auth.user.id, activeSmsOrderStatuses(), settings.orderTimeoutMinutes, limit],
+  );
+  let expired = 0;
+  let refunded = 0;
+
+  for (const row of rows) {
+    const raw = {
+      provider: row.provider || "5sim",
+      data: {
+        local: "timeout",
+        previousStatus: row.status,
+        orderTimeoutMinutes: settings.orderTimeoutMinutes,
+      },
+    };
+    const updated = await one(
+      app.db,
+      `UPDATE sms_orders
+          SET status = 'expired',
+              raw_json = $1,
+              updated_at = now()
+        WHERE id = $2
+          AND user_id = $3
+          AND lower(status) = ANY($4)
+      RETURNING *`,
+      [JSON.stringify(raw), row.id, auth.user.id, activeSmsOrderStatuses()],
+    );
+    if (!updated) continue;
+
+    expired += 1;
+    const refundResult = await refundSmsOrderIfNeeded(app, request, auth, updated.id, "timeout");
+    if (refundResult.refunded) refunded += 1;
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      targetUserId: auth.user.id,
+      action: "sms.expire",
+      resourceType: "sms_order",
+      resourceId: updated.id,
+      status: "success",
+      httpStatus: 200,
+      metadata: {
+        previousStatus: row.status,
+        orderTimeoutMinutes: settings.orderTimeoutMinutes,
+        refunded: refundResult.refunded,
+      },
+    });
+  }
+
+  return { expired, refunded, orderTimeoutMinutes: settings.orderTimeoutMinutes };
 }
 
 async function smsBuyRisk(app, userId) {
@@ -295,6 +365,7 @@ export async function smsRoutes(app) {
     const auth = await requireUser(app.db, request, reply);
     if (auth.response) return auth.response;
 
+    await expireStaleSmsOrdersForUser(app, request, auth);
     const rows = await many(
       app.db,
       `SELECT * FROM sms_orders
@@ -335,6 +406,7 @@ export async function smsRoutes(app) {
       return { error: "请选择服务。" };
     }
 
+    await expireStaleSmsOrdersForUser(app, request, auth);
     const risk = await smsBuyRisk(app, auth.user.id);
     if (risk.blocked) {
       if (risk.retryAfter) reply.header("retry-after", String(risk.retryAfter));
@@ -418,6 +490,7 @@ export async function smsRoutes(app) {
         country,
         operator,
         product,
+        ...providerFailureMetadata(lastError),
       });
       return smsProviderHttpError(reply, lastError || { status: 502 });
     }
@@ -525,7 +598,19 @@ export async function smsRoutes(app) {
     if (limited) return limited;
 
     const checked = await checkSmsProviderOrder(app, row);
-    if (!checked.ok) return smsProviderHttpError(reply, checked);
+    if (!checked.ok) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: auth.user.id,
+        action: "sms.check",
+        resourceType: "sms_order",
+        resourceId: row.id,
+        status: "failed",
+        httpStatus: checked.status || 502,
+        metadata: providerFailureMetadata(checked, row),
+      });
+      return smsProviderHttpError(reply, checked);
+    }
     await exec(
       app.db,
       `UPDATE sms_orders
@@ -598,7 +683,19 @@ export async function smsRoutes(app) {
       if (limited) return limited;
 
       const changed = await changeSmsProviderOrder(app, row, action);
-      if (!changed.ok) return smsProviderHttpError(reply, changed);
+      if (!changed.ok) {
+        await writeAuditLog(app.db, request, {
+          actorUserId: auth.user.id,
+          targetUserId: auth.user.id,
+          action: `sms.${action}`,
+          resourceType: "sms_order",
+          resourceId: row.id,
+          status: "failed",
+          httpStatus: changed.status || 502,
+          metadata: providerFailureMetadata(changed, row),
+        });
+        return smsProviderHttpError(reply, changed);
+      }
       await exec(
         app.db,
         `UPDATE sms_orders

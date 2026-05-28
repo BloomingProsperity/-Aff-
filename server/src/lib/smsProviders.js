@@ -16,6 +16,44 @@ const PROVIDER_NAMES = {
   [SMS_PROVIDERS.SMSPOOL]: "SMSPool",
 };
 
+const STATUS_ALIASES = {
+  pending: "pending",
+  received: "received",
+  processing: "processing",
+  activating: "activating",
+  resend: "resend",
+  canceled: "cancelled",
+  cancelled: "cancelled",
+  timeout: "timeout",
+  expired: "expired",
+  finish: "completed",
+  finished: "completed",
+  completed: "completed",
+  banned: "banned",
+  ban: "banned",
+  refunded: "refunded",
+};
+
+const SMSPOOL_STATUS_CODES = {
+  1: "pending",
+  2: "expired",
+  3: "completed",
+  4: "resend",
+  5: "cancelled",
+  6: "refunded",
+  7: "processing",
+  8: "activating",
+};
+
+const PUBLIC_PROVIDER_ERRORS = {
+  no_stock: "当前服务暂时没有可用号码，请稍后再试。",
+  invalid_service: "当前服务暂时不可购买，请换一个国家或服务。",
+  provider_busy: "当前服务繁忙，请稍后再试。",
+  insufficient_provider_balance: "服务暂时不可用，请稍后再试。",
+  rate_limited: "请求过于频繁，请稍后再试。",
+  unavailable: "上游服务暂时不可用，请稍后再试。",
+};
+
 const COUNTRY_ISO2 = {
   usa: "us",
   england: "gb",
@@ -57,6 +95,42 @@ const SERVICE_WORDS = {
 
 function cleanText(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+export function normalizeProviderStatus(provider, status, fallback = "pending") {
+  if (provider === SMS_PROVIDERS.SMSPOOL && status !== undefined && status !== null && status !== "") {
+    const numeric = Number(status);
+    if (Number.isInteger(numeric) && SMSPOOL_STATUS_CODES[numeric]) return SMSPOOL_STATUS_CODES[numeric];
+  }
+  const raw = cleanText(status || fallback);
+  return STATUS_ALIASES[raw] || raw || fallback;
+}
+
+function providerPublicCode(result = {}) {
+  if (result.publicCode) return result.publicCode;
+  if (Number(result.status) === 429) return "rate_limited";
+  const apiCode = Number(result.apiCode ?? result.data?.code);
+  if (apiCode === 50001) return "insufficient_provider_balance";
+  if (apiCode === 50101) return "provider_busy";
+  if (apiCode === 50111) return "no_stock";
+  if (apiCode === 50113 || apiCode === 50114) return "invalid_service";
+  return "unavailable";
+}
+
+function providerError(result = {}, extra = {}) {
+  const publicCode = providerPublicCode(result);
+  return {
+    ok: false,
+    status: result.status || 502,
+    error: result.error || "",
+    apiCode: result.apiCode ?? result.data?.code,
+    publicCode,
+    ...extra,
+  };
+}
+
+export function publicSmsProviderError(result = {}) {
+  return PUBLIC_PROVIDER_ERRORS[providerPublicCode(result)] || PUBLIC_PROVIDER_ERRORS.unavailable;
 }
 
 function comparable(value) {
@@ -263,15 +337,15 @@ async function fivesimBuy(app, quote) {
     `/user/buy/activation/${quote.providerCountry}/${quote.providerOperator}/${quote.providerProduct}`,
     token,
   );
-  if (!result.ok) return { ok: false, status: result.status, error: result.error };
+  if (!result.ok) return providerError(result, { provider: SMS_PROVIDERS.FIVESIM });
   const id = result.data?.id;
-  if (!id) return { ok: false, status: 502, error: "上游服务暂时不可用。" };
+  if (!id) return providerError({ status: 502, publicCode: "unavailable" }, { provider: SMS_PROVIDERS.FIVESIM });
   return {
     ok: true,
     provider: SMS_PROVIDERS.FIVESIM,
     id: String(id),
     phone: result.data?.phone || result.data?.number || "",
-    status: result.data?.status || "received",
+    status: normalizeProviderStatus(SMS_PROVIDERS.FIVESIM, result.data?.status, "received"),
     sms: result.data?.sms || [],
     cost: amount(result.data?.price || result.data?.cost || quote.cost),
     raw: result.data || {},
@@ -368,9 +442,9 @@ async function beeBuy(app, quote) {
     service: quote.providerProduct,
     max_amount: maxAmount,
   });
-  if (!result.ok) return { ok: false, status: result.status || 502, error: result.error, apiCode: result.apiCode };
+  if (!result.ok) return providerError(result, { provider: SMS_PROVIDERS.BEESMS });
   const data = result.data?.data || {};
-  if (!data.order_id) return { ok: false, status: 502, error: "上游服务暂时不可用。" };
+  if (!data.order_id) return providerError({ status: 502, publicCode: "unavailable" }, { provider: SMS_PROVIDERS.BEESMS });
   return {
     ok: true,
     provider: SMS_PROVIDERS.BEESMS,
@@ -468,10 +542,10 @@ async function smspoolBuy(app, quote) {
     pricing_option: 0,
     quantity: 1,
   });
-  if (!result.ok) return { ok: false, status: result.status || 502, error: result.error };
+  if (!result.ok) return providerError(result, { provider: SMS_PROVIDERS.SMSPOOL });
   const data = result.data || {};
   const id = data.order_id || data.orderid || data.order_code || data.id || data.request_id;
-  if (!id) return { ok: false, status: 502, error: "上游服务暂时不可用。" };
+  if (!id) return providerError({ status: 502, publicCode: "unavailable" }, { provider: SMS_PROVIDERS.SMSPOOL });
   return {
     ok: true,
     provider: SMS_PROVIDERS.SMSPOOL,
@@ -549,7 +623,7 @@ export async function buySmsProvider(app, quote) {
   if (quote.provider === SMS_PROVIDERS.FIVESIM) return fivesimBuy(app, quote);
   if (quote.provider === SMS_PROVIDERS.BEESMS) return beeBuy(app, quote);
   if (quote.provider === SMS_PROVIDERS.SMSPOOL) return smspoolBuy(app, quote);
-  return { ok: false, status: 502, error: "上游服务暂时不可用。" };
+  return { ok: false, status: 502, publicCode: "unavailable", error: "上游服务暂时不可用。" };
 }
 
 export function providerOrderKey(provider, id) {
@@ -584,12 +658,12 @@ export async function checkSmsProviderOrder(app, row) {
 
   if (provider === SMS_PROVIDERS.FIVESIM) {
     const result = await app.fivesim(`/user/check/${id}`, providerToken(app.config, provider));
-    if (!result.ok) return { ok: false, status: result.status, error: result.error };
+    if (!result.ok) return providerError(result, { provider });
     return {
       ok: true,
       provider,
       phone: result.data?.phone || result.data?.number || row.phone || "",
-      status: result.data?.status || row.status,
+      status: normalizeProviderStatus(provider, result.data?.status, row.status),
       sms: result.data?.sms || [],
       raw: result.data || {},
     };
@@ -597,10 +671,40 @@ export async function checkSmsProviderOrder(app, row) {
 
   if (provider === SMS_PROVIDERS.BEESMS) {
     const result = await beeRequest(app, "/v1/otp/sms", { order: id });
-    if (!result.ok && result.apiCode !== 50106) {
-      return { ok: false, status: result.status || 502, error: result.error };
+    if (!result.ok && result.apiCode === 50106) {
+      return {
+        ok: true,
+        provider,
+        phone: row.phone || "",
+        status: "pending",
+        sms: [],
+        raw: result.data || {},
+      };
     }
-    const sms = result.ok ? smsArrayFromBeeCode(result.data?.data) : [];
+    if (!result.ok && result.apiCode === 50107) {
+      return {
+        ok: true,
+        provider,
+        phone: row.phone || "",
+        status: "timeout",
+        sms: [],
+        raw: result.data || {},
+      };
+    }
+    if (!result.ok && result.apiCode === 50112) {
+      return {
+        ok: true,
+        provider,
+        phone: row.phone || "",
+        status: "cancelled",
+        sms: [],
+        raw: result.data || {},
+      };
+    }
+    if (!result.ok) {
+      return providerError(result, { provider });
+    }
+    const sms = smsArrayFromBeeCode(result.data?.data);
     return {
       ok: true,
       provider,
@@ -613,20 +717,21 @@ export async function checkSmsProviderOrder(app, row) {
 
   if (provider === SMS_PROVIDERS.SMSPOOL) {
     const result = await smspoolRequest(app, "/sms/check", { orderid: id });
-    if (!result.ok) return { ok: false, status: result.status || 502, error: result.error };
+    if (!result.ok) return providerError(result, { provider });
     const data = result.data || {};
     const code = data.code || data.full_code || data.sms_code || "";
+    const statusValue = data.status ?? data.status_code ?? data.statusCode ?? (code ? "completed" : row.status);
     return {
       ok: true,
       provider,
       phone: data.phonenumber || data.phone || row.phone || "",
-      status: data.status || (code ? "completed" : row.status),
+      status: normalizeProviderStatus(provider, statusValue, row.status),
       sms: Array.isArray(data.sms) ? data.sms : smsArrayFromBeeCode(code || data.sms),
       raw: data,
     };
   }
 
-  return { ok: false, status: 502, error: "上游服务暂时不可用。" };
+  return { ok: false, status: 502, publicCode: "unavailable", error: "上游服务暂时不可用。" };
 }
 
 export async function changeSmsProviderOrder(app, row, action) {
@@ -635,10 +740,10 @@ export async function changeSmsProviderOrder(app, row, action) {
 
   if (provider === SMS_PROVIDERS.FIVESIM) {
     const result = await app.fivesim(`/user/${action}/${id}`, providerToken(app.config, provider));
-    if (!result.ok) return { ok: false, status: result.status, error: result.error };
+    if (!result.ok) return providerError(result, { provider });
     return {
       ok: true,
-      status: result.data?.status || action,
+      status: normalizeProviderStatus(provider, result.data?.status, action),
       sms: result.data?.sms || [],
       raw: result.data || {},
     };
@@ -647,7 +752,7 @@ export async function changeSmsProviderOrder(app, row, action) {
   if (provider === SMS_PROVIDERS.BEESMS) {
     if (action === "cancel" || action === "ban") {
       const result = await beeRequest(app, "/v1/otp/cancel", { order: id });
-      if (!result.ok) return { ok: false, status: result.status || 502, error: result.error };
+      if (!result.ok) return providerError(result, { provider });
       return { ok: true, status: "cancelled", sms: [], raw: result.data || {} };
     }
     return { ok: true, status: "finished", sms: [], raw: { local: true } };
@@ -656,16 +761,16 @@ export async function changeSmsProviderOrder(app, row, action) {
   if (provider === SMS_PROVIDERS.SMSPOOL) {
     if (action === "cancel" || action === "ban") {
       const result = await smspoolRequest(app, "/sms/cancel", { orderid: id });
-      if (!result.ok) return { ok: false, status: result.status || 502, error: result.error };
+      if (!result.ok) return providerError(result, { provider });
       return { ok: true, status: "cancelled", sms: [], raw: result.data || {} };
     }
     return { ok: true, status: "finished", sms: [], raw: { local: true } };
   }
 
-  return { ok: false, status: 502, error: "上游服务暂时不可用。" };
+  return { ok: false, status: 502, publicCode: "unavailable", error: "上游服务暂时不可用。" };
 }
 
 export function smsProviderHttpError(reply, result) {
   reply.code(result?.status || 502);
-  return { error: result?.error || "上游服务暂时不可用，请稍后重试。" };
+  return { error: publicSmsProviderError(result) };
 }

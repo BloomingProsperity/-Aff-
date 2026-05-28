@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   normalizeProviderHealth,
+  normalizeProviderStatus,
   providerOrderKey,
   rawProviderOrderId,
+  publicSmsProviderError,
   sortBuyableQuotes,
 } from "../src/lib/smsProviders.js";
 
@@ -23,6 +25,26 @@ test("non-5sim upstream ids are namespaced locally", () => {
   assert.equal(providerOrderKey("5sim", "123"), "123");
   assert.equal(providerOrderKey("bee-sms", "123"), "bee-sms:123");
   assert.equal(rawProviderOrderId({ provider: "bee-sms", fivesim_id: "bee-sms:123" }), "123");
+});
+
+test("provider statuses follow upstream API semantics", () => {
+  assert.equal(normalizeProviderStatus("5sim", "CANCELED"), "cancelled");
+  assert.equal(normalizeProviderStatus("5sim", "FINISHED"), "completed");
+  assert.equal(normalizeProviderStatus("5sim", "RECEIVED"), "received");
+  assert.equal(normalizeProviderStatus("smspool", 1), "pending");
+  assert.equal(normalizeProviderStatus("smspool", 2), "expired");
+  assert.equal(normalizeProviderStatus("smspool", 3), "completed");
+  assert.equal(normalizeProviderStatus("smspool", 5), "cancelled");
+  assert.equal(normalizeProviderStatus("smspool", 6), "refunded");
+  assert.equal(normalizeProviderStatus("smspool", 8), "activating");
+  assert.equal(normalizeProviderStatus("bee-sms", "pending"), "pending");
+});
+
+test("provider errors are converted to standard public messages", () => {
+  assert.equal(publicSmsProviderError({ publicCode: "no_stock", error: "raw upstream no numbers" }), "当前服务暂时没有可用号码，请稍后再试。");
+  assert.equal(publicSmsProviderError({ publicCode: "insufficient_provider_balance", error: "Balance not enough" }), "服务暂时不可用，请稍后再试。");
+  assert.equal(publicSmsProviderError({ status: 429, error: "provider rate limit raw text" }), "请求过于频繁，请稍后再试。");
+  assert.equal(publicSmsProviderError({ status: 502, error: "raw token rejected" }), "上游服务暂时不可用，请稍后再试。");
 });
 
 test("provider health summary never exposes tokens and flags low balances", () => {

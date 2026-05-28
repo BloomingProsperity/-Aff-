@@ -684,6 +684,10 @@ function SmsDesk() {
   const countryLabel = countries.find(x => x.code === country);
   const operators = countryLabel?.operators?.length ? countryLabel.operators : SMS_DEFAULT_OPERATORS;
   const smsList = order?.sms || [];
+  const orderStatus = String(order?.status || "").toLowerCase();
+  const orderClosed = Boolean(order?.refundedAt) || [
+    "finish", "finished", "completed", "cancelled", "canceled", "ban", "banned", "failed", "expired", "timeout",
+  ].includes(orderStatus);
   const guestBuyUrl = "https://t.me/Whohaoe";
 
   return (
@@ -812,10 +816,10 @@ function SmsDesk() {
                     )) : <p>还没有收到短信。</p>}
                   </div>
                   <div className="sms-actions sms-actions--tight">
-                    <button className="ca-button ca-button--primary" onClick={() => checkOrder()} disabled={busy}>刷新验证码</button>
-                    <button className="ca-button ca-button--outline" onClick={() => setOrderState("finish")} disabled={busy}>完成订单</button>
-                    <button className="ca-button ca-button--outline" onClick={() => setOrderState("cancel")} disabled={busy}>取消订单</button>
-                    <button className="ca-button ca-button--outline" onClick={() => setOrderState("ban")} disabled={busy}>拉黑号码</button>
+                    <button className="ca-button ca-button--primary" onClick={() => checkOrder()} disabled={busy || orderClosed}>刷新验证码</button>
+                    <button className="ca-button ca-button--outline" onClick={() => setOrderState("finish")} disabled={busy || orderClosed}>完成订单</button>
+                    <button className="ca-button ca-button--outline" onClick={() => setOrderState("cancel")} disabled={busy || orderClosed}>取消订单</button>
+                    <button className="ca-button ca-button--outline" onClick={() => setOrderState("ban")} disabled={busy || orderClosed}>拉黑号码</button>
                   </div>
                 </div>
               </div>

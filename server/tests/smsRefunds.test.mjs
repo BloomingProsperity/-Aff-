@@ -13,6 +13,7 @@ test("sms refund statuses include cancelled and banned variants", () => {
   assert.equal(refundableSmsOrderStatus("canceled"), true);
   assert.equal(refundableSmsOrderStatus("banned"), true);
   assert.equal(refundableSmsOrderStatus("ban"), true);
+  assert.equal(refundableSmsOrderStatus("refunded"), true);
   assert.equal(refundableSmsOrderStatus("failed"), true);
   assert.equal(refundableSmsOrderStatus("completed"), false);
   assert.equal(refundableSmsOrderStatus("received"), false);
