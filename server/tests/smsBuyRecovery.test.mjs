@@ -45,6 +45,20 @@ test("sms buy success event logging is best-effort after the local order is comm
   assert.match(body, /sms buy success event log failed/);
 });
 
+test("sms buy logs an internal event when upstream price jumps above fixed price", async () => {
+  const source = await readFile(new URL("../src/routes/sms.js", import.meta.url), "utf8");
+  const routeStart = source.indexOf('app.post("/api/sms/buy"');
+  const start = source.indexOf("if (!supplierCostAllowed(app.config, bought.cost || chosen.cost || 0))", routeStart);
+  const end = source.indexOf("const realQuote = quoteCharge", start);
+  const body = source.slice(start, end);
+
+  assert.match(body, /writeSmsOrderEvent/);
+  assert.match(body, /provider\.price_over_fixed/);
+  assert.match(body, /publicCode:\s*"supplier_price_over_fixed_price"/);
+  assert.match(body, /changeSmsProviderOrder[\s\S]*"cancel"/);
+  assert.match(body, /refundBalance/);
+});
+
 test("sms buy rate limit writes an audit log before returning", async () => {
   const calls = [];
   const db = {

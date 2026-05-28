@@ -667,6 +667,22 @@ export async function smsRoutes(app) {
       await changeSmsProviderOrder(app, { ...bought, provider: chosen.provider, fivesim_id: providerOrderKey(chosen.provider, bought.id) }, "cancel");
       await refundBalance(app.db, auth.user.id, reservedCents);
       reply.code(400);
+      await writeSmsOrderEvent(app.db, {
+        userId: auth.user.id,
+        actorUserId: auth.user.id,
+        type: "provider.price_over_fixed",
+        status: "failed",
+        provider: chosen.provider,
+        publicCode: "supplier_price_over_fixed_price",
+        message: "供应商价格超过当前售价，已取消并退款",
+        metadata: {
+          country,
+          operator,
+          product,
+          quoteCount: quotes.length,
+          selectedProvider: chosen.provider,
+        },
+      });
       await auditSmsBuy(app, request, auth, "failed", 400, {
         reason: "supplier_price_over_fixed_price",
         country,
