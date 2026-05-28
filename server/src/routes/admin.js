@@ -606,7 +606,22 @@ export async function adminRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      const orderId = Number(request.params.id) || "";
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.sms_order.close",
+        resourceType: "sms_order",
+        resourceId: orderId,
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: {
+          reason: "rate_limited",
+          hasNote: request.body?.note !== undefined,
+        },
+      });
+      return limited;
+    }
 
     const orderId = Number(request.params.id);
     const note = String(request.body?.note || "后台关闭订单").trim().slice(0, 200);

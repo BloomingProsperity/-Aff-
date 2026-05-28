@@ -333,7 +333,18 @@ export async function voucherRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.voucher.void",
+        resourceType: "voucher",
+        resourceId: id,
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "rate_limited" },
+      });
+      return limited;
+    }
 
     const row = await one(
       app.db,
