@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cleanupOperationalData } from "../src/lib/housekeeping.js";
+import {
+  cleanupOperationalData,
+  housekeepingStatus,
+  PAGE_VIEW_RETENTION_DAYS,
+} from "../src/lib/housekeeping.js";
 
 test("housekeeping removes expired temporary database rows without touching business ledgers", async () => {
   const calls = [];
@@ -30,4 +34,27 @@ test("housekeeping removes expired temporary database rows without touching busi
   assert.deepEqual(calls[4].params, [90]);
   assert.equal(JSON.stringify(calls).includes("balance_logs"), false);
   assert.equal(JSON.stringify(calls).includes("sms_orders"), false);
+});
+
+test("housekeeping status is safe for admin overview", () => {
+  const status = housekeepingStatus({
+    lastRunAt: new Date("2026-05-28T02:03:04.000Z"),
+    lastSummary: { sessions: 2, rateLimits: 3, productCache: 4, operationLocks: 5, pageViews: 6 },
+    lastError: new Error("temporary cleanup failed"),
+  });
+
+  assert.equal(PAGE_VIEW_RETENTION_DAYS, 90);
+  assert.deepEqual(status, {
+    enabled: true,
+    pageViewRetentionDays: 90,
+    lastRunAt: "2026-05-28T02:03:04.000Z",
+    lastDeleted: {
+      sessions: 2,
+      rateLimits: 3,
+      productCache: 4,
+      operationLocks: 5,
+      pageViews: 6,
+    },
+    lastError: "temporary cleanup failed",
+  });
 });

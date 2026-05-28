@@ -108,6 +108,7 @@
     const [err,  setErr]  = useState(null);
     const [maintaining, setMaintaining] = useState(false);
     const [cleaningLogs, setCleaningLogs] = useState(false);
+    const [cleaningHousekeeping, setCleaningHousekeeping] = useState(false);
     const [maintenanceMsg, setMaintenanceMsg] = useState(null);
 
     function loadOverview() {
@@ -146,10 +147,23 @@
         .finally(() => setCleaningLogs(false));
     }
 
+    function cleanHousekeeping() {
+      setCleaningHousekeeping(true);
+      setMaintenanceMsg(null);
+      admApi("/admin/housekeeping/run", { method: "POST", body: JSON.stringify({}) })
+        .then(d => {
+          const s = d.summary || {};
+          setMaintenanceMsg(`临时数据已清理：登录 ${fmt(s.sessions || 0)} 条，访问记录 ${fmt(s.pageViews || 0)} 条`);
+          loadOverview();
+        })
+        .catch(() => setMaintenanceMsg("临时数据清理失败，请稍后重试"))
+        .finally(() => setCleaningHousekeeping(false));
+    }
+
     if (err)   return <div className="adm-err adm-err--block">{err}</div>;
     if (!data) return <div className="adm-loading">加载中…</div>;
 
-    const { users = {}, orders = {}, revenue = {}, pageviews = [], risk = {}, logRetention = {} } = data;
+    const { users = {}, orders = {}, revenue = {}, pageviews = [], risk = {}, logRetention = {}, housekeeping = {} } = data;
     const page_views = pageviews;
     const maxPv = Math.max(...page_views.map(x => Number(x.total) || 0), 1);
 
@@ -211,6 +225,11 @@
               {cleaningLogs ? "清理中" : "清理日志"}
             </button>
             <button className="adm-btn adm-btn--sm adm-btn--outline"
+              disabled={cleaningHousekeeping}
+              onClick={cleanHousekeeping}>
+              {cleaningHousekeeping ? "清理中" : "清理临时数据"}
+            </button>
+            <button className="adm-btn adm-btn--sm adm-btn--outline"
               disabled={maintaining}
               onClick={expireStaleOrders}>
               {maintaining ? "处理中" : "清理超时订单"}
@@ -226,6 +245,8 @@
               sub={`失败来源 ${fmt(risk.uniqueFailedIps24h || 0)} 个`} accent />
             <AdmStatCard label="日志保留" value={logRetention.enabled ? `${fmt(logRetention.days || 30)} 天` : "未启用"}
               sub={logRetention.lastRunAt ? `上次清理 ${fmtDate(logRetention.lastRunAt)}` : "每天自动检查"} />
+            <AdmStatCard label="临时数据清理" value={housekeeping.enabled ? `${fmt(housekeeping.pageViewRetentionDays || 90)} 天` : "未启用"}
+              sub={housekeeping.lastRunAt ? `上次清理 ${fmtDate(housekeeping.lastRunAt)}` : "每小时自动检查"} />
           </div>
           {maintenanceMsg && <div className="adm-maintenance-msg">{maintenanceMsg}</div>}
         </div>

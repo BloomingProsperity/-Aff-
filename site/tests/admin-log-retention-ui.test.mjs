@@ -13,3 +13,13 @@ assert.equal(
   true,
   "manual log retention cleanup should refresh overview state after running",
 );
+assert.equal(
+  adminJsx.includes("/admin/housekeeping/run"),
+  true,
+  "admin overview should expose a manual temporary data cleanup action",
+);
+assert.equal(
+  adminJsx.includes("cleanHousekeeping"),
+  true,
+  "manual temporary data cleanup should refresh overview state after running",
+);

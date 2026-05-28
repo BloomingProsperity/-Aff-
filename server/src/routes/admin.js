@@ -3,6 +3,7 @@ import { writeAuditLog } from "../lib/audit.js";
 import { validateBalanceAdjustment } from "../lib/balance.js";
 import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
+import { cleanupOperationalData, housekeepingStatus } from "../lib/housekeeping.js";
 import { cleanupOldLogs, logRetentionStatus } from "../lib/logRetention.js";
 import { enforceRateLimit } from "../lib/security.js";
 import { adminSettingsView, applySettingToConfig, normalizeAdminSetting, settingKeys } from "../lib/settings.js";
@@ -154,6 +155,7 @@ export async function adminRoutes(app) {
       pageviews,
       risk,
       logRetention: app.logRetention?.status?.() || logRetentionStatus(),
+      housekeeping: app.housekeeping?.status?.() || housekeepingStatus(),
     };
   });
 
@@ -201,6 +203,53 @@ export async function adminRoutes(app) {
       ok: true,
       summary,
       logRetention: app.logRetention?.status?.() || logRetentionStatus({ lastRunAt: new Date(), lastSummary: summary }),
+    };
+  });
+
+  app.post("/api/admin/housekeeping/run", async (request, reply) => {
+    const auth = await requireAdmin(app.db, request, reply, app.config);
+    if (auth.response) return auth.response;
+
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "admin:housekeeping",
+      extra: `admin:${auth.user.id}`,
+      limit: 5,
+      windowSeconds: 300,
+      config: app.config,
+    });
+    if (limited) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.housekeeping.run",
+        resourceType: "housekeeping",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "rate_limited" },
+      });
+      return limited;
+    }
+
+    const summary = app.housekeeping?.run
+      ? await app.housekeeping.run()
+      : await cleanupOperationalData(app.db);
+    if (!summary) {
+      reply.code(409);
+      return { error: "临时数据正在清理，请稍后再试。" };
+    }
+
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      action: "admin.housekeeping.run",
+      resourceType: "housekeeping",
+      status: "success",
+      httpStatus: 200,
+      metadata: summary,
+    });
+
+    return {
+      ok: true,
+      summary,
+      housekeeping: app.housekeeping?.status?.() || housekeepingStatus({ lastRunAt: new Date(), lastSummary: summary }),
     };
   });
 
