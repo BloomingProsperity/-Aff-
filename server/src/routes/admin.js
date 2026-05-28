@@ -102,6 +102,8 @@ export async function adminRoutes(app) {
       failedPurchases24h: 0,
       uniqueFailedIps24h: 0,
       riskyIps24h: 0,
+      activeSmsOrders: 0,
+      activeSmsUsers: 0,
     };
     try {
       risk = await one(
@@ -122,7 +124,9 @@ export async function adminRoutes(app) {
            COUNT(*) FILTER (WHERE status = 'failed' AND action = 'auth.login')::int AS "failedLogins24h",
            COUNT(*) FILTER (WHERE status = 'failed' AND action = 'sms.buy')::int AS "failedPurchases24h",
            COUNT(DISTINCT ip) FILTER (WHERE status = 'failed' AND COALESCE(ip, '') <> '')::int AS "uniqueFailedIps24h",
-           (SELECT COUNT(*)::int FROM ip_failures WHERE total >= 10) AS "riskyIps24h"
+           (SELECT COUNT(*)::int FROM ip_failures WHERE total >= 10) AS "riskyIps24h",
+           (SELECT COUNT(*)::int FROM sms_orders WHERE lower(status) IN ('pending', 'received')) AS "activeSmsOrders",
+           (SELECT COUNT(DISTINCT user_id)::int FROM sms_orders WHERE lower(status) IN ('pending', 'received')) AS "activeSmsUsers"
           FROM recent`,
       );
     } catch (error) {

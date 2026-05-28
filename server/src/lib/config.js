@@ -54,6 +54,8 @@ export function loadConfig(env = process.env) {
     beeSmsApiToken: env.BEESMS_API_TOKEN || env.BEE_SMS_API_TOKEN || env.BEESMS_TOKEN || "",
     smsUsdCnyRate: Number(env.SMS_USD_CNY_RATE || env.SMS_PRICE_RATE || 7.2),
     smsMarginCny: Number(env.SMS_MARGIN_CNY || env.SMS_PRICE_FIXED || 10),
+    smsActiveOrderLimit: Number(env.SMS_ACTIVE_ORDER_LIMIT || 3),
+    smsBuyCooldownSeconds: Number(env.SMS_BUY_COOLDOWN_SECONDS || 10),
     turnstileSiteKey: env.TURNSTILE_SITE_KEY || env.TURNSTILE_SITEKEY || "",
     turnstileSecretKey: env.TURNSTILE_SECRET_KEY || env.TURNSTILE_SECRET || "",
   };

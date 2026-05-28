@@ -3,6 +3,8 @@ import { many } from "./db.js";
 const SETTING_DEFS = {
   SMS_USD_CNY_RATE: { prop: "smsUsdCnyRate", type: "number" },
   SMS_MARGIN_CNY: { prop: "smsMarginCny", type: "number" },
+  SMS_ACTIVE_ORDER_LIMIT: { prop: "smsActiveOrderLimit", type: "positive_int" },
+  SMS_BUY_COOLDOWN_SECONDS: { prop: "smsBuyCooldownSeconds", type: "non_negative_int" },
   FIVESIM_API_KEY: { prop: "fivesimApiKey", type: "secret" },
   SMSPOOL_API_KEY: { prop: "smspoolApiKey", type: "secret" },
   BEESMS_API_TOKEN: { prop: "beeSmsApiToken", type: "secret" },
@@ -51,6 +53,15 @@ export function normalizeAdminSetting(key, value) {
     return { ok: true, value: String(n) };
   }
 
+  if (def.type === "positive_int" || def.type === "non_negative_int") {
+    const n = Number.parseInt(raw, 10);
+    const min = def.type === "positive_int" ? 1 : 0;
+    if (!Number.isFinite(n) || String(n) !== raw || n < min) {
+      return { ok: false, error: "设置数值不正确。" };
+    }
+    return { ok: true, value: String(n) };
+  }
+
   return { ok: true, value: raw };
 }
 
@@ -60,7 +71,7 @@ export function applySettingToConfig(config, key, value) {
   const normalized = normalizeAdminSetting(key, value);
   if (!normalized.ok || normalized.skip) return false;
 
-  if (def.type === "number") {
+  if (def.type === "number" || def.type === "positive_int" || def.type === "non_negative_int") {
     config[def.prop] = Number(normalized.value);
     return true;
   }
@@ -74,6 +85,8 @@ export function adminSettingsView(config) {
     settings: {
       SMS_USD_CNY_RATE: String(config.smsUsdCnyRate || 7.2),
       SMS_MARGIN_CNY: String(config.smsMarginCny || 10),
+      SMS_ACTIVE_ORDER_LIMIT: String(config.smsActiveOrderLimit ?? 3),
+      SMS_BUY_COOLDOWN_SECONDS: String(config.smsBuyCooldownSeconds ?? 10),
       TURNSTILE_SITE_KEY: String(config.turnstileSiteKey || ""),
     },
     secrets: Object.fromEntries(SECRET_KEYS.map(key => {

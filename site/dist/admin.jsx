@@ -153,6 +153,8 @@
             <AdmStatCard label="24h 失败动作" value={fmt(risk.failedActions24h || 0)} />
             <AdmStatCard label="24h 登录失败" value={fmt(risk.failedLogins24h || 0)} />
             <AdmStatCard label="24h 购买失败" value={fmt(risk.failedPurchases24h || 0)} />
+            <AdmStatCard label="未完成号码" value={fmt(risk.activeSmsOrders || 0)}
+              sub={`涉及用户 ${fmt(risk.activeSmsUsers || 0)} 个`} />
             <AdmStatCard label="高频失败 IP" value={fmt(risk.riskyIps24h || 0)}
               sub={`失败来源 ${fmt(risk.uniqueFailedIps24h || 0)} 个`} accent />
           </div>
@@ -708,6 +710,8 @@
     const [cfg,     setCfg]     = useState({
       SMS_USD_CNY_RATE: "",
       SMS_MARGIN_CNY: "",
+      SMS_ACTIVE_ORDER_LIMIT: "",
+      SMS_BUY_COOLDOWN_SECONDS: "",
       TURNSTILE_SITE_KEY: "",
       TURNSTILE_SECRET_KEY: "",
       FIVESIM_API_KEY: "",
@@ -777,6 +781,20 @@
                 <input className="adm-input" type="number" step="0.01"
                   value={cfg.SMS_MARGIN_CNY || ""}
                   onChange={e => setCfg(c => ({ ...c, SMS_MARGIN_CNY: e.target.value }))}
+                  placeholder="10" />
+              </div>
+              <div className="adm-field">
+                <label>单用户未完成号码上限</label>
+                <input className="adm-input" type="number" min="1" step="1"
+                  value={cfg.SMS_ACTIVE_ORDER_LIMIT || ""}
+                  onChange={e => setCfg(c => ({ ...c, SMS_ACTIVE_ORDER_LIMIT: e.target.value }))}
+                  placeholder="3" />
+              </div>
+              <div className="adm-field">
+                <label>同用户下单间隔（秒）</label>
+                <input className="adm-input" type="number" min="0" step="1"
+                  value={cfg.SMS_BUY_COOLDOWN_SECONDS || ""}
+                  onChange={e => setCfg(c => ({ ...c, SMS_BUY_COOLDOWN_SECONDS: e.target.value }))}
                   placeholder="10" />
               </div>
             </div>

@@ -6,6 +6,7 @@ import { fivesimHttpError } from "../lib/fivesim.js";
 import { quoteCharge } from "../lib/pricing.js";
 import { maybeGrantReferralReward } from "../lib/referrals.js";
 import { enforceRateLimit } from "../lib/security.js";
+import { activeSmsOrderStatuses, cooldownSecondsLeft, smsRiskSettings } from "../lib/smsRisk.js";
 import {
   buySmsProvider,
   changeSmsProviderOrder,
@@ -141,6 +142,51 @@ async function auditSmsBuy(app, request, auth, status, httpStatus, metadata = {}
   });
 }
 
+async function smsBuyRisk(app, userId) {
+  const settings = smsRiskSettings(app.config);
+  const active = await one(
+    app.db,
+    `SELECT COUNT(*)::int AS total
+       FROM sms_orders
+      WHERE user_id = $1
+        AND lower(status) = ANY($2)`,
+    [userId, activeSmsOrderStatuses()],
+  );
+  const activeCount = Number(active?.total || 0);
+  if (activeCount >= settings.activeOrderLimit) {
+    return {
+      blocked: true,
+      httpStatus: 409,
+      reason: "active_order_limit",
+      metadata: { activeCount, activeOrderLimit: settings.activeOrderLimit },
+      error: "当前还有未完成的号码，请先完成、取消或拉黑后再购买。",
+    };
+  }
+
+  const last = await one(
+    app.db,
+    `SELECT created_at
+       FROM sms_orders
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1`,
+    [userId],
+  );
+  const retryAfter = cooldownSecondsLeft(last?.created_at, new Date(), app.config);
+  if (retryAfter > 0) {
+    return {
+      blocked: true,
+      httpStatus: 429,
+      reason: "buy_cooldown",
+      retryAfter,
+      metadata: { retryAfter, buyCooldownSeconds: settings.buyCooldownSeconds },
+      error: `下单太快，请 ${retryAfter} 秒后再试。`,
+    };
+  }
+
+  return { blocked: false, activeCount, settings };
+}
+
 export async function smsRoutes(app) {
   app.get("/api/sms/countries", async (request, reply) => {
     const limited = await enforceRateLimit(app.db, request, reply, {
@@ -209,6 +255,40 @@ export async function smsRoutes(app) {
       reply.code(400);
       await auditSmsBuy(app, request, auth, "failed", 400, { reason: "missing_product", country, operator });
       return { error: "请选择服务。" };
+    }
+
+    const risk = await smsBuyRisk(app, auth.user.id);
+    if (risk.blocked) {
+      if (risk.retryAfter) reply.header("retry-after", String(risk.retryAfter));
+      reply.code(risk.httpStatus);
+      await auditSmsBuy(app, request, auth, "failed", risk.httpStatus, {
+        reason: risk.reason,
+        country,
+        operator,
+        product,
+        ...risk.metadata,
+      });
+      return { error: risk.error };
+    }
+
+    if (risk.settings.buyCooldownSeconds > 0) {
+      const cooldownLimited = await enforceRateLimit(app.db, request, reply, {
+        scope: "sms:buy:cooldown",
+        extra: `user:${auth.user.id}`,
+        limit: 1,
+        windowSeconds: risk.settings.buyCooldownSeconds,
+        config: app.config,
+      });
+      if (cooldownLimited) {
+        await auditSmsBuy(app, request, auth, "failed", 429, {
+          reason: "buy_cooldown",
+          country,
+          operator,
+          product,
+          buyCooldownSeconds: risk.settings.buyCooldownSeconds,
+        });
+        return cooldownLimited;
+      }
     }
 
     const quotes = await quoteSmsProviders(app, { country, operator, product });
