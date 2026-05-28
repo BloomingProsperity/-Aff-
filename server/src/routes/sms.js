@@ -1,4 +1,4 @@
-import { requireUser } from "../lib/auth.js";
+import { requirePaidUser, requireUser } from "../lib/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
 import { centsToAmount, cleanOrderId, cleanPart, toIso } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
@@ -234,8 +234,13 @@ export async function smsRoutes(app) {
   });
 
   app.post("/api/sms/buy", async (request, reply) => {
-    const auth = await requireUser(app.db, request, reply);
-    if (auth.response) return auth.response;
+    const auth = await requirePaidUser(app.db, request, reply);
+    if (auth.response) {
+      if (auth.blockedReason && auth.user) {
+        await auditSmsBuy(app, request, auth, "failed", reply.statusCode || 403, { reason: auth.blockedReason });
+      }
+      return auth.response;
+    }
 
     const limited = await enforceRateLimit(app.db, request, reply, {
       scope: "sms:buy",

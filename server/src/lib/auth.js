@@ -5,6 +5,7 @@ import { exec, one } from "./db.js";
 const SESSION_DAYS = 14;
 const CURRENT_PASSWORD_ITERATIONS = 600000;
 const LEGACY_PASSWORD_ITERATIONS = [120000];
+const USER_STATUSES = new Set(["active", "suspended"]);
 
 function sha256Base64(value) {
   return createHash("sha256").update(value).digest("base64url");
@@ -16,10 +17,21 @@ export function publicUser(user) {
     id: Number(user.id),
     email: user.email,
     role: user.role,
+    status: normalizeUserStatus(user.status),
+    statusNote: user.status_note || "",
     balance: centsToAmount(user.balance_cents),
     referralCode: user.referral_code || "",
     createdAt: toIso(user.created_at),
   };
+}
+
+export function normalizeUserStatus(value) {
+  const status = String(value || "").trim().toLowerCase();
+  return USER_STATUSES.has(status) ? status : "active";
+}
+
+export function canUsePaidFeatures(user) {
+  return normalizeUserStatus(user?.status) === "active";
 }
 
 export function hashPassword(password, saltBase64, iterations = CURRENT_PASSWORD_ITERATIONS) {
@@ -108,6 +120,16 @@ export async function requireUser(db, request, reply) {
     return { response: { error: "请先登录。" } };
   }
   return { user };
+}
+
+export async function requirePaidUser(db, request, reply) {
+  const auth = await requireUser(db, request, reply);
+  if (auth.response) return auth;
+  if (!canUsePaidFeatures(auth.user)) {
+    reply.code(403);
+    return { response: { error: "账号已暂停，请联系管理员。" }, user: auth.user, blockedReason: "account_suspended" };
+  }
+  return auth;
 }
 
 export async function requireAdmin(db, request, reply, config = request.server?.config || request.config || {}) {

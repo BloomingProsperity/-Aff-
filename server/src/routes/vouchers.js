@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { publicUser, requireAdmin, requireUser } from "../lib/auth.js";
+import { publicUser, requireAdmin, requirePaidUser, requireUser } from "../lib/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
 import { amountToCents, centsToAmount, cleanOrderId, toIso } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
@@ -37,8 +37,21 @@ function siteOrigin(request, config) {
 
 export async function voucherRoutes(app) {
   app.post("/api/vouchers/redeem", async (request, reply) => {
-    const auth = await requireUser(app.db, request, reply);
-    if (auth.response) return auth.response;
+    const auth = await requirePaidUser(app.db, request, reply);
+    if (auth.response) {
+      if (auth.blockedReason && auth.user) {
+        await writeAuditLog(app.db, request, {
+          actorUserId: auth.user.id,
+          targetUserId: auth.user.id,
+          action: "voucher.redeem",
+          resourceType: "voucher",
+          status: "failed",
+          httpStatus: reply.statusCode || 403,
+          metadata: { reason: auth.blockedReason },
+        });
+      }
+      return auth.response;
+    }
 
     const limited = await enforceRateLimit(app.db, request, reply, {
       scope: "voucher:redeem",

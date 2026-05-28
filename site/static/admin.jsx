@@ -50,6 +50,7 @@
     empty:     ["adm-badge--err",   "已空"],
     error:     ["adm-badge--err",   "异常"],
     disabled:  ["adm-badge--muted", "未配置"],
+    suspended: ["adm-badge--err",   "已暂停"],
   };
   function AdmBadge({ s }) {
     const [cls, label] = BADGE_MAP[s] || ["adm-badge--muted", s || "—"];
@@ -264,6 +265,7 @@
     const [q,         setQ]         = useState("");
     const [loading,   setLoading]   = useState(false);
     const [topupUser, setTopupUser] = useState(null);
+    const [busyUserId, setBusyUserId] = useState(null);
 
     function load(p, query) {
       setLoading(true);
@@ -274,6 +276,18 @@
     }
 
     useEffect(() => { load(1, ""); }, []);
+
+    function setUserStatus(user, status) {
+      const note = status === "suspended" ? "后台手动暂停" : "后台手动恢复";
+      setBusyUserId(user.id);
+      admApi(`/admin/users/${user.id}/status`, {
+        method: "POST",
+        body: JSON.stringify({ status, note }),
+      })
+        .then(() => load(page, q))
+        .catch(() => {})
+        .finally(() => setBusyUserId(null));
+    }
 
     return (
       <div className="adm-content-inner">
@@ -293,26 +307,36 @@
           <table className="adm-table">
             <thead>
               <tr>
-                <th>ID</th><th>邮箱</th><th>余额</th>
+                <th>ID</th><th>邮箱</th><th>状态</th><th>余额</th>
                 <th>注册时间</th><th>操作</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={5} className="adm-empty">加载中…</td></tr>
+                <tr><td colSpan={6} className="adm-empty">加载中…</td></tr>
               )}
               {!loading && users.length === 0 && (
-                <tr><td colSpan={5} className="adm-empty">暂无数据</td></tr>
+                <tr><td colSpan={6} className="adm-empty">暂无数据</td></tr>
               )}
               {users.map(u => (
                 <tr key={u.id}>
                   <td className="adm-td--mono">{u.id}</td>
                   <td className="adm-td--email">{u.email}</td>
+                  <td><AdmBadge s={u.status || "active"} /></td>
                   <td>{fmtCny(u.balance)}</td>
                   <td className="adm-td--date">{fmtDate(u.created_at)}</td>
-                  <td>
+                  <td className="adm-actions-cell">
                     <button className="adm-btn adm-btn--sm adm-btn--outline"
                       onClick={() => setTopupUser(u)}>调整余额</button>
+                    {u.status === "suspended" ? (
+                      <button className="adm-btn adm-btn--sm adm-btn--outline"
+                        disabled={busyUserId === u.id}
+                        onClick={() => setUserStatus(u, "active")}>恢复</button>
+                    ) : (
+                      <button className="adm-btn adm-btn--sm adm-btn--outline"
+                        disabled={busyUserId === u.id}
+                        onClick={() => setUserStatus(u, "suspended")}>暂停</button>
+                    )}
                   </td>
                 </tr>
               ))}

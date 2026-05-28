@@ -2774,6 +2774,12 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
 .adm-td--amount { font-weight: 700; font-variant-numeric: tabular-nums; }
 .adm-td--pos { color: #2b8a4d; }
 .adm-td--neg { color: #c94040; }
+.adm-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
 /* ── badge ── */
 .adm-badge {

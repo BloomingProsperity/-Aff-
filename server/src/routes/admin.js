@@ -1,4 +1,4 @@
-import { publicUser, requireAdmin } from "../lib/auth.js";
+import { normalizeUserStatus, publicUser, requireAdmin } from "../lib/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
 import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
@@ -15,6 +15,8 @@ function pageParams(query = {}) {
 function adminUser(row) {
   return {
     ...publicUser(row),
+    status: normalizeUserStatus(row.status),
+    status_note: row.status_note || "",
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -153,7 +155,7 @@ export async function adminRoutes(app) {
     params.push(limit, offset);
     const rows = await many(
       app.db,
-      `SELECT id, email, role, balance_cents, created_at
+      `SELECT id, email, role, status, status_note, balance_cents, created_at
          FROM users
         ${where}
         ORDER BY id DESC
@@ -161,6 +163,60 @@ export async function adminRoutes(app) {
       params,
     );
     return { users: rows.map(adminUser), total: Number(count?.total || 0), page };
+  });
+
+  app.post("/api/admin/users/:id/status", async (request, reply) => {
+    const auth = await requireAdmin(app.db, request, reply, app.config);
+    if (auth.response) return auth.response;
+
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "admin:user-status",
+      extra: `admin:${auth.user.id}`,
+      limit: 30,
+      windowSeconds: 300,
+      config: app.config,
+    });
+    if (limited) return limited;
+
+    const userId = Number(request.params.id);
+    const status = normalizeUserStatus(request.body?.status);
+    const note = String(request.body?.note || "").slice(0, 200);
+    if (!userId) {
+      reply.code(400);
+      return { error: "用户不存在。" };
+    }
+    if (userId === Number(auth.user.id) && status === "suspended") {
+      reply.code(400);
+      return { error: "不能暂停自己的管理员账号。" };
+    }
+
+    const updated = await one(
+      app.db,
+      `UPDATE users
+          SET status = $1,
+              status_note = $2,
+              status_updated_at = now(),
+              updated_at = now()
+        WHERE id = $3
+      RETURNING *`,
+      [status, note, userId],
+    );
+    if (!updated) {
+      reply.code(404);
+      return { error: "用户不存在。" };
+    }
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      targetUserId: userId,
+      action: "admin.user.status",
+      resourceType: "user",
+      resourceId: userId,
+      status: "success",
+      httpStatus: 200,
+      metadata: { status, note },
+    });
+
+    return { user: adminUser(updated) };
   });
 
   app.get("/api/admin/provider-health", async (request, reply) => {
