@@ -1,4 +1,5 @@
 export const LOG_RETENTION_DAYS = 30;
+export const LOG_RETENTION_TABLES = ["audit_logs", "sms_order_events"];
 
 function retentionDays(days) {
   const n = Number(days || LOG_RETENTION_DAYS);
@@ -23,8 +24,24 @@ export async function cleanupOldLogs(db, { days = LOG_RETENTION_DAYS } = {}) {
   };
 }
 
+export function logRetentionStatus(state = {}, { days = LOG_RETENTION_DAYS } = {}) {
+  const summary = state.lastSummary || {};
+  const error = state.lastError;
+  return {
+    enabled: true,
+    days: retentionDays(summary.days || days),
+    tables: LOG_RETENTION_TABLES,
+    lastRunAt: state.lastRunAt instanceof Date ? state.lastRunAt.toISOString() : "",
+    lastDeleted: {
+      auditLogs: Number(summary.auditLogs || 0),
+      smsOrderEvents: Number(summary.smsOrderEvents || 0),
+    },
+    lastError: error ? String(error.message || error).slice(0, 160) : "",
+  };
+}
+
 export function startLogRetention(app, options = {}) {
-  const state = { running: false };
+  const state = { running: false, lastRunAt: null, lastSummary: null, lastError: null };
   const intervalMs = Math.max(60_000, Number(options.intervalMs || 24 * 60 * 60 * 1000));
 
   async function run() {
@@ -32,11 +49,16 @@ export function startLogRetention(app, options = {}) {
     state.running = true;
     try {
       const summary = await cleanupOldLogs(app.db, options);
+      state.lastRunAt = new Date();
+      state.lastSummary = summary;
+      state.lastError = null;
       if (summary.auditLogs || summary.smsOrderEvents) {
         app.log?.info?.({ summary }, "old logs cleaned");
       }
       return summary;
     } catch (error) {
+      state.lastRunAt = new Date();
+      state.lastError = error;
       app.log?.warn?.({ error: error.message }, "log retention cleanup failed");
       return null;
     } finally {
@@ -50,10 +72,15 @@ export function startLogRetention(app, options = {}) {
 
   const timer = setInterval(run, intervalMs);
   timer.unref?.();
-  return {
+  const controller = {
     stop() {
       clearInterval(timer);
     },
     run,
+    status() {
+      return logRetentionStatus(state, options);
+    },
   };
+  app.logRetention = controller;
+  return controller;
 }

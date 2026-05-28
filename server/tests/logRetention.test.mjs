@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cleanupOldLogs, LOG_RETENTION_DAYS } from "../src/lib/logRetention.js";
+import { cleanupOldLogs, logRetentionStatus, LOG_RETENTION_DAYS } from "../src/lib/logRetention.js";
 
 test("log retention removes operational logs older than 30 days", async () => {
   const calls = [];
@@ -23,4 +23,21 @@ test("log retention removes operational logs older than 30 days", async () => {
   assert.deepEqual(calls[0].params, [30]);
   assert.deepEqual(calls[1].params, [30]);
   assert.equal(JSON.stringify(calls).includes("balance_logs"), false);
+});
+
+test("log retention status is safe for admin overview", () => {
+  const status = logRetentionStatus({
+    lastRunAt: new Date("2026-05-28T01:02:03.000Z"),
+    lastSummary: { auditLogs: 7, smsOrderEvents: 9, days: 30 },
+    lastError: new Error("database unavailable"),
+  });
+
+  assert.deepEqual(status, {
+    enabled: true,
+    days: 30,
+    tables: ["audit_logs", "sms_order_events"],
+    lastRunAt: "2026-05-28T01:02:03.000Z",
+    lastDeleted: { auditLogs: 7, smsOrderEvents: 9 },
+    lastError: "database unavailable",
+  });
 });

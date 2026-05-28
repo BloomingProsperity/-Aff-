@@ -122,7 +122,7 @@
     if (err)   return <div className="adm-err adm-err--block">{err}</div>;
     if (!data) return <div className="adm-loading">加载中…</div>;
 
-    const { users = {}, orders = {}, revenue = {}, pageviews = [], risk = {} } = data;
+    const { users = {}, orders = {}, revenue = {}, pageviews = [], risk = {}, logRetention = {} } = data;
     const page_views = pageviews;
     const maxPv = Math.max(...page_views.map(x => Number(x.total) || 0), 1);
 
@@ -192,6 +192,8 @@
               sub={`涉及用户 ${fmt(risk.activeSmsUsers || 0)} 个`} />
             <AdmStatCard label="高频失败 IP" value={fmt(risk.riskyIps24h || 0)}
               sub={`失败来源 ${fmt(risk.uniqueFailedIps24h || 0)} 个`} accent />
+            <AdmStatCard label="日志保留" value={logRetention.enabled ? `${fmt(logRetention.days || 30)} 天` : "未启用"}
+              sub={logRetention.lastRunAt ? `上次清理 ${fmtDate(logRetention.lastRunAt)}` : "每天自动检查"} />
           </div>
           {maintenanceMsg && <div className="adm-maintenance-msg">{maintenanceMsg}</div>}
         </div>

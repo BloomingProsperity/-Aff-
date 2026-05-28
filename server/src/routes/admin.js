@@ -3,6 +3,7 @@ import { writeAuditLog } from "../lib/audit.js";
 import { validateBalanceAdjustment } from "../lib/balance.js";
 import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
+import { logRetentionStatus } from "../lib/logRetention.js";
 import { enforceRateLimit } from "../lib/security.js";
 import { adminSettingsView, applySettingToConfig, normalizeAdminSetting, settingKeys } from "../lib/settings.js";
 import { expireStaleSmsOrders } from "../lib/smsMaintenance.js";
@@ -146,7 +147,14 @@ export async function adminRoutes(app) {
       if (error.code !== "42P01") throw error;
     }
 
-    return { users, orders, revenue, pageviews, risk };
+    return {
+      users,
+      orders,
+      revenue,
+      pageviews,
+      risk,
+      logRetention: app.logRetention?.status?.() || logRetentionStatus(),
+    };
   });
 
   app.get("/api/admin/users", async (request, reply) => {
