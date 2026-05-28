@@ -99,6 +99,11 @@ export async function destroySession(db, request) {
   await exec(db, "DELETE FROM sessions WHERE token_hash = $1", [sha256Base64(token)]);
 }
 
+export async function destroyUserSessions(db, userId) {
+  const result = await exec(db, "DELETE FROM sessions WHERE user_id = $1", [Number(userId)]);
+  return Number(result.rowCount || 0);
+}
+
 export async function currentUser(db, request) {
   const token = request.cookies?.hkai_session || "";
   if (!token) return null;

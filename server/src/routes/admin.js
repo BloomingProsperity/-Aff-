@@ -1,4 +1,4 @@
-import { normalizeUserStatus, publicUser, requireAdmin } from "../lib/auth.js";
+import { destroyUserSessions, normalizeUserStatus, publicUser, requireAdmin } from "../lib/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
 import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
@@ -214,6 +214,10 @@ export async function adminRoutes(app) {
       reply.code(404);
       return { error: "用户不存在。" };
     }
+    let sessionsRevoked = 0;
+    if (status === "suspended") {
+      sessionsRevoked = await destroyUserSessions(app.db, userId);
+    }
     await writeAuditLog(app.db, request, {
       actorUserId: auth.user.id,
       targetUserId: userId,
@@ -222,10 +226,48 @@ export async function adminRoutes(app) {
       resourceId: userId,
       status: "success",
       httpStatus: 200,
-      metadata: { status, note },
+      metadata: { status, note, sessionsRevoked },
     });
 
-    return { user: adminUser(updated) };
+    return { user: adminUser(updated), sessionsRevoked };
+  });
+
+  app.post("/api/admin/users/:id/sessions/revoke", async (request, reply) => {
+    const auth = await requireAdmin(app.db, request, reply, app.config);
+    if (auth.response) return auth.response;
+
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "admin:user-sessions-revoke",
+      extra: `admin:${auth.user.id}`,
+      limit: 30,
+      windowSeconds: 300,
+      config: app.config,
+    });
+    if (limited) return limited;
+
+    const userId = Number(request.params.id);
+    if (!userId) {
+      reply.code(400);
+      return { error: "用户不存在。" };
+    }
+    const target = await one(app.db, "SELECT id, email FROM users WHERE id = $1", [userId]);
+    if (!target) {
+      reply.code(404);
+      return { error: "用户不存在。" };
+    }
+    const sessionsRevoked = await destroyUserSessions(app.db, userId);
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      targetUserId: userId,
+      action: "admin.user.sessions.revoke",
+      resourceType: "session",
+      resourceId: userId,
+      status: "success",
+      httpStatus: 200,
+      metadata: { sessionsRevoked },
+    });
+
+    return { ok: true, sessionsRevoked };
   });
 
   app.get("/api/admin/provider-health", async (request, reply) => {

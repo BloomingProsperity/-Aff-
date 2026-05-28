@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   adminRoleForNewUser,
   canUsePaidFeatures,
+  destroyUserSessions,
   hashPassword,
   isConfiguredAdmin,
   normalizeUserStatus,
@@ -74,6 +75,22 @@ test("paid user guard marks suspended accounts for audit", async () => {
   assert.equal(auth.blockedReason, "account_suspended");
   assert.equal(auth.user.email, "buyer@gmail.com");
   assert.ok(auth.response.error);
+});
+
+test("admin can revoke all sessions for a user", async () => {
+  const calls = [];
+  const db = {
+    query: async (sql, params) => {
+      calls.push({ sql, params });
+      return { rowCount: 3, rows: [] };
+    },
+  };
+
+  const revoked = await destroyUserSessions(db, 7);
+
+  assert.equal(revoked, 3);
+  assert.match(calls[0].sql, /DELETE FROM sessions/);
+  assert.deepEqual(calls[0].params, [7]);
 });
 
 test("legacy password hashes still verify but require rehash", () => {

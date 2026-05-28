@@ -353,6 +353,7 @@
     const [loading,   setLoading]   = useState(false);
     const [topupUser, setTopupUser] = useState(null);
     const [busyUserId, setBusyUserId] = useState(null);
+    const [msg, setMsg] = useState(null);
 
     function load(p, query) {
       setLoading(true);
@@ -367,12 +368,30 @@
     function setUserStatus(user, status) {
       const note = status === "suspended" ? "后台手动暂停" : "后台手动恢复";
       setBusyUserId(user.id);
+      setMsg(null);
       admApi(`/admin/users/${user.id}/status`, {
         method: "POST",
         body: JSON.stringify({ status, note }),
       })
-        .then(() => load(page, q))
-        .catch(() => {})
+        .then(d => {
+          const revoked = Number(d.sessionsRevoked || 0);
+          setMsg(status === "suspended" ? `已暂停，清理会话 ${fmt(revoked)} 个` : "已恢复");
+          load(page, q);
+        })
+        .catch(() => setMsg("操作失败，请稍后重试"))
+        .finally(() => setBusyUserId(null));
+    }
+
+    function revokeSessions(user) {
+      if (!window.confirm(`确认让 ${user.email} 的所有登录态失效？`)) return;
+      setBusyUserId(user.id);
+      setMsg(null);
+      admApi(`/admin/users/${user.id}/sessions/revoke`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      })
+        .then(d => setMsg(`已清理会话 ${fmt(d.sessionsRevoked || 0)} 个`))
+        .catch(() => setMsg("操作失败，请稍后重试"))
         .finally(() => setBusyUserId(null));
     }
 
@@ -389,6 +408,7 @@
             onChange={e => setQ(e.target.value)} placeholder="搜索邮箱…" />
           <button className="adm-btn adm-btn--primary" type="submit">搜索</button>
         </form>
+        {msg && <div className="adm-maintenance-msg">{msg}</div>}
 
         <div className="adm-card adm-card--table">
           <table className="adm-table">
@@ -424,6 +444,9 @@
                         disabled={busyUserId === u.id}
                         onClick={() => setUserStatus(u, "suspended")}>暂停</button>
                     )}
+                    <button className="adm-btn adm-btn--sm adm-btn--outline"
+                      disabled={busyUserId === u.id}
+                      onClick={() => revokeSessions(u)}>清会话</button>
                   </td>
                 </tr>
               ))}
