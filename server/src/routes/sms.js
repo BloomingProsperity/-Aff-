@@ -622,6 +622,42 @@ export async function smsRoutes(app) {
 
       const attempt = await buySmsProvider(app, candidate);
       if (attempt.ok) {
+        if (!supplierCostAllowed(app.config, attempt.cost || candidate.cost || 0)) {
+          const overPriceError = {
+            provider: candidate.provider,
+            status: 400,
+            publicCode: "supplier_price_over_fixed_price",
+          };
+          await changeSmsProviderOrder(
+            app,
+            { ...attempt, provider: candidate.provider, fivesim_id: providerOrderKey(candidate.provider, attempt.id) },
+            "cancel",
+          );
+          await writeSmsOrderEvent(app.db, {
+            userId: auth.user.id,
+            actorUserId: auth.user.id,
+            type: "provider.price_over_fixed",
+            status: "failed",
+            provider: candidate.provider,
+            publicCode: "supplier_price_over_fixed_price",
+            message: "供应商价格超过当前售价，已取消并尝试下一家",
+            metadata: {
+              country,
+              operator,
+              product,
+              quoteCount: quotes.length,
+              selectedProvider: candidate.provider,
+            },
+          });
+          lastError = overPriceError;
+          attempts.push({
+            provider: candidate.provider,
+            status: overPriceError.status,
+            apiCode: null,
+            publicCode: overPriceError.publicCode,
+          });
+          continue;
+        }
         bought = attempt;
         chosen = candidate;
         break;
@@ -661,36 +697,6 @@ export async function smsRoutes(app) {
         ...providerFailureMetadata(lastError),
       });
       return smsProviderHttpError(reply, lastError || { status: 502 });
-    }
-
-    if (!supplierCostAllowed(app.config, bought.cost || chosen.cost || 0)) {
-      await changeSmsProviderOrder(app, { ...bought, provider: chosen.provider, fivesim_id: providerOrderKey(chosen.provider, bought.id) }, "cancel");
-      await refundBalance(app.db, auth.user.id, reservedCents);
-      reply.code(400);
-      await writeSmsOrderEvent(app.db, {
-        userId: auth.user.id,
-        actorUserId: auth.user.id,
-        type: "provider.price_over_fixed",
-        status: "failed",
-        provider: chosen.provider,
-        publicCode: "supplier_price_over_fixed_price",
-        message: "供应商价格超过当前售价，已取消并退款",
-        metadata: {
-          country,
-          operator,
-          product,
-          quoteCount: quotes.length,
-          selectedProvider: chosen.provider,
-        },
-      });
-      await auditSmsBuy(app, request, auth, "failed", 400, {
-        reason: "supplier_price_over_fixed_price",
-        country,
-        operator,
-        product,
-        provider: chosen.provider,
-      });
-      return { error: "当前服务暂时缺货，请稍后再试。" };
     }
 
     const realQuote = quoteCharge(app.config, bought.cost || chosen.cost || 0);

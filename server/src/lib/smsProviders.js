@@ -59,6 +59,7 @@ const PUBLIC_PROVIDER_ERRORS = {
   provider_busy: "当前服务繁忙，请稍后再试。",
   insufficient_provider_balance: "服务暂时不可用，请稍后再试。",
   rate_limited: "请求过于频繁，请稍后再试。",
+  supplier_price_over_fixed_price: "当前服务暂时没有可用号码，请稍后再试。",
   unavailable: "上游服务暂时不可用，请稍后再试。",
 };
 
