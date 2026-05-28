@@ -1,3 +1,4 @@
+import { healthStatus } from "../lib/health.js";
 import { turnstileEnabled } from "../lib/security.js";
 
 export async function configRoutes(app) {
@@ -6,5 +7,9 @@ export async function configRoutes(app) {
     turnstileEnabled: Boolean(app.config.turnstileSiteKey && turnstileEnabled(app.config)),
   }));
 
-  app.get("/api/health", async () => ({ ok: true }));
+  app.get("/api/health", async (request, reply) => {
+    const result = await healthStatus(app.db);
+    reply.code(result.httpStatus);
+    return result.body;
+  });
 }
