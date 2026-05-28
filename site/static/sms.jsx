@@ -625,7 +625,8 @@ function SmsDesk() {
       const data = await api(`/api/sms/check/${target.id}`);
       setOrder(data.order);
       setOrders(prev => prev.map(x => x.id === data.order.id ? data.order : x));
-      setMessage((data.order.sms || []).length ? "已收到验证码。" : "暂未收到验证码，可以稍后刷新。");
+      if (typeof data.balance === "number") setUser(prev => prev ? { ...prev, balance: data.balance } : prev);
+      setMessage(data.order.refundedAt ? `订单已关闭，余额已退回 ${yuan(data.order.refund)}。` : (data.order.sms || []).length ? "已收到验证码。" : "暂未收到验证码，可以稍后刷新。");
     } catch (err) {
       setMessage(err.message);
     } finally {
@@ -643,7 +644,9 @@ function SmsDesk() {
       });
       setOrder(data.order);
       setOrders(prev => prev.map(x => x.id === data.order.id ? data.order : x));
-      setMessage(action === "finish" ? "订单已完成。" : action === "cancel" ? "订单已取消。" : "号码已拉黑。");
+      if (typeof data.balance === "number") setUser(prev => prev ? { ...prev, balance: data.balance } : prev);
+      const refundText = data.order.refundedAt ? `，余额已退回 ${yuan(data.order.refund)}` : "";
+      setMessage(action === "finish" ? "订单已完成。" : action === "cancel" ? `订单已取消${refundText}。` : `号码已拉黑${refundText}。`);
     } catch (err) {
       setMessage(err.message);
     } finally {
@@ -793,6 +796,12 @@ function SmsDesk() {
                     <strong>{order.phone || order.number || "-"}</strong>
                     <button className="ca-button ca-button--outline" onClick={copyNumber}>复制号码</button>
                   </div>
+                  {order.refundedAt && (
+                    <div className="sms-refund-note">
+                      <span>已退回余额</span>
+                      <strong>{yuan(order.refund)}</strong>
+                    </div>
+                  )}
                   <div className="sms-code-list">
                     <h3>验证码</h3>
                     {smsList.length ? smsList.map((sms, i) => (

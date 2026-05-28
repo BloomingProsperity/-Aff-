@@ -2281,6 +2281,20 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   font-variant-numeric: tabular-nums;
   word-break: break-all;
 }
+.sms-refund-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgb(39 174 96 / .10);
+  border: 1px solid rgb(39 174 96 / .18);
+  color: #126c3b;
+  font-size: 13px;
+  font-weight: 700;
+}
 .sms-code-list {
   margin-top: 18px;
 }

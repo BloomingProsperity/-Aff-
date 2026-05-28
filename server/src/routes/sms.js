@@ -6,6 +6,7 @@ import { fivesimHttpError } from "../lib/fivesim.js";
 import { quoteCharge } from "../lib/pricing.js";
 import { maybeGrantReferralReward } from "../lib/referrals.js";
 import { enforceRateLimit } from "../lib/security.js";
+import { shouldRefundSmsOrder, smsRefundCents, smsRefundNote } from "../lib/smsRefunds.js";
 import { activeSmsOrderStatuses, cooldownSecondsLeft, smsRiskSettings } from "../lib/smsRisk.js";
 import {
   buySmsProvider,
@@ -33,6 +34,8 @@ function normalizeOrder(row) {
     phone: row.phone,
     price: centsToAmount(row.price_cents),
     status: row.status,
+    refund: centsToAmount(row.refund_cents),
+    refundedAt: toIso(row.refunded_at),
     sms,
     createdAt: toIso(row.created_at),
     updatedAt: toIso(row.updated_at),
@@ -140,6 +143,76 @@ async function auditSmsBuy(app, request, auth, status, httpStatus, metadata = {}
     httpStatus,
     metadata,
   });
+}
+
+async function refundSmsOrderIfNeeded(app, request, auth, orderId, triggerAction) {
+  const client = await app.db.connect();
+  let result = { refunded: false, order: null, balanceCents: null };
+
+  try {
+    await client.query("BEGIN");
+    const locked = await one(
+      client,
+      "SELECT * FROM sms_orders WHERE id = $1 AND user_id = $2 FOR UPDATE",
+      [orderId, auth.user.id],
+    );
+    if (!locked || !shouldRefundSmsOrder(locked)) {
+      await client.query("COMMIT");
+      return { refunded: false, order: locked, balanceCents: null };
+    }
+
+    const refundCents = smsRefundCents(locked);
+    const user = await one(
+      client,
+      `UPDATE users
+          SET balance_cents = balance_cents + $1, updated_at = now()
+        WHERE id = $2
+      RETURNING *`,
+      [refundCents, auth.user.id],
+    );
+    const refundedOrder = await one(
+      client,
+      `UPDATE sms_orders
+          SET refund_cents = $1,
+              refunded_at = now(),
+              updated_at = now()
+        WHERE id = $2 AND user_id = $3
+      RETURNING *`,
+      [refundCents, orderId, auth.user.id],
+    );
+    await exec(
+      client,
+      `INSERT INTO balance_logs (user_id, delta_cents, balance_after_cents, reason, note)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [auth.user.id, refundCents, user.balance_cents, "sms_refund", smsRefundNote(refundedOrder || locked)],
+    );
+    await client.query("COMMIT");
+    result = { refunded: true, order: refundedOrder, balanceCents: user.balance_cents };
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  if (result.refunded) {
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      targetUserId: auth.user.id,
+      action: "sms.refund",
+      resourceType: "sms_order",
+      resourceId: result.order?.id || orderId,
+      status: "success",
+      httpStatus: 200,
+      metadata: {
+        triggerAction,
+        orderStatus: result.order?.status || "",
+        refundAmount: centsToAmount(result.order?.refund_cents),
+      },
+    });
+  }
+
+  return result;
 }
 
 async function smsBuyRisk(app, userId) {
@@ -471,9 +544,11 @@ export async function smsRoutes(app) {
     if (["finished", "completed"].includes(String(updated?.status || "").toLowerCase())) {
       await maybeGrantReferralReward(app.db, updated.id);
     }
+    const refundResult = await refundSmsOrderIfNeeded(app, request, auth, updated.id, "check");
+    const responseOrder = refundResult.order || updated;
     const oldStatus = String(row.status || "");
-    const newStatus = String(updated?.status || "");
-    if (oldStatus !== newStatus || (updated?.sms_json || "[]") !== (row.sms_json || "[]")) {
+    const newStatus = String(responseOrder?.status || "");
+    if (oldStatus !== newStatus || (responseOrder?.sms_json || "[]") !== (row.sms_json || "[]") || refundResult.refunded) {
       await writeAuditLog(app.db, request, {
         actorUserId: auth.user.id,
         targetUserId: auth.user.id,
@@ -485,11 +560,15 @@ export async function smsRoutes(app) {
         metadata: {
           oldStatus,
           newStatus,
-          hasSms: normalizeOrder(updated).sms.length > 0,
+          refunded: refundResult.refunded,
+          hasSms: normalizeOrder(responseOrder).sms.length > 0,
         },
       });
     }
-    return { order: normalizeOrder(updated) };
+    return {
+      order: normalizeOrder(responseOrder),
+      balance: refundResult.balanceCents == null ? undefined : centsToAmount(refundResult.balanceCents),
+    };
   });
 
   for (const action of ["finish", "cancel", "ban"]) {
@@ -537,6 +616,8 @@ export async function smsRoutes(app) {
       if (["finish", "completed"].includes(action) || ["finished", "completed"].includes(String(updated?.status || "").toLowerCase())) {
         await maybeGrantReferralReward(app.db, updated.id);
       }
+      const refundResult = await refundSmsOrderIfNeeded(app, request, auth, updated.id, action);
+      const responseOrder = refundResult.order || updated;
       await writeAuditLog(app.db, request, {
         actorUserId: auth.user.id,
         targetUserId: auth.user.id,
@@ -547,10 +628,14 @@ export async function smsRoutes(app) {
         httpStatus: 200,
         metadata: {
           oldStatus: row.status,
-          newStatus: updated.status,
+          newStatus: responseOrder.status,
+          refunded: refundResult.refunded,
         },
       });
-      return { order: normalizeOrder(updated) };
+      return {
+        order: normalizeOrder(responseOrder),
+        balance: refundResult.balanceCents == null ? undefined : centsToAmount(refundResult.balanceCents),
+      };
     });
   }
 }

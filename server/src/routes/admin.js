@@ -24,6 +24,7 @@ function adminUser(row) {
 
 function logType(row) {
   if (row.reason === "sms_order") return "order";
+  if (row.reason === "sms_refund") return "refund";
   if (row.reason === "refund") return "refund";
   if (row.reason === "voucher_redeem") return "voucher";
   if (row.reason === "referral_reward") return "referral";

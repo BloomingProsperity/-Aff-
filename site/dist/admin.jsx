@@ -402,15 +402,15 @@
             <thead>
               <tr>
                 <th>ID</th><th>用户</th><th>服务</th><th>国家</th>
-                <th>号码</th><th>金额</th><th>状态</th><th>时间</th>
+                <th>号码</th><th>金额</th><th>退款</th><th>状态</th><th>时间</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={8} className="adm-empty">加载中…</td></tr>
+                <tr><td colSpan={9} className="adm-empty">加载中…</td></tr>
               )}
               {!loading && orders.length === 0 && (
-                <tr><td colSpan={8} className="adm-empty">暂无数据</td></tr>
+                <tr><td colSpan={9} className="adm-empty">暂无数据</td></tr>
               )}
               {orders.map(o => (
                 <tr key={o.id}>
@@ -420,6 +420,7 @@
                   <td>{o.country || "—"}</td>
                   <td className="adm-td--mono">{o.phone || "—"}</td>
                   <td>{fmtCny(Number(o.price_cents || 0) / 100)}</td>
+                  <td>{Number(o.refund_cents || 0) > 0 ? fmtCny(Number(o.refund_cents || 0) / 100) : "—"}</td>
                   <td><AdmBadge s={o.status} /></td>
                   <td className="adm-td--date">{fmtDate(o.created_at)}</td>
                 </tr>
