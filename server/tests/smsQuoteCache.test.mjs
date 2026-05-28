@@ -91,3 +91,57 @@ test("selected sms quote uses a short public cache to avoid repeated upstream ca
     await app.close();
   }
 });
+
+test("sms products rejects malformed lookup parts before upstream lookup", async () => {
+  const db = quoteCacheDb();
+  const upstreamCalls = [];
+  const app = await buildApp({
+    db,
+    logger: false,
+    config: loadConfig({ FIVESIM_API_KEY: "token", PUBLIC_URL: "https://hkai.shop" }),
+    fivesimClient: async (path) => {
+      upstreamCalls.push(path);
+      throw new Error("malformed products request reached upstream");
+    },
+  });
+
+  try {
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/sms/products?country=${"a".repeat(80)}&operator=any`,
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(upstreamCalls, []);
+    assert.equal(db.cache.size, 0);
+  } finally {
+    await app.close();
+  }
+});
+
+test("sms quote rejects malformed product before provider routing", async () => {
+  const db = quoteCacheDb();
+  const upstreamCalls = [];
+  const app = await buildApp({
+    db,
+    logger: false,
+    config: loadConfig({ FIVESIM_API_KEY: "token", PUBLIC_URL: "https://hkai.shop" }),
+    fivesimClient: async (path) => {
+      upstreamCalls.push(path);
+      throw new Error("malformed quote request reached upstream");
+    },
+  });
+
+  try {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/sms/quote?country=usa&operator=any&product=tele gram",
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(upstreamCalls, []);
+    assert.equal(db.cache.size, 0);
+  } finally {
+    await app.close();
+  }
+});

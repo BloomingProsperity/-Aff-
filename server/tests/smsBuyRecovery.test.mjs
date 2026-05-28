@@ -88,3 +88,53 @@ test("sms buy rate limit writes an audit log before returning", async () => {
     await app.close();
   }
 });
+
+test("sms buy rejects malformed lookup before lock or provider work", async () => {
+  const calls = [];
+  const db = {
+    async query(sql, params = []) {
+      calls.push({ sql, params });
+      if (sql.includes("FROM app_settings")) return { rows: [] };
+      if (sql.includes("FROM sessions") && sql.includes("JOIN users")) {
+        return { rows: [{ id: 7, email: "buyer@gmail.com", role: "user", status: "active", balance_cents: 5000 }] };
+      }
+      if (sql.includes("INTO rate_limits")) return { rows: [{ count: 1, reset_at: Math.floor(Date.now() / 1000) + 60 }] };
+      if (sql.includes("INTO audit_logs")) return { rows: [], rowCount: 1 };
+      if (sql.includes("operation_locks") || sql.includes("UPDATE users") || sql.includes("sms_orders")) {
+        throw new Error(`Malformed sms buy reached protected SQL: ${sql}`);
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+  const app = await buildApp({
+    db,
+    logger: false,
+    config: loadConfig({ PUBLIC_URL: "https://hkai.shop", FIVESIM_API_KEY: "token" }),
+    fivesimClient: async () => {
+      throw new Error("Malformed sms buy reached provider");
+    },
+  });
+
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/sms/buy",
+      headers: {
+        host: "api.hkai.shop",
+        cookie: "hkai_session=session-token",
+      },
+      payload: { country: "usa", operator: "any", product: "tele gram" },
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.equal(calls.some(call => call.sql.includes("operation_locks")), false);
+    const audit = calls.find(call => call.sql.includes("INTO audit_logs"));
+    assert.ok(audit);
+    assert.equal(audit.params[2], "sms.buy");
+    assert.equal(audit.params[5], "failed");
+    assert.equal(audit.params[6], 400);
+    assert.match(audit.params[11], /invalid_lookup/);
+  } finally {
+    await app.close();
+  }
+});

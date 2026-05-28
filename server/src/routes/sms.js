@@ -26,6 +26,18 @@ import {
 const PRODUCT_CACHE_SECONDS = 60;
 const QUOTE_CACHE_SECONDS = 20;
 const COUNTRIES_CACHE_SECONDS = 3600;
+const SMS_LOOKUP_PART_PATTERN = /^[a-zA-Z0-9_-]{1,40}$/;
+
+function smsLookupPart(value, fallback = "") {
+  const raw = String(value ?? fallback ?? "").trim();
+  if (!SMS_LOOKUP_PART_PATTERN.test(raw)) return null;
+  return raw.toLowerCase();
+}
+
+function badSmsLookup(reply) {
+  reply.code(400);
+  return { error: "请求参数不正确。" };
+}
 
 function countriesCacheKey() {
   return "countries:5sim";
@@ -395,8 +407,9 @@ export async function smsRoutes(app) {
     });
     if (limited) return limited;
 
-    const country = cleanPart(request.query.country || "usa");
-    const operator = cleanPart(request.query.operator || "any");
+    const country = smsLookupPart(request.query.country, "usa");
+    const operator = smsLookupPart(request.query.operator, "any");
+    if (!country || !operator) return badSmsLookup(reply);
     const catalog = await loadProductCatalog(app, country, operator);
     if (!catalog.ok) return fivesimHttpError(reply, catalog.result);
     reply.header("x-cache", catalog.cache);
@@ -412,13 +425,10 @@ export async function smsRoutes(app) {
     });
     if (limited) return limited;
 
-    const country = cleanPart(request.query.country || "usa");
-    const operator = cleanPart(request.query.operator || "any");
-    const product = cleanPart(request.query.product || "");
-    if (!product) {
-      reply.code(400);
-      return { error: "请选择服务。" };
-    }
+    const country = smsLookupPart(request.query.country, "usa");
+    const operator = smsLookupPart(request.query.operator, "any");
+    const product = smsLookupPart(request.query.product, "");
+    if (!country || !operator || !product) return badSmsLookup(reply);
 
     const quote = await loadPublicQuote(app, country, operator, product);
     reply.header("x-cache", quote.cache);
@@ -473,6 +483,16 @@ export async function smsRoutes(app) {
       return limited;
     }
 
+    const body = request.body || {};
+    const requestedCountry = smsLookupPart(body.country, "usa");
+    const requestedOperator = smsLookupPart(body.operator, "any");
+    const requestedProduct = smsLookupPart(body.product, "");
+    if (!requestedCountry || !requestedOperator || !requestedProduct) {
+      reply.code(400);
+      await auditSmsBuy(app, request, auth, "failed", 400, { reason: "invalid_lookup", hasProduct: Boolean(body.product) });
+      return { error: "请求参数不正确。" };
+    }
+
     const buyLock = await acquireOperationLock(app.db, {
       key: operationLockKey("sms:buy", auth.user.id),
       ttlSeconds: 90,
@@ -492,16 +512,9 @@ export async function smsRoutes(app) {
     let localOrderCommitted = false;
 
     try {
-    const body = request.body || {};
-
-    country = cleanPart(body.country || "usa");
-    operator = cleanPart(body.operator || "any");
-    product = cleanPart(body.product || "");
-    if (!product) {
-      reply.code(400);
-      await auditSmsBuy(app, request, auth, "failed", 400, { reason: "missing_product", country, operator });
-      return { error: "请选择服务。" };
-    }
+    country = requestedCountry;
+    operator = requestedOperator;
+    product = requestedProduct;
 
     await expireStaleSmsOrdersForUser(app, request, auth);
     const risk = await smsBuyRisk(app, auth.user.id);
