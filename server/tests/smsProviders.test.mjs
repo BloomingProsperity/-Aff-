@@ -90,6 +90,25 @@ test("provider errors are converted to standard public messages", () => {
   assert.equal(publicSmsProviderError({ status: 502, error: "raw token rejected" }), "上游服务暂时不可用，请稍后再试。");
 });
 
+test("provider text errors are classified before showing public messages", () => {
+  assert.equal(
+    publicSmsProviderError({ error: "NO_NUMBERS_AVAILABLE" }),
+    publicSmsProviderError({ publicCode: "no_stock" }),
+  );
+  assert.equal(
+    publicSmsProviderError({ error: "insufficient balance" }),
+    publicSmsProviderError({ publicCode: "insufficient_provider_balance" }),
+  );
+  assert.equal(
+    publicSmsProviderError({ error: "service not found" }),
+    publicSmsProviderError({ publicCode: "invalid_service" }),
+  );
+  assert.equal(
+    publicSmsProviderError({ error: "too many requests" }),
+    publicSmsProviderError({ publicCode: "rate_limited" }),
+  );
+});
+
 test("provider health summary never exposes tokens and flags low balances", () => {
   const ok = normalizeProviderHealth({
     provider: "5sim",

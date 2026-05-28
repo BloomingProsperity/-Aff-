@@ -55,6 +55,31 @@ const PUBLIC_PROVIDER_ERRORS = {
   unavailable: "上游服务暂时不可用，请稍后再试。",
 };
 
+function providerPublicCodeFromText(result = {}) {
+  const text = [
+    result.error,
+    result.message,
+    result.data?.error,
+    result.data?.message,
+    result.data?.detail,
+    result.data?.description,
+  ].map(value => String(value || "").toLowerCase()).join(" ");
+  if (!text.trim()) return "";
+
+  if (/(too many|rate.?limit|throttl|429)/i.test(text)) return "rate_limited";
+  if (/(insufficient|not enough|low|empty).*(balance|credit|fund|wallet)|balance.*(insufficient|not enough|low|empty)/i.test(text)) {
+    return "insufficient_provider_balance";
+  }
+  if (/(no|zero).*(number|stock)|out.?of.?stock|sold.?out|no_numbers|no numbers|no.*available.*number/i.test(text)) {
+    return "no_stock";
+  }
+  if (/(service|product|country).*(not found|invalid|unknown|unsupported)|invalid.*(service|product|country)/i.test(text)) {
+    return "invalid_service";
+  }
+  if (/(busy|try again|temporary|maintenance|timeout)/i.test(text)) return "provider_busy";
+  return "";
+}
+
 const COUNTRY_ISO2 = {
   usa: "us",
   england: "gb",
@@ -115,6 +140,8 @@ function providerPublicCode(result = {}) {
   if (apiCode === 50101) return "provider_busy";
   if (apiCode === 50111) return "no_stock";
   if (apiCode === 50113 || apiCode === 50114) return "invalid_service";
+  const textCode = providerPublicCodeFromText(result);
+  if (textCode) return textCode;
   return "unavailable";
 }
 
