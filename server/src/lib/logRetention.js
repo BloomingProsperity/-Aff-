@@ -1,5 +1,5 @@
 export const LOG_RETENTION_DAYS = 30;
-export const LOG_RETENTION_TABLES = ["audit_logs", "sms_order_events"];
+export const LOG_RETENTION_TABLES = ["audit_logs", "sms_order_events", "sms_orders.raw_json"];
 
 function retentionDays(days) {
   const n = Number(days || LOG_RETENTION_DAYS);
@@ -17,9 +17,17 @@ export async function cleanupOldLogs(db, { days = LOG_RETENTION_DAYS } = {}) {
     "DELETE FROM sms_order_events WHERE created_at < now() - ($1::int * INTERVAL '1 day')",
     [keepDays],
   );
+  const smsOrderRawPayloads = await db.query(
+    `UPDATE sms_orders
+        SET raw_json = '{}'
+      WHERE created_at < now() - ($1::int * INTERVAL '1 day')
+        AND raw_json <> '{}'`,
+    [keepDays],
+  );
   return {
     auditLogs: Number(audit.rowCount || 0),
     smsOrderEvents: Number(smsEvents.rowCount || 0),
+    smsOrderRawPayloads: Number(smsOrderRawPayloads.rowCount || 0),
     days: keepDays,
   };
 }
@@ -35,6 +43,7 @@ export function logRetentionStatus(state = {}, { days = LOG_RETENTION_DAYS } = {
     lastDeleted: {
       auditLogs: Number(summary.auditLogs || 0),
       smsOrderEvents: Number(summary.smsOrderEvents || 0),
+      smsOrderRawPayloads: Number(summary.smsOrderRawPayloads || 0),
     },
     lastError: error ? String(error.message || error).slice(0, 160) : "",
   };

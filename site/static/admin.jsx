@@ -163,7 +163,7 @@
       admApi("/admin/log-retention/run", { method: "POST", body: JSON.stringify({}) })
         .then(d => {
           const s = d.summary || {};
-          setMaintenanceMsg(`日志已清理：审计 ${fmt(s.auditLogs || 0)} 条，订单事件 ${fmt(s.smsOrderEvents || 0)} 条`);
+          setMaintenanceMsg(`日志已清理：审计 ${fmt(s.auditLogs || 0)} 条，订单事件 ${fmt(s.smsOrderEvents || 0)} 条，原始包 ${fmt(s.smsOrderRawPayloads || 0)} 条`);
           loadOverview();
         })
         .catch(() => setMaintenanceMsg("日志清理失败，请稍后重试"))

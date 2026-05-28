@@ -14,6 +14,11 @@ assert.equal(
   "manual log retention cleanup should refresh overview state after running",
 );
 assert.equal(
+  adminJsx.includes("smsOrderRawPayloads"),
+  true,
+  "admin overview should show old upstream raw payload cleanup results",
+);
+assert.equal(
   adminJsx.includes("/admin/housekeeping/run"),
   true,
   "admin overview should expose a manual temporary data cleanup action",

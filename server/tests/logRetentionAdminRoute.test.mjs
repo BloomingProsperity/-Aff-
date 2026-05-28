@@ -23,6 +23,7 @@ test("admin can manually run log retention cleanup with audit trail", async () =
       if (sql.includes("INSERT INTO rate_limits")) return { rows: [{ count: 1, reset_at: 1_800_000_000 }] };
       if (sql.includes("DELETE FROM audit_logs")) return { rows: [], rowCount: 4 };
       if (sql.includes("DELETE FROM sms_order_events")) return { rows: [], rowCount: 6 };
+      if (sql.includes("UPDATE sms_orders")) return { rows: [], rowCount: 8 };
       if (sql.includes("INSERT INTO audit_logs")) return { rows: [], rowCount: 1 };
       throw new Error(`Unexpected SQL: ${sql}`);
     },
@@ -46,22 +47,25 @@ test("admin can manually run log retention cleanup with audit trail", async () =
     });
 
     assert.equal(response.statusCode, 200);
-    assert.deepEqual(response.json().summary, { auditLogs: 4, smsOrderEvents: 6, days: 30 });
+    assert.deepEqual(response.json().summary, { auditLogs: 4, smsOrderEvents: 6, smsOrderRawPayloads: 8, days: 30 });
 
     const rateLimit = calls.find(call => call.sql.includes("INSERT INTO rate_limits"));
     const auditDelete = calls.find(call => call.sql.includes("DELETE FROM audit_logs"));
     const smsDelete = calls.find(call => call.sql.includes("DELETE FROM sms_order_events"));
+    const rawUpdate = calls.find(call => call.sql.includes("UPDATE sms_orders"));
     const auditWrite = calls.find(call => call.sql.includes("INSERT INTO audit_logs"));
 
     assert.ok(rateLimit);
     assert.ok(auditDelete);
     assert.ok(smsDelete);
+    assert.ok(rawUpdate);
     assert.ok(auditWrite);
     assert.ok(calls.indexOf(rateLimit) < calls.indexOf(auditDelete));
     assert.equal(auditWrite.params[2], "admin.log_retention.run");
     assert.equal(auditWrite.params[5], "success");
     assert.match(auditWrite.params[11], /"auditLogs":4/);
     assert.match(auditWrite.params[11], /"smsOrderEvents":6/);
+    assert.match(auditWrite.params[11], /"smsOrderRawPayloads":8/);
   } finally {
     await app.close();
   }
