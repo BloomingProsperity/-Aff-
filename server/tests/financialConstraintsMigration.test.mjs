@@ -25,3 +25,16 @@ test("database migrations enforce positive voucher and referral amounts", () => 
   assert.match(migrationText, /referral_rewards_reward_cents_positive/);
   assert.match(migrationText, /CHECK\s*\(\s*reward_cents\s*>\s*0\s*\)/i);
 });
+
+test("database migrations validate financial constraints after adding them", () => {
+  for (const name of [
+    "users_balance_cents_nonnegative",
+    "balance_logs_balance_after_cents_nonnegative",
+    "sms_orders_price_cents_nonnegative",
+    "sms_orders_refund_cents_nonnegative",
+    "balance_vouchers_amount_cents_positive",
+    "referral_rewards_reward_cents_positive",
+  ]) {
+    assert.match(migrationText, new RegExp(`VALIDATE CONSTRAINT\\s+${name}`, "i"));
+  }
+});
