@@ -23,9 +23,14 @@ import {
 } from "../lib/smsProviders.js";
 
 const PRODUCT_CACHE_SECONDS = 60;
+const QUOTE_CACHE_SECONDS = 20;
 
 function productCacheKey(country, operator) {
   return `products:${country}:${operator}`;
+}
+
+function quoteCacheKey(country, operator, product) {
+  return `quote:${country}:${operator}:${product}`;
 }
 
 async function readProductCache(db, cacheKey, now) {
@@ -41,7 +46,7 @@ async function readProductCache(db, cacheKey, now) {
   }
 }
 
-async function writeProductCache(db, cacheKey, data, now) {
+async function writeProductCache(db, cacheKey, data, now, seconds = PRODUCT_CACHE_SECONDS) {
   await exec(
     db,
     `INSERT INTO product_cache (cache_key, data_json, expires_at, updated_at)
@@ -50,7 +55,7 @@ async function writeProductCache(db, cacheKey, data, now) {
        data_json = EXCLUDED.data_json,
        expires_at = EXCLUDED.expires_at,
        updated_at = now()`,
-    [cacheKey, JSON.stringify(data || {}), now + PRODUCT_CACHE_SECONDS],
+    [cacheKey, JSON.stringify(data || {}), now + seconds],
   );
 }
 
@@ -68,6 +73,18 @@ async function loadProductCatalog(app, country, operator) {
 
   if (cached?.data) return { ok: true, data: cached.data, cache: "STALE" };
   return { ok: false, result };
+}
+
+async function loadPublicQuote(app, country, operator, product) {
+  const now = Math.floor(Date.now() / 1000);
+  const cacheKey = quoteCacheKey(country, operator, product);
+  const cached = await readProductCache(app.db, cacheKey, now);
+  if (cached?.fresh) return { data: cached.data, cache: "HIT" };
+
+  const quotes = await quoteSmsProviders(app, { country, operator, product });
+  const data = publicBestSmsQuote(app.config, quotes);
+  await writeProductCache(app.db, cacheKey, data, now, QUOTE_CACHE_SECONDS);
+  return { data, cache: "MISS" };
 }
 
 function enrichProducts(config, products) {
@@ -379,8 +396,9 @@ export async function smsRoutes(app) {
       return { error: "请选择服务。" };
     }
 
-    const quotes = await quoteSmsProviders(app, { country, operator, product });
-    return publicBestSmsQuote(app.config, quotes);
+    const quote = await loadPublicQuote(app, country, operator, product);
+    reply.header("x-cache", quote.cache);
+    return quote.data;
   });
 
   app.get("/api/sms/orders", async (request, reply) => {
