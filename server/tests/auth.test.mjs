@@ -8,6 +8,7 @@ import {
   isConfiguredAdmin,
   normalizeUserStatus,
   passwordNeedsRehash,
+  requireAdmin,
   requirePaidUser,
   validatePasswordInput,
   verifyPassword,
@@ -94,6 +95,46 @@ test("paid user guard marks suspended accounts for audit", async () => {
   assert.equal(auth.blockedReason, "account_suspended");
   assert.equal(auth.user.email, "buyer@gmail.com");
   assert.ok(auth.response.error);
+});
+
+test("admin guard audits authenticated users without admin access", async () => {
+  const calls = [];
+  const db = {
+    async query(sql, params = []) {
+      calls.push({ sql, params });
+      if (sql.includes("FROM sessions") && sql.includes("JOIN users")) {
+        return { rows: [{ id: 9, email: "buyer@gmail.com", role: "user", status: "active", balance_cents: 0 }] };
+      }
+      if (sql.includes("INTO audit_logs")) return { rows: [], rowCount: 1 };
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+  const reply = {
+    statusCode: 200,
+    code(value) {
+      this.statusCode = value;
+      return this;
+    },
+  };
+  const request = {
+    cookies: { hkai_session: "session-token" },
+    method: "GET",
+    url: "/api/admin/stats",
+    headers: { "user-agent": "test-agent" },
+    ip: "203.0.113.8",
+  };
+
+  const auth = await requireAdmin(db, request, reply, { adminEmail: "huakaifugui2.0@gmail.com" });
+
+  assert.equal(reply.statusCode, 403);
+  assert.ok(auth.response.error);
+  const audit = calls.find(call => call.sql.includes("INTO audit_logs"));
+  assert.ok(audit);
+  assert.equal(audit.params[0], 9);
+  assert.equal(audit.params[2], "admin.access");
+  assert.equal(audit.params[5], "failed");
+  assert.equal(audit.params[6], 403);
+  assert.match(audit.params[11], /not_configured_admin/);
 });
 
 test("admin can revoke all sessions for a user", async () => {

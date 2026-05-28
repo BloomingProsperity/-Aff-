@@ -1,4 +1,5 @@
 import { createHash, pbkdf2Sync, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { writeAuditLog } from "./audit.js";
 import { cleanEmail, centsToAmount, toIso } from "./common.js";
 import { exec, one } from "./db.js";
 
@@ -155,6 +156,19 @@ export async function requireAdmin(db, request, reply, config = request.server?.
   if (auth.response) return auth;
   if (!isConfiguredAdmin(auth.user, config)) {
     reply.code(403);
+    await writeAuditLog(db, request, {
+      actorUserId: auth.user.id,
+      targetUserId: auth.user.id,
+      action: "admin.access",
+      resourceType: "admin",
+      status: "failed",
+      httpStatus: 403,
+      metadata: {
+        reason: "not_configured_admin",
+        role: auth.user.role || "",
+        email: auth.user.email || "",
+      },
+    });
     return { response: { error: "没有管理员权限。" } };
   }
   return auth;
