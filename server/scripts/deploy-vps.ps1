@@ -82,7 +82,9 @@ $RemoteScriptBody = $RemoteScriptBody `
   -replace "__COMMIT__", (ConvertTo-BashSingleQuoted $Commit) `
   -replace "__VERSION__", (ConvertTo-BashSingleQuoted $Version)
 
-Set-Content -LiteralPath $LocalRemoteScript -Value $RemoteScriptBody -Encoding ascii
+$RemoteScriptBody = $RemoteScriptBody.Replace("`r`n", "`n")
+$AsciiEncoding = New-Object System.Text.ASCIIEncoding
+[System.IO.File]::WriteAllText($LocalRemoteScript, $RemoteScriptBody, $AsciiEncoding)
 
 scp -i $IdentityFile $Archive "$Remote`:$RemoteArchive"
 scp -i $IdentityFile $LocalRemoteScript "$Remote`:$RemoteScript"
