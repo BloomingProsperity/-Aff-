@@ -628,11 +628,50 @@ export async function smsRoutes(app) {
             status: 400,
             publicCode: "supplier_price_over_fixed_price",
           };
-          await changeSmsProviderOrder(
+          const providerOrder = {
+            ...attempt,
+            provider: candidate.provider,
+            fivesim_id: providerOrderKey(candidate.provider, attempt.id),
+          };
+          const cancelled = await changeSmsProviderOrder(
             app,
-            { ...attempt, provider: candidate.provider, fivesim_id: providerOrderKey(candidate.provider, attempt.id) },
+            providerOrder,
             "cancel",
           );
+          if (!cancelled?.ok) {
+            const cancelFailedError = {
+              provider: candidate.provider,
+              status: cancelled?.status || 502,
+              apiCode: cancelled?.apiCode ?? null,
+              publicCode: "supplier_price_over_fixed_cancel_failed",
+            };
+            await writeSmsOrderEvent(app.db, {
+              userId: auth.user.id,
+              actorUserId: auth.user.id,
+              type: "provider.price_over_fixed_cancel_failed",
+              status: "failed",
+              provider: candidate.provider,
+              publicCode: "supplier_price_over_fixed_cancel_failed",
+              message: "供应商价格超过当前售价，取消失败，已停止继续采购",
+              metadata: {
+                country,
+                operator,
+                product,
+                quoteCount: quotes.length,
+                selectedProvider: candidate.provider,
+                cancelStatus: cancelled?.status || null,
+                cancelPublicCode: cancelled?.publicCode || "",
+              },
+            });
+            lastError = cancelFailedError;
+            attempts.push({
+              provider: candidate.provider,
+              status: cancelFailedError.status,
+              apiCode: cancelFailedError.apiCode,
+              publicCode: cancelFailedError.publicCode,
+            });
+            break;
+          }
           await writeSmsOrderEvent(app.db, {
             userId: auth.user.id,
             actorUserId: auth.user.id,

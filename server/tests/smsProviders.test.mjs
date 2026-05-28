@@ -90,6 +90,7 @@ test("provider statuses follow upstream API semantics", () => {
 test("provider errors are converted to standard public messages", () => {
   assert.equal(publicSmsProviderError({ publicCode: "no_stock", error: "raw upstream no numbers" }), "当前服务暂时没有可用号码，请稍后再试。");
   assert.equal(publicSmsProviderError({ publicCode: "supplier_price_over_fixed_price" }), "当前服务暂时没有可用号码，请稍后再试。");
+  assert.equal(publicSmsProviderError({ publicCode: "supplier_price_over_fixed_cancel_failed" }), "服务暂时不可用，请稍后再试。");
   assert.equal(publicSmsProviderError({ publicCode: "insufficient_provider_balance", error: "Balance not enough" }), "服务暂时不可用，请稍后再试。");
   assert.equal(publicSmsProviderError({ status: 429, error: "provider rate limit raw text" }), "请求过于频繁，请稍后再试。");
   assert.equal(publicSmsProviderError({ status: 502, error: "raw token rejected" }), "上游服务暂时不可用，请稍后再试。");

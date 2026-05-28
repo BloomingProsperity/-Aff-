@@ -72,6 +72,20 @@ test("sms buy continues to the next supplier after cancelling an over-priced pur
   assert.match(loopBody, /bought\s*=\s*attempt[\s\S]*chosen\s*=\s*candidate[\s\S]*break/);
 });
 
+test("sms buy stops retrying if an over-priced upstream order cannot be cancelled", async () => {
+  const source = await readFile(new URL("../src/routes/sms.js", import.meta.url), "utf8");
+  const routeStart = source.indexOf('app.post("/api/sms/buy"');
+  const loopStart = source.indexOf("for (const candidate of candidates)", routeStart);
+  const loopEnd = source.indexOf("if (!bought || !chosen)", loopStart);
+  const loopBody = source.slice(loopStart, loopEnd);
+
+  assert.match(loopBody, /const\s+cancelled\s*=\s*await\s+changeSmsProviderOrder/);
+  assert.match(loopBody, /if\s*\(!cancelled\?\.ok\)/);
+  assert.match(loopBody, /provider\.price_over_fixed_cancel_failed/);
+  assert.match(loopBody, /publicCode:\s*"supplier_price_over_fixed_cancel_failed"/);
+  assert.match(loopBody, /break;/);
+});
+
 test("sms buy rate limit writes an audit log before returning", async () => {
   const calls = [];
   const db = {
