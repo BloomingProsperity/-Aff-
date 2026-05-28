@@ -137,6 +137,43 @@ test("admin guard audits authenticated users without admin access", async () => 
   assert.match(audit.params[11], /not_configured_admin/);
 });
 
+test("admin guard audits unauthenticated admin access attempts", async () => {
+  const calls = [];
+  const db = {
+    async query(sql, params = []) {
+      calls.push({ sql, params });
+      if (sql.includes("INTO audit_logs")) return { rows: [], rowCount: 1 };
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+  const reply = {
+    statusCode: 200,
+    code(value) {
+      this.statusCode = value;
+      return this;
+    },
+  };
+  const request = {
+    cookies: {},
+    method: "GET",
+    url: "/api/admin/stats",
+    headers: { "user-agent": "scanner-agent" },
+    ip: "198.51.100.10",
+  };
+
+  const auth = await requireAdmin(db, request, reply, { adminEmail: "huakaifugui2.0@gmail.com" });
+
+  assert.equal(reply.statusCode, 401);
+  assert.ok(auth.response.error);
+  const audit = calls.find(call => call.sql.includes("INTO audit_logs"));
+  assert.ok(audit);
+  assert.equal(audit.params[0], null);
+  assert.equal(audit.params[2], "admin.access");
+  assert.equal(audit.params[5], "failed");
+  assert.equal(audit.params[6], 401);
+  assert.match(audit.params[11], /unauthenticated/);
+});
+
 test("admin can revoke all sessions for a user", async () => {
   const calls = [];
   const db = {

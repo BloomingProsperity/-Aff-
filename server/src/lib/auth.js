@@ -153,7 +153,16 @@ export async function requirePaidUser(db, request, reply) {
 
 export async function requireAdmin(db, request, reply, config = request.server?.config || request.config || {}) {
   const auth = await requireUser(db, request, reply);
-  if (auth.response) return auth;
+  if (auth.response) {
+    await writeAuditLog(db, request, {
+      action: "admin.access",
+      resourceType: "admin",
+      status: "failed",
+      httpStatus: 401,
+      metadata: { reason: "unauthenticated" },
+    });
+    return auth;
+  }
   if (!isConfiguredAdmin(auth.user, config)) {
     reply.code(403);
     await writeAuditLog(db, request, {
