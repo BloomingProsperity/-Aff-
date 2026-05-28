@@ -9,6 +9,7 @@ import { enforceRateLimit } from "../lib/security.js";
 import { adminSettingsView, applySettingToConfig, normalizeAdminSetting, settingKeys } from "../lib/settings.js";
 import { expireStaleSmsOrders } from "../lib/smsMaintenance.js";
 import { normalizeSmsOrderEvent, writeSmsOrderEvent } from "../lib/smsEvents.js";
+import { normalizeAdminSmsOrder } from "../lib/smsOrders.js";
 import { changeSmsProviderOrder, smsProviderHealth } from "../lib/smsProviders.js";
 import { adminClosableSmsOrderStatus, shouldRefundSmsOrder, smsRefundCents, smsRefundNote } from "../lib/smsRefunds.js";
 import { activeSmsOrderStatuses } from "../lib/smsRisk.js";
@@ -590,7 +591,7 @@ export async function adminRoutes(app) {
         LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params,
     );
-    return { orders: rows, total: Number(count?.total || 0), page };
+    return { orders: rows.map(normalizeAdminSmsOrder), total: Number(count?.total || 0), page };
   });
 
   app.post("/api/admin/orders/expire-stale", async (request, reply) => {
@@ -682,7 +683,7 @@ export async function adminRoutes(app) {
         LIMIT 100`,
       [orderId],
     );
-    return { order, events: rows.map(normalizeSmsOrderEvent) };
+    return { order: normalizeAdminSmsOrder(order), events: rows.map(normalizeSmsOrderEvent) };
   });
 
   app.post("/api/admin/orders/:id/close", async (request, reply) => {
@@ -865,7 +866,7 @@ export async function adminRoutes(app) {
     });
 
     return {
-      order: result.order,
+      order: normalizeAdminSmsOrder(result.order),
       refunded: result.refunded,
       refundAmount: centsToAmount(result.refundCents),
     };
