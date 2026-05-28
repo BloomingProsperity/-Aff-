@@ -30,7 +30,7 @@ assert.match(headers.get("strict-transport-security") || "", /max-age=31536000/)
 
 assert.match(csp, /default-src 'self'/);
 assert.match(csp, /script-src .*https:\/\/challenges\.cloudflare\.com/);
-assert.match(csp, /script-src .*'unsafe-eval'/);
+assert.equal(csp.includes("'unsafe-eval'"), false);
 assert.match(csp, /connect-src .*https:\/\/api\.hkai\.shop/);
 assert.match(csp, /frame-src https:\/\/challenges\.cloudflare\.com/);
 assert.match(csp, /frame-ancestors 'none'/);

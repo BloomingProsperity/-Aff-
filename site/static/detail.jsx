@@ -1024,4 +1024,4 @@ function NotFound() {
   );
 }
 
-Object.assign(window, { CardDetail, GiftDetail, GiftBuy, NotFound, Dot });
+Object.assign(window, { CardDetail, GiftDetail, GiftBuy, DetailHeader, NotFound, Dot });
