@@ -162,6 +162,10 @@ function serviceAliases(product) {
   return [...new Set([raw, ...(SERVICE_WORDS[raw] || [])])].filter(Boolean);
 }
 
+function catalogCode(value) {
+  return cleanText(value).replace(/[^a-z0-9_-]/g, "").slice(0, 40);
+}
+
 function itemValue(item, keys) {
   for (const key of keys) {
     if (item?.[key] !== undefined && item?.[key] !== null) return item[key];
@@ -476,6 +480,53 @@ async function smspoolServices(app) {
     return result.ok ? result.data : [];
   });
   return asArray(data);
+}
+
+function serviceCatalogEntry(item, provider) {
+  const rawCode = itemValue(item, [
+    "short_name",
+    "code",
+    "service_code",
+    "service_id",
+    "id",
+    "ID",
+    "name",
+    "service",
+    "service_name",
+  ]);
+  const code = catalogCode(rawCode);
+  if (!code) return null;
+  const count = amount(itemValue(item, ["stock", "count", "qty", "quantity"]));
+  return {
+    code,
+    provider,
+    count: count > 0 ? count : undefined,
+  };
+}
+
+export async function providerServiceCatalog(app) {
+  const providers = configuredProviders(app.config).filter(provider => provider !== SMS_PROVIDERS.FIVESIM);
+  const rows = await Promise.all(providers.map(async provider => {
+    try {
+      const services = provider === SMS_PROVIDERS.BEESMS
+        ? await beeServices(app)
+        : await smspoolServices(app);
+      return services.map(item => serviceCatalogEntry(item, provider)).filter(Boolean);
+    } catch {
+      return [];
+    }
+  }));
+
+  const catalog = {};
+  for (const entry of rows.flat()) {
+    if (!catalog[entry.code]) {
+      catalog[entry.code] = { currency: "CNY" };
+    }
+    if (entry.count !== undefined) {
+      catalog[entry.code].count = Math.max(Number(catalog[entry.code].count || 0), entry.count);
+    }
+  }
+  return catalog;
 }
 
 async function smspoolCountries(app) {

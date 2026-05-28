@@ -16,6 +16,7 @@ import {
   changeSmsProviderOrder,
   checkSmsProviderOrder,
   providerOrderKey,
+  providerServiceCatalog,
   publicBestSmsQuote,
   quoteSmsProviders,
   selectBestSmsQuote,
@@ -411,9 +412,16 @@ export async function smsRoutes(app) {
     const operator = smsLookupPart(request.query.operator, "any");
     if (!country || !operator) return badSmsLookup(reply);
     const catalog = await loadProductCatalog(app, country, operator);
-    if (!catalog.ok) return fivesimHttpError(reply, catalog.result);
+    const providerCatalog = await providerServiceCatalog(app);
+    if (!catalog.ok) {
+      if (Object.keys(providerCatalog).length) {
+        reply.header("x-cache", "PROVIDER");
+        return providerCatalog;
+      }
+      return fivesimHttpError(reply, catalog.result);
+    }
     reply.header("x-cache", catalog.cache);
-    return enrichProducts(app.config, catalog.data);
+    return { ...providerCatalog, ...enrichProducts(app.config, catalog.data) };
   });
 
   app.get("/api/sms/quote", async (request, reply) => {
