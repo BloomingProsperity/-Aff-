@@ -101,3 +101,19 @@ SSL 可以用：
 sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d api.hkai.shop
 ```
+
+## 数据库备份
+
+生产环境的用户余额、订单、充值券和邀请记录都在 PostgreSQL，必须保留自动备份。安装或更新备份定时器：
+
+```powershell
+cd C:\Users\h\Desktop\银行卡Aff项目
+.\server\scripts\install-db-backup.ps1
+```
+
+默认会在 VPS 上安装 `hkai-db-backup.timer`，每天凌晨自动运行 `pg_dump`，备份文件放在 `/root/hkai-db-backups`，保留 14 天。手动检查：
+
+```bash
+systemctl list-timers --all hkai-db-backup.timer
+ls -lh /root/hkai-db-backups
+```
