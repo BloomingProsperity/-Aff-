@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const headersText = await readFile(new URL("../static/_headers", import.meta.url), "utf8");
+const tokensCss = await readFile(new URL("../static/tokens.css", import.meta.url), "utf8");
 
 function readHeadersFor(path) {
   const lines = headersText.split(/\r?\n/);
@@ -33,5 +34,7 @@ assert.match(csp, /script-src .*'unsafe-eval'/);
 assert.match(csp, /connect-src .*https:\/\/api\.hkai\.shop/);
 assert.match(csp, /frame-src https:\/\/challenges\.cloudflare\.com/);
 assert.match(csp, /frame-ancestors 'none'/);
+
+assert.equal(tokensCss.includes("fonts.googleapis.com"), false, "static CSS should not load external Google Fonts blocked by CSP");
 
 console.log("static headers tests passed");

@@ -8,11 +8,8 @@
    ============================================================ */
 
 /* ----- Fonts ------------------------------------------------ */
-/* Inter is loaded from Google Fonts as a substitution — the
-   product CSS stack only DECLARES Inter, no .woff is shipped.
-   PingFang SC + Microsoft YaHei are OS-resident on Chinese-
-   language devices and fall back to system-ui elsewhere. */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap");
+/* The font stack stays local: PingFang SC + Microsoft YaHei on
+   Chinese-language devices, then system-ui elsewhere. */
 
 :root {
   /* ===== Base color tokens (verbatim from globals.css) ===== */
@@ -52,10 +49,9 @@
   --border-active:     var(--color-ink);                       /* selected tab outline (replaced by fill in practice) */
 
   /* ===== Type ===== */
-  --font-sans:         "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  /* The product uses no serif and no monospace. Tabular numerals
-     come from Inter's default `tnum` feature when used inside
-     `font-variant-numeric: tabular-nums`. */
+  --font-sans:         "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  /* The product uses no serif and no monospace. Numeric columns
+     request tabular glyphs with `font-variant-numeric`. */
   --font-numeric:      var(--font-sans);
 
   /* Type scale (matches Tailwind defaults used in code) */
