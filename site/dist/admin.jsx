@@ -45,6 +45,11 @@
     active:    ["adm-badge--ok",    "可用"],
     redeemed:  ["adm-badge--muted", "已兑换"],
     void:      ["adm-badge--err",   "已作废"],
+    ok:        ["adm-badge--ok",    "正常"],
+    low:       ["adm-badge--warn",  "低余额"],
+    empty:     ["adm-badge--err",   "已空"],
+    error:     ["adm-badge--err",   "异常"],
+    disabled:  ["adm-badge--muted", "未配置"],
   };
   function AdmBadge({ s }) {
     const [cls, label] = BADGE_MAP[s] || ["adm-badge--muted", s || "—"];
@@ -83,12 +88,16 @@
 
   function AdminOverview() {
     const [data, setData] = useState(null);
+    const [providers, setProviders] = useState([]);
     const [err,  setErr]  = useState(null);
 
     useEffect(() => {
       admApi("/admin/stats")
         .then(setData)
         .catch(() => setErr("加载失败，请检查网络或稍后重试"));
+      admApi("/admin/provider-health")
+        .then(d => setProviders(d.providers || []))
+        .catch(() => setProviders([]));
     }, []);
 
     if (err)   return <div className="adm-err adm-err--block">{err}</div>;
@@ -158,6 +167,29 @@
             <AdmStatCard label="高频失败 IP" value={fmt(risk.riskyIps24h || 0)}
               sub={`失败来源 ${fmt(risk.uniqueFailedIps24h || 0)} 个`} accent />
           </div>
+        </div>
+
+        <div className="adm-card">
+          <div className="adm-card-head">供应商余额</div>
+          {providers.length === 0
+            ? <div className="adm-empty">暂无供应商状态</div>
+            : (
+              <div className="adm-provider-list">
+                {providers.map(item => (
+                  <div className="adm-provider-row" key={item.provider}>
+                    <div>
+                      <strong>{item.providerName || item.provider}</strong>
+                      <span>{item.configured ? "已配置" : "未配置"}</span>
+                    </div>
+                    <div className="adm-provider-balance">
+                      {item.balance === null ? "—" : `$${Number(item.balance || 0).toFixed(4)}`}
+                    </div>
+                    <AdmBadge s={item.status} />
+                  </div>
+                ))}
+              </div>
+            )
+          }
         </div>
       </div>
     );

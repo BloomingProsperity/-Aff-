@@ -10,6 +10,11 @@ const CACHE_SECONDS = 300;
 const FIVE_SIM_BASE = "https://5sim.net/v1";
 const BEE_BASE = "https://api.bee-sms.com";
 const SMSPOOL_BASE = "https://api.smspool.net";
+const PROVIDER_NAMES = {
+  [SMS_PROVIDERS.FIVESIM]: "5sim",
+  [SMS_PROVIDERS.BEESMS]: "Bee-SMS",
+  [SMS_PROVIDERS.SMSPOOL]: "SMSPool",
+};
 
 const COUNTRY_ISO2 = {
   usa: "us",
@@ -199,6 +204,30 @@ function providerToken(config, provider) {
   if (provider === SMS_PROVIDERS.BEESMS) return String(config.beeSmsApiToken || "").trim();
   if (provider === SMS_PROVIDERS.SMSPOOL) return String(config.smspoolApiKey || "").trim();
   return "";
+}
+
+export function normalizeProviderHealth(input = {}, options = {}) {
+  const provider = String(input.provider || "");
+  const configured = Boolean(input.configured);
+  const lowBalanceUsd = Math.max(0, Number(options.lowBalanceUsd ?? 1));
+  const rawBalance = Number(input.balance);
+  const balance = Number.isFinite(rawBalance) ? Math.max(0, rawBalance) : 0;
+  const hasError = Boolean(input.error);
+  let status = "disabled";
+  if (configured && hasError) status = "error";
+  else if (configured && balance <= 0) status = "empty";
+  else if (configured && balance < lowBalanceUsd) status = "low";
+  else if (configured) status = "ok";
+
+  return {
+    provider,
+    providerName: PROVIDER_NAMES[provider] || provider,
+    configured,
+    status,
+    balance: configured && !hasError ? Number(balance.toFixed(4)) : null,
+    checkedAt: input.checkedAt || new Date().toISOString(),
+    error: hasError ? "余额读取失败" : "",
+  };
 }
 
 async function fivesimQuote(app, input) {
@@ -467,6 +496,20 @@ async function balanceByProvider(app, provider) {
   if (provider === SMS_PROVIDERS.BEESMS) return beeBalance(app);
   if (provider === SMS_PROVIDERS.SMSPOOL) return smspoolBalance(app);
   return 0;
+}
+
+export async function smsProviderHealth(app, options = {}) {
+  const providers = [SMS_PROVIDERS.FIVESIM, SMS_PROVIDERS.BEESMS, SMS_PROVIDERS.SMSPOOL];
+  return Promise.all(providers.map(async provider => {
+    const configured = Boolean(providerToken(app.config, provider));
+    if (!configured) return normalizeProviderHealth({ provider, configured: false }, options);
+    try {
+      const balance = await balanceByProvider(app, provider);
+      return normalizeProviderHealth({ provider, configured: true, balance }, options);
+    } catch {
+      return normalizeProviderHealth({ provider, configured: true, error: true }, options);
+    }
+  }));
 }
 
 export function sortBuyableQuotes(quotes) {

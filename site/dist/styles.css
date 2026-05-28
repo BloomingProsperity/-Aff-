@@ -2944,6 +2944,27 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
 .adm-view-bar     { background: #9dccff; border-radius: 4px; height: 8px; transition: width .4s ease; }
 .adm-view-count   { font-size: 12px; color: #596784; text-align: right; font-variant-numeric: tabular-nums; }
 
+.adm-provider-list { display: flex; flex-direction: column; gap: 10px; }
+.adm-provider-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 120px auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #edf3ff;
+  border-radius: 10px;
+  background: #fbfdff;
+}
+.adm-provider-row strong { display: block; color: #111a38; font-size: 13px; }
+.adm-provider-row span { display: block; color: #8a93b0; font-size: 11px; margin-top: 3px; }
+.adm-provider-balance {
+  color: #334061;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 /* ── modal ── */
 .adm-overlay {
   position: fixed; inset: 0;

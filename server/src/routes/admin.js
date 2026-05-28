@@ -4,6 +4,7 @@ import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
 import { enforceRateLimit } from "../lib/security.js";
 import { adminSettingsView, applySettingToConfig, normalizeAdminSetting, settingKeys } from "../lib/settings.js";
+import { smsProviderHealth } from "../lib/smsProviders.js";
 
 function pageParams(query = {}) {
   const page = Math.max(1, Number.parseInt(query.page, 10) || 1);
@@ -160,6 +161,23 @@ export async function adminRoutes(app) {
       params,
     );
     return { users: rows.map(adminUser), total: Number(count?.total || 0), page };
+  });
+
+  app.get("/api/admin/provider-health", async (request, reply) => {
+    const auth = await requireAdmin(app.db, request, reply, app.config);
+    if (auth.response) return auth.response;
+
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "admin:provider-health",
+      extra: `admin:${auth.user.id}`,
+      limit: 30,
+      windowSeconds: 60,
+      config: app.config,
+    });
+    if (limited) return limited;
+
+    const providers = await smsProviderHealth(app, { lowBalanceUsd: 1 });
+    return { providers };
   });
 
   app.post("/api/admin/credit", async (request, reply) => {

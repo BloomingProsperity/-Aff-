@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { providerOrderKey, rawProviderOrderId, sortBuyableQuotes } from "../src/lib/smsProviders.js";
+import {
+  normalizeProviderHealth,
+  providerOrderKey,
+  rawProviderOrderId,
+  sortBuyableQuotes,
+} from "../src/lib/smsProviders.js";
 
 test("sms provider router keeps only stocked quotes with enough supplier balance", () => {
   const quotes = sortBuyableQuotes([
@@ -18,4 +23,39 @@ test("non-5sim upstream ids are namespaced locally", () => {
   assert.equal(providerOrderKey("5sim", "123"), "123");
   assert.equal(providerOrderKey("bee-sms", "123"), "bee-sms:123");
   assert.equal(rawProviderOrderId({ provider: "bee-sms", fivesim_id: "bee-sms:123" }), "123");
+});
+
+test("provider health summary never exposes tokens and flags low balances", () => {
+  const ok = normalizeProviderHealth({
+    provider: "5sim",
+    configured: true,
+    balance: 12.34567,
+    token: "secret-token",
+  }, { lowBalanceUsd: 1 });
+  const low = normalizeProviderHealth({
+    provider: "smspool",
+    configured: true,
+    balance: 0.5,
+  }, { lowBalanceUsd: 1 });
+  const disabled = normalizeProviderHealth({
+    provider: "bee-sms",
+    configured: false,
+    balance: 20,
+  }, { lowBalanceUsd: 1 });
+  const error = normalizeProviderHealth({
+    provider: "smspool",
+    configured: true,
+    balance: 0,
+    error: "raw upstream token rejected",
+  }, { lowBalanceUsd: 1 });
+
+  assert.equal(ok.status, "ok");
+  assert.equal(ok.balance, 12.3457);
+  assert.equal(JSON.stringify(ok).includes("secret-token"), false);
+  assert.equal(low.status, "low");
+  assert.equal(disabled.status, "disabled");
+  assert.equal(disabled.balance, null);
+  assert.equal(error.status, "error");
+  assert.equal(error.error, "余额读取失败");
+  assert.equal(JSON.stringify(error).includes("token rejected"), false);
 });
