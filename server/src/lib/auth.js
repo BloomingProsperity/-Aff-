@@ -158,7 +158,5 @@ export function isConfiguredAdmin(user, config) {
 }
 
 export async function adminRoleForNewUser(db, config, email) {
-  const normalized = cleanEmail(email);
-  if (config.adminEmail && cleanEmail(config.adminEmail) === normalized) return "admin";
   return "user";
 }

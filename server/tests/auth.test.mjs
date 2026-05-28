@@ -13,12 +13,12 @@ import {
 } from "../src/lib/auth.js";
 import { loadConfig } from "../src/lib/config.js";
 
-test("only configured admin email gets admin role", async () => {
+test("public registration never grants admin role automatically", async () => {
   const db = { query: async () => ({ rows: [{ count: 0 }] }) };
 
   assert.equal(
     await adminRoleForNewUser(db, { adminEmail: "owner@gmail.com" }, "OWNER@gmail.com"),
-    "admin",
+    "user",
   );
   assert.equal(
     await adminRoleForNewUser(db, { adminEmail: "" }, "first@gmail.com"),
