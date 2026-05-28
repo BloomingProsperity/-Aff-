@@ -87,6 +87,15 @@ export function isAllowedFetchSite(request) {
   return value !== "cross-site";
 }
 
+export function isAllowedStateChangingRead(request, config = {}) {
+  if (!isAllowedFetchSite(request)) return false;
+  const origin = header(request, "origin");
+  if (origin && !isAllowedRequestOrigin(origin, config)) return false;
+  const referer = header(request, "referer");
+  if (referer && !isAllowedRequestOrigin(referer, config)) return false;
+  return true;
+}
+
 export function isMutatingRequest(request) {
   return !SAFE_METHODS.has(String(request.method || "GET").toUpperCase());
 }

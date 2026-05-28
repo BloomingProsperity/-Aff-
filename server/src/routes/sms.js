@@ -8,7 +8,7 @@ import { normalizePublicSmsOrder } from "../lib/smsOrders.js";
 import { acquireOperationLock, operationLockKey, releaseOperationLock } from "../lib/operationLocks.js";
 import { publicChargeQuote, quoteCharge } from "../lib/pricing.js";
 import { maybeGrantReferralReward } from "../lib/referrals.js";
-import { enforceRateLimit } from "../lib/security.js";
+import { enforceRateLimit, isAllowedStateChangingRead } from "../lib/security.js";
 import { shouldRefundSmsOrder, smsRefundCents, smsRefundNote } from "../lib/smsRefunds.js";
 import { activeSmsOrderStatuses, cooldownSecondsLeft, smsRiskSettings } from "../lib/smsRisk.js";
 import {
@@ -426,6 +426,11 @@ export async function smsRoutes(app) {
   });
 
   app.get("/api/sms/orders", async (request, reply) => {
+    if (!isAllowedStateChangingRead(request, app.config)) {
+      reply.code(403);
+      return { error: "请求来源无效。" };
+    }
+
     const auth = await requireUser(app.db, request, reply);
     if (auth.response) return auth.response;
 
@@ -798,6 +803,11 @@ export async function smsRoutes(app) {
   });
 
   app.get("/api/sms/check/:id", async (request, reply) => {
+    if (!isAllowedStateChangingRead(request, app.config)) {
+      reply.code(403);
+      return { error: "请求来源无效。" };
+    }
+
     const auth = await requireUser(app.db, request, reply);
     if (auth.response) return auth.response;
 
