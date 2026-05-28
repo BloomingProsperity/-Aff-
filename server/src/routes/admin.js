@@ -1,5 +1,6 @@
 import { destroyUserSessions, normalizeUserStatus, publicUser, requireAdmin } from "../lib/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
+import { validateBalanceAdjustment } from "../lib/balance.js";
 import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
 import { enforceRateLimit } from "../lib/security.js";
@@ -316,14 +317,52 @@ export async function adminRoutes(app) {
       return { error: "用户不存在。" };
     }
 
+    const adjustment = validateBalanceAdjustment(target.balance_cents, delta);
+    if (!adjustment.ok) {
+      reply.code(400);
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: userId,
+        action: "admin.balance.adjust",
+        resourceType: "balance",
+        resourceId: userId,
+        status: "failed",
+        httpStatus: 400,
+        metadata: {
+          reason: adjustment.reason,
+          amount: centsToAmount(delta),
+          currentBalance: centsToAmount(target.balance_cents),
+        },
+      });
+      return { error: "余额不能扣成负数。" };
+    }
+
     const updated = await one(
       app.db,
       `UPDATE users
           SET balance_cents = balance_cents + $1, updated_at = now()
         WHERE id = $2
+          AND balance_cents + $1 >= 0
         RETURNING *`,
       [delta, userId],
     );
+    if (!updated) {
+      reply.code(409);
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: userId,
+        action: "admin.balance.adjust",
+        resourceType: "balance",
+        resourceId: userId,
+        status: "failed",
+        httpStatus: 409,
+        metadata: {
+          reason: "balance_changed",
+          amount: centsToAmount(delta),
+        },
+      });
+      return { error: "余额已变化，请刷新后重试。" };
+    }
     await exec(
       app.db,
       `INSERT INTO balance_logs (user_id, admin_id, delta_cents, balance_after_cents, reason, note)
