@@ -45,7 +45,22 @@ export async function announcementRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      const body = request.body || {};
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.announcement.create",
+        resourceType: "announcement",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: {
+          reason: "rate_limited",
+          hasTitle: body.title !== undefined,
+          hasBody: body.body !== undefined,
+        },
+      });
+      return limited;
+    }
 
     const input = normalizeAnnouncementInput(request.body || {});
     if (!input.ok) {
@@ -101,7 +116,23 @@ export async function announcementRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      const body = request.body || {};
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.announcement.update",
+        resourceType: "announcement",
+        resourceId: Number(id),
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: {
+          reason: "rate_limited",
+          hasTitle: body.title !== undefined,
+          hasBody: body.body !== undefined,
+        },
+      });
+      return limited;
+    }
 
     const input = normalizeAnnouncementInput(request.body || {});
     if (!input.ok) {
@@ -171,7 +202,18 @@ export async function announcementRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.announcement.delete",
+        resourceType: "announcement",
+        resourceId: Number(id),
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "rate_limited" },
+      });
+      return limited;
+    }
 
     const row = await one(app.db, "DELETE FROM announcements WHERE id = $1 RETURNING *", [id]);
     if (!row) {
