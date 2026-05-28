@@ -2763,9 +2763,10 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
 .adm-card-head--split {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
 }
+.adm-card-head--split > .adm-btn:first-of-type { margin-left: auto; }
 .adm-card-head--split .adm-btn {
   text-transform: none;
   letter-spacing: 0;

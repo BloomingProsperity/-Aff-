@@ -94,6 +94,7 @@
     const [providers, setProviders] = useState([]);
     const [err,  setErr]  = useState(null);
     const [maintaining, setMaintaining] = useState(false);
+    const [cleaningLogs, setCleaningLogs] = useState(false);
     const [maintenanceMsg, setMaintenanceMsg] = useState(null);
 
     function loadOverview() {
@@ -117,6 +118,19 @@
         })
         .catch(() => setMaintenanceMsg("处理失败，请稍后重试"))
         .finally(() => setMaintaining(false));
+    }
+
+    function cleanOldLogs() {
+      setCleaningLogs(true);
+      setMaintenanceMsg(null);
+      admApi("/admin/log-retention/run", { method: "POST", body: JSON.stringify({}) })
+        .then(d => {
+          const s = d.summary || {};
+          setMaintenanceMsg(`日志已清理：审计 ${fmt(s.auditLogs || 0)} 条，订单事件 ${fmt(s.smsOrderEvents || 0)} 条`);
+          loadOverview();
+        })
+        .catch(() => setMaintenanceMsg("日志清理失败，请稍后重试"))
+        .finally(() => setCleaningLogs(false));
     }
 
     if (err)   return <div className="adm-err adm-err--block">{err}</div>;
@@ -178,6 +192,11 @@
         <div className="adm-card">
           <div className="adm-card-head adm-card-head--split">
             <span>运营风险</span>
+            <button className="adm-btn adm-btn--sm adm-btn--outline"
+              disabled={cleaningLogs}
+              onClick={cleanOldLogs}>
+              {cleaningLogs ? "清理中" : "清理日志"}
+            </button>
             <button className="adm-btn adm-btn--sm adm-btn--outline"
               disabled={maintaining}
               onClick={expireStaleOrders}>

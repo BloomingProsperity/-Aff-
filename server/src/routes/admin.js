@@ -3,7 +3,7 @@ import { writeAuditLog } from "../lib/audit.js";
 import { validateBalanceAdjustment } from "../lib/balance.js";
 import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
-import { logRetentionStatus } from "../lib/logRetention.js";
+import { cleanupOldLogs, logRetentionStatus } from "../lib/logRetention.js";
 import { enforceRateLimit } from "../lib/security.js";
 import { adminSettingsView, applySettingToConfig, normalizeAdminSetting, settingKeys } from "../lib/settings.js";
 import { expireStaleSmsOrders } from "../lib/smsMaintenance.js";
@@ -154,6 +154,43 @@ export async function adminRoutes(app) {
       pageviews,
       risk,
       logRetention: app.logRetention?.status?.() || logRetentionStatus(),
+    };
+  });
+
+  app.post("/api/admin/log-retention/run", async (request, reply) => {
+    const auth = await requireAdmin(app.db, request, reply, app.config);
+    if (auth.response) return auth.response;
+
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "admin:log-retention",
+      extra: `admin:${auth.user.id}`,
+      limit: 5,
+      windowSeconds: 300,
+      config: app.config,
+    });
+    if (limited) return limited;
+
+    const summary = app.logRetention?.run
+      ? await app.logRetention.run()
+      : await cleanupOldLogs(app.db);
+    if (!summary) {
+      reply.code(409);
+      return { error: "日志清理正在执行，请稍后再试。" };
+    }
+
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      action: "admin.log_retention.run",
+      resourceType: "log_retention",
+      status: "success",
+      httpStatus: 200,
+      metadata: summary,
+    });
+
+    return {
+      ok: true,
+      summary,
+      logRetention: app.logRetention?.status?.() || logRetentionStatus({ lastRunAt: new Date(), lastSummary: summary }),
     };
   });
 
