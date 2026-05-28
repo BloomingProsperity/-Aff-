@@ -8,6 +8,7 @@ export const SMS_PROVIDERS = {
 };
 
 const CACHE_SECONDS = 300;
+const PROVIDER_HTTP_TIMEOUT_MS = 15_000;
 const FIVE_SIM_BASE = "https://5sim.net/v1";
 const BEE_BASE = "https://api.bee-sms.com";
 const SMSPOOL_BASE = "https://api.smspool.net";
@@ -277,15 +278,21 @@ async function parseResponse(response) {
 }
 
 async function fetchJson(url, init = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PROVIDER_HTTP_TIMEOUT_MS);
+  timeout.unref?.();
   try {
     const response = await fetch(url, {
       method: init.method || "GET",
       headers: { Accept: "application/json", ...(init.headers || {}) },
       body: init.body,
+      signal: init.signal || controller.signal,
     });
     return parseResponse(response);
   } catch {
     return { ok: false, status: 502, data: null, error: "上游服务暂时不可用。" };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

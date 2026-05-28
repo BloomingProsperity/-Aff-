@@ -7,6 +7,7 @@ import {
   rawProviderOrderId,
   publicBestSmsQuote,
   publicSmsProviderError,
+  quoteSmsProviders,
   selectBestSmsQuote,
   sortBuyableQuotes,
 } from "../src/lib/smsProviders.js";
@@ -152,4 +153,43 @@ test("provider health summary never exposes tokens and flags low balances", () =
   assert.equal(error.message, "余额读取失败");
   assert.equal(error.error, "余额读取失败");
   assert.equal(JSON.stringify(error).includes("token rejected"), false);
+});
+
+test("provider HTTP requests include an abort signal timeout", async () => {
+  const originalFetch = globalThis.fetch;
+  const signals = [];
+  const db = {
+    async query(sql) {
+      if (sql.includes("SELECT data_json, expires_at FROM product_cache")) return { rows: [] };
+      if (sql.includes("INSERT INTO product_cache")) return { rows: [], rowCount: 1 };
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+
+  globalThis.fetch = async (url, init = {}) => {
+    signals.push(init.signal);
+    const path = new URL(String(url)).pathname;
+    let data = { code: 200, data: [] };
+    if (path.endsWith("/v1/otp/areas")) data = { code: 200, data: [{ code: "US", name: "United States" }] };
+    if (path.endsWith("/v1/otp/services")) data = { code: 200, data: [{ code: "tg", name: "Telegram" }] };
+    if (path.endsWith("/v1/otp/prices")) data = { code: 200, data: [{ area_code: "US", service_code: "tg", amount: 50, qty: 3 }] };
+    if (path.endsWith("/v1/user/balance")) data = { code: 200, data: 5000 };
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+
+  try {
+    const quotes = await quoteSmsProviders({
+      db,
+      config: { beeSmsApiToken: "token" },
+    }, { country: "usa", operator: "any", product: "telegram" });
+
+    assert.equal(quotes[0]?.provider, "bee-sms");
+    assert.ok(signals.length >= 4);
+    assert.equal(signals.every(signal => signal instanceof AbortSignal), true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
