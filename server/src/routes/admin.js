@@ -555,7 +555,18 @@ export async function adminRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.sms_order.expire_stale",
+        resourceType: "sms_order",
+        resourceId: "stale",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "rate_limited" },
+      });
+      return limited;
+    }
 
     const summary = await expireStaleSmsOrders(app, {
       actorUserId: auth.user.id,
