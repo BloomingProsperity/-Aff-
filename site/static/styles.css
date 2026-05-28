@@ -3013,7 +3013,7 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
 .adm-provider-list { display: flex; flex-direction: column; gap: 10px; }
 .adm-provider-row {
   display: grid;
-  grid-template-columns: minmax(140px, 1fr) 120px auto;
+  grid-template-columns: minmax(140px, 1fr) 120px minmax(90px, auto) auto;
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
@@ -3028,6 +3028,11 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   font-size: 13px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.adm-provider-message {
+  color: #596784;
+  font-size: 12px;
   text-align: right;
 }
 .adm-maintenance-msg {

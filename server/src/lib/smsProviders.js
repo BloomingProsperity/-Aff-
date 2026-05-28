@@ -16,6 +16,13 @@ const PROVIDER_NAMES = {
   [SMS_PROVIDERS.BEESMS]: "Bee-SMS",
   [SMS_PROVIDERS.SMSPOOL]: "SMSPool",
 };
+const PROVIDER_HEALTH_MESSAGES = {
+  ok: "余额正常",
+  low: "余额偏低",
+  empty: "余额为 0",
+  error: "余额读取失败",
+  disabled: "未配置",
+};
 
 const STATUS_ALIASES = {
   pending: "pending",
@@ -330,6 +337,7 @@ export function normalizeProviderHealth(input = {}, options = {}) {
     providerName: PROVIDER_NAMES[provider] || provider,
     configured,
     status,
+    message: PROVIDER_HEALTH_MESSAGES[status] || "状态未知",
     balance: configured && !hasError ? Number(balance.toFixed(4)) : null,
     checkedAt: input.checkedAt || new Date().toISOString(),
     error: hasError ? "余额读取失败" : "",

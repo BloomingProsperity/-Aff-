@@ -314,7 +314,9 @@
       key: item.provider
     }, React.createElement("div", null, React.createElement("strong", null, item.providerName || item.provider), React.createElement("span", null, item.configured ? "已配置" : "未配置")), React.createElement("div", {
       className: "adm-provider-balance"
-    }, item.balance === null ? "—" : `$${Number(item.balance || 0).toFixed(4)}`), React.createElement(AdmBadge, {
+    }, item.balance === null ? "—" : `$${Number(item.balance || 0).toFixed(4)}`), React.createElement("span", {
+      className: "adm-provider-message"
+    }, item.message || ""), React.createElement(AdmBadge, {
       s: item.status
     }))))));
   }

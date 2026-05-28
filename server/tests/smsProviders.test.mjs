@@ -134,12 +134,16 @@ test("provider health summary never exposes tokens and flags low balances", () =
   }, { lowBalanceUsd: 1 });
 
   assert.equal(ok.status, "ok");
+  assert.equal(ok.message, "余额正常");
   assert.equal(ok.balance, 12.3457);
   assert.equal(JSON.stringify(ok).includes("secret-token"), false);
   assert.equal(low.status, "low");
+  assert.equal(low.message, "余额偏低");
   assert.equal(disabled.status, "disabled");
+  assert.equal(disabled.message, "未配置");
   assert.equal(disabled.balance, null);
   assert.equal(error.status, "error");
+  assert.equal(error.message, "余额读取失败");
   assert.equal(error.error, "余额读取失败");
   assert.equal(JSON.stringify(error).includes("token rejected"), false);
 });

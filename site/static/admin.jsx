@@ -266,6 +266,7 @@
                     <div className="adm-provider-balance">
                       {item.balance === null ? "—" : `$${Number(item.balance || 0).toFixed(4)}`}
                     </div>
+                    <span className="adm-provider-message">{item.message || ""}</span>
                     <AdmBadge s={item.status} />
                   </div>
                 ))}
