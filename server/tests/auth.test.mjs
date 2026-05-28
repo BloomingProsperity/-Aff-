@@ -161,3 +161,68 @@ test("auth routes reject oversized passwords before account lookup", async () =>
     await app.close();
   }
 });
+
+async function buildRateLimitedAuthApp(calls) {
+  const db = {
+    async query(sql, params = []) {
+      calls.push({ sql, params });
+      if (sql.includes("FROM app_settings")) return { rows: [] };
+      if (sql.includes("INTO rate_limits")) return { rows: [{ count: 99, reset_at: Math.floor(Date.now() / 1000) + 60 }] };
+      if (sql.includes("INTO audit_logs")) return { rows: [], rowCount: 1 };
+      throw new Error(`Rate-limited auth reached unexpected SQL: ${sql}`);
+    },
+  };
+  return buildApp({
+    db,
+    logger: false,
+    config: loadConfig({ PUBLIC_URL: "https://hkai.shop" }),
+  });
+}
+
+test("rate-limited login attempts are written to audit logs", async () => {
+  const calls = [];
+  const app = await buildRateLimitedAuthApp(calls);
+
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      headers: { host: "api.hkai.shop" },
+      payload: { email: "buyer@gmail.com", password: "correct-password" },
+    });
+
+    assert.equal(response.statusCode, 429);
+    const audit = calls.find(call => call.sql.includes("INTO audit_logs"));
+    assert.ok(audit);
+    assert.equal(audit.params[2], "auth.login");
+    assert.equal(audit.params[5], "failed");
+    assert.equal(audit.params[6], 429);
+    assert.match(audit.params[11], /rate_limited/);
+  } finally {
+    await app.close();
+  }
+});
+
+test("rate-limited registration attempts are written to audit logs", async () => {
+  const calls = [];
+  const app = await buildRateLimitedAuthApp(calls);
+
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      headers: { host: "api.hkai.shop" },
+      payload: { email: "buyer@gmail.com", password: "correct-password" },
+    });
+
+    assert.equal(response.statusCode, 429);
+    const audit = calls.find(call => call.sql.includes("INTO audit_logs"));
+    assert.ok(audit);
+    assert.equal(audit.params[2], "auth.register");
+    assert.equal(audit.params[5], "failed");
+    assert.equal(audit.params[6], 429);
+    assert.match(audit.params[11], /rate_limited/);
+  } finally {
+    await app.close();
+  }
+});

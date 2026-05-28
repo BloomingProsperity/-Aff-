@@ -32,7 +32,15 @@ export async function authRoutes(app) {
       windowSeconds: 3600,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      await writeAuditLog(app.db, request, {
+        action: "auth.register",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "rate_limited", email: cleanEmail(request.body?.email) },
+      });
+      return limited;
+    }
 
     const body = request.body || {};
     const turnstile = await verifyTurnstile(app.config, request, reply, body.turnstileToken);
@@ -138,7 +146,15 @@ export async function authRoutes(app) {
       windowSeconds: 600,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      await writeAuditLog(app.db, request, {
+        action: "auth.login",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "rate_limited", email: cleanEmail(request.body?.email) },
+      });
+      return limited;
+    }
 
     const body = request.body || {};
     const turnstile = await verifyTurnstile(app.config, request, reply, body.turnstileToken);
