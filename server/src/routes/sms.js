@@ -838,7 +838,30 @@ export async function smsRoutes(app) {
       windowSeconds: 60,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      await writeSmsOrderEvent(app.db, {
+        orderId: row.id,
+        userId: auth.user.id,
+        actorUserId: auth.user.id,
+        type: "provider.check_rate_limited",
+        status: "failed",
+        provider: row.provider || "",
+        publicCode: "rate_limited",
+        message: "查询过于频繁",
+        metadata: { reason: "rate_limited", orderStatus: row.status || "" },
+      });
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: auth.user.id,
+        action: "sms.check",
+        resourceType: "sms_order",
+        resourceId: row.id,
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "rate_limited", orderStatus: row.status || "" },
+      });
+      return limited;
+    }
 
     const checked = await checkSmsProviderOrder(app, row);
     if (!checked.ok) {
@@ -949,7 +972,30 @@ export async function smsRoutes(app) {
         windowSeconds: 60,
         config: app.config,
       });
-      if (limited) return limited;
+      if (limited) {
+        await writeSmsOrderEvent(app.db, {
+          orderId: row.id,
+          userId: auth.user.id,
+          actorUserId: auth.user.id,
+          type: `provider.${action}_rate_limited`,
+          status: "failed",
+          provider: row.provider || "",
+          publicCode: "rate_limited",
+          message: "订单操作过于频繁",
+          metadata: { reason: "rate_limited", action, orderStatus: row.status || "" },
+        });
+        await writeAuditLog(app.db, request, {
+          actorUserId: auth.user.id,
+          targetUserId: auth.user.id,
+          action: `sms.${action}`,
+          resourceType: "sms_order",
+          resourceId: row.id,
+          status: "failed",
+          httpStatus: reply.statusCode || 429,
+          metadata: { reason: "rate_limited", action, orderStatus: row.status || "" },
+        });
+        return limited;
+      }
 
       const changed = await changeSmsProviderOrder(app, row, action);
       if (!changed.ok) {
