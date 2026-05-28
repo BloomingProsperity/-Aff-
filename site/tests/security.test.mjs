@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { isAllowedAuthEmail } from "../functions/_lib/common.js";
-import { rateLimitKey, turnstileEnabled, turnstileSiteKey, verifyTurnstile } from "../functions/_lib/security.js";
+import { isAllowedAuthEmail } from "../../server/src/lib/common.js";
+import { rateLimitKey, turnstileEnabled, verifyTurnstile } from "../../server/src/lib/security.js";
 
 const request = new Request("https://hkai.shop/api/auth/login", {
   headers: {
@@ -29,8 +29,7 @@ assert.equal(isAllowedAuthEmail("user@hotmail.com"), false);
 assert.equal(isAllowedAuthEmail("user@mail.qq.com"), false);
 
 assert.equal(turnstileEnabled({}), false);
-assert.equal(turnstileEnabled({ TURNSTILE_SECRET_KEY: "secret" }), true);
-assert.equal(turnstileSiteKey({ TURNSTILE_SITE_KEY: "site" }), "site");
-assert.equal(await verifyTurnstile({}, request, ""), null);
+assert.equal(turnstileEnabled({ turnstileSecretKey: "secret" }), true);
+assert.equal(await verifyTurnstile({}, request, {}, ""), null);
 
 console.log("security tests passed");

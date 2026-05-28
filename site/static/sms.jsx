@@ -228,6 +228,34 @@ function shouldShowTurnstileRetry(status) {
   return ["error", "expired", "timeout", "unsupported", "script-error"].includes(status);
 }
 
+const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+let turnstileLoadPromise = null;
+
+function ensureTurnstileScript() {
+  if (window.turnstile) return Promise.resolve();
+  if (turnstileLoadPromise) return turnstileLoadPromise;
+
+  turnstileLoadPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-hkai-turnstile="true"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("turnstile-load-failed")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = TURNSTILE_SCRIPT_URL;
+    script.async = true;
+    script.defer = true;
+    script.dataset.hkaiTurnstile = "true";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("turnstile-load-failed"));
+    document.head.appendChild(script);
+  });
+
+  return turnstileLoadPromise;
+}
+
 function SmsOrderPanel({ user, product, country, operator, countries, currentProduct, busy, onBuy, onLoadOrders, message }) {
   const countryLabel = countries.find(x => x.code === country);
   const productAvailable = Boolean(currentProduct && Number(currentProduct.charge || 0) > 0 && Number(currentProduct.count || 0) > 0);
@@ -365,7 +393,9 @@ function TurnstileBox({ siteKey, onToken, resetKey, onStatus }) {
       armPendingTimer();
     };
 
-    render();
+    ensureTurnstileScript().then(render).catch(() => {
+      if (!cancelled) onStatus?.("script-error");
+    });
     const timer = window.setInterval(render, 250);
     const failTimer = window.setTimeout(() => {
       if (!cancelled && !widgetRef.current) onStatus?.("script-error");
