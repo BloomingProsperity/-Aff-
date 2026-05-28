@@ -462,7 +462,16 @@ export async function smsRoutes(app) {
       windowSeconds: 60,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      const body = request.body || {};
+      await auditSmsBuy(app, request, auth, "failed", reply.statusCode || 429, {
+        reason: "rate_limited",
+        country: cleanPart(body.country || "usa"),
+        operator: cleanPart(body.operator || "any"),
+        product: cleanPart(body.product || ""),
+      });
+      return limited;
+    }
 
     const buyLock = await acquireOperationLock(app.db, {
       key: operationLockKey("sms:buy", auth.user.id),
