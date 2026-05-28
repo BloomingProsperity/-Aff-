@@ -5,6 +5,9 @@ const turnstileScript = "https://challenges.cloudflare.com/turnstile/v0/api.js";
 
 const indexHtml = await readFile(new URL("../static/index.html", import.meta.url), "utf8");
 const smsJsx = await readFile(new URL("../static/sms.jsx", import.meta.url), "utf8");
+const smsDeskStart = smsJsx.indexOf("function SmsDesk()");
+const smsDeskEnd = smsJsx.indexOf("function LoginDesk()");
+const smsDeskSource = smsJsx.slice(smsDeskStart, smsDeskEnd);
 
 assert.equal(
   indexHtml.includes(turnstileScript),
@@ -16,4 +19,10 @@ assert.equal(
   smsJsx.includes(turnstileScript),
   true,
   "Login component should load Turnstile only when the login flow needs it",
+);
+
+assert.equal(
+  smsDeskSource.includes("turnstile"),
+  false,
+  "SMS buying page should not load or manage Turnstile; verification belongs to the login flow",
 );

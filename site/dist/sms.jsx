@@ -427,10 +427,6 @@ function TurnstileBox({ siteKey, onToken, resetKey, onStatus }) {
 
 function SmsDesk() {
   const [user, setUser] = useState(null);
-  const [authMode, setAuthMode] = useState("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [refCode, setRefCode] = useState(new URLSearchParams(window.location.search).get("ref") || "");
   const [countries, setCountries] = useState(SMS_COUNTRY_FALLBACK);
   const [products, setProducts] = useState([]);
   const [selectedQuote, setSelectedQuote] = useState(null);
@@ -448,11 +444,6 @@ function SmsDesk() {
   const [creditNote, setCreditNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("注册或登录后开始接码。");
-  const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState("");
-  const [turnstileStatus, setTurnstileStatus] = useState("idle");
-  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
-
   const api = async (path, options = {}) => {
     const res = await fetch(smsApiUrl(path), {
       ...options,
@@ -498,17 +489,7 @@ function SmsDesk() {
     if (!creditUserId && data.users?.[0]) setCreditUserId(String(data.users[0].id));
   };
 
-  const resetTurnstile = () => {
-    setTurnstileToken("");
-    setTurnstileStatus("loading");
-    setTurnstileResetKey(value => value + 1);
-  };
-
   React.useEffect(() => {
-    api("/api/config")
-      .then(data => setTurnstileSiteKey(data.turnstileEnabled ? data.turnstileSiteKey : ""))
-      .catch(() => {});
-
     refreshMe()
       .then(found => { if (found) setMessage("已登录，可以下单。"); })
       .catch(() => {});
@@ -591,28 +572,6 @@ function SmsDesk() {
     loadReferral().catch(() => {});
     loadAdminUsers().catch(() => {});
   }, [user?.id, user?.role]);
-
-  const submitAuth = async () => {
-    if (turnstileSiteKey && !turnstileToken) {
-      setMessage("请先等人机验证完成。");
-      return;
-    }
-    setBusy(true);
-    try {
-      const data = await api(`/api/auth/${authMode}`, {
-        method: "POST",
-        body: JSON.stringify({ email, password, ref: authMode === "register" ? refCode : "", turnstileToken }),
-      });
-      setUser(data.user);
-      setPassword("");
-      setMessage(authMode === "register" ? "注册成功，初始余额为 0，需要管理员充值。" : "登录成功。");
-    } catch (err) {
-      setMessage(err.message);
-    } finally {
-      resetTurnstile();
-      setBusy(false);
-    }
-  };
 
   const logout = async () => {
     setBusy(true);
