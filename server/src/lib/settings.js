@@ -1,18 +1,18 @@
 import { many } from "./db.js";
 
 const SETTING_DEFS = {
-  SMS_USD_CNY_RATE: { prop: "smsUsdCnyRate", type: "number" },
-  SMS_MARGIN_CNY: { prop: "smsMarginCny", type: "number" },
-  SMS_ACTIVE_ORDER_LIMIT: { prop: "smsActiveOrderLimit", type: "positive_int" },
-  SMS_BUY_COOLDOWN_SECONDS: { prop: "smsBuyCooldownSeconds", type: "non_negative_int" },
-  SMS_ORDER_TIMEOUT_MINUTES: { prop: "smsOrderTimeoutMinutes", type: "positive_int" },
-  SMS_MAINTENANCE_INTERVAL_SECONDS: { prop: "smsMaintenanceIntervalSeconds", type: "positive_int" },
-  SMS_MAINTENANCE_BATCH_LIMIT: { prop: "smsMaintenanceBatchLimit", type: "positive_int" },
-  FIVESIM_API_KEY: { prop: "fivesimApiKey", type: "secret" },
-  SMSPOOL_API_KEY: { prop: "smspoolApiKey", type: "secret" },
-  BEESMS_API_TOKEN: { prop: "beeSmsApiToken", type: "secret" },
-  TURNSTILE_SITE_KEY: { prop: "turnstileSiteKey", type: "text", skipBlank: true },
-  TURNSTILE_SECRET_KEY: { prop: "turnstileSecretKey", type: "secret" },
+  SMS_USD_CNY_RATE: { prop: "smsUsdCnyRate", type: "number", min: 1, max: 20 },
+  SMS_MARGIN_CNY: { prop: "smsMarginCny", type: "number", min: 0.01, max: 500 },
+  SMS_ACTIVE_ORDER_LIMIT: { prop: "smsActiveOrderLimit", type: "positive_int", min: 1, max: 20 },
+  SMS_BUY_COOLDOWN_SECONDS: { prop: "smsBuyCooldownSeconds", type: "non_negative_int", min: 0, max: 3600 },
+  SMS_ORDER_TIMEOUT_MINUTES: { prop: "smsOrderTimeoutMinutes", type: "positive_int", min: 5, max: 180 },
+  SMS_MAINTENANCE_INTERVAL_SECONDS: { prop: "smsMaintenanceIntervalSeconds", type: "positive_int", min: 10, max: 3600 },
+  SMS_MAINTENANCE_BATCH_LIMIT: { prop: "smsMaintenanceBatchLimit", type: "positive_int", min: 1, max: 500 },
+  FIVESIM_API_KEY: { prop: "fivesimApiKey", type: "secret", maxLength: 4096 },
+  SMSPOOL_API_KEY: { prop: "smspoolApiKey", type: "secret", maxLength: 4096 },
+  BEESMS_API_TOKEN: { prop: "beeSmsApiToken", type: "secret", maxLength: 4096 },
+  TURNSTILE_SITE_KEY: { prop: "turnstileSiteKey", type: "text", skipBlank: true, maxLength: 200 },
+  TURNSTILE_SECRET_KEY: { prop: "turnstileSecretKey", type: "secret", maxLength: 4096 },
 };
 
 const SECRET_KEYS = ["FIVESIM_API_KEY", "SMSPOOL_API_KEY", "BEESMS_API_TOKEN", "TURNSTILE_SECRET_KEY"];
@@ -49,17 +49,23 @@ export function normalizeAdminSetting(key, value) {
   if ((def.type === "secret" || def.skipBlank) && !raw) {
     return { ok: true, skip: true };
   }
+  if (def.maxLength && raw.length > def.maxLength) {
+    return { ok: false, error: "设置内容过长。" };
+  }
 
   if (def.type === "number") {
     const n = Number(raw);
-    if (!Number.isFinite(n) || n <= 0) return { ok: false, error: "设置数值不正确。" };
+    const min = Number(def.min ?? 0);
+    const max = Number(def.max ?? Number.POSITIVE_INFINITY);
+    if (!Number.isFinite(n) || n < min || n > max) return { ok: false, error: "设置数值不正确。" };
     return { ok: true, value: String(n) };
   }
 
   if (def.type === "positive_int" || def.type === "non_negative_int") {
     const n = Number.parseInt(raw, 10);
-    const min = def.type === "positive_int" ? 1 : 0;
-    if (!Number.isFinite(n) || String(n) !== raw || n < min) {
+    const min = Number(def.min ?? (def.type === "positive_int" ? 1 : 0));
+    const max = Number(def.max ?? Number.POSITIVE_INFINITY);
+    if (!Number.isFinite(n) || String(n) !== raw || n < min || n > max) {
       return { ok: false, error: "设置数值不正确。" };
     }
     return { ok: true, value: String(n) };

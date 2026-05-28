@@ -806,7 +806,7 @@ export async function adminRoutes(app) {
     const input = request.body?.settings || {};
 
     const allowed = settingKeys();
-    const changedKeys = [];
+    const normalizedSettings = [];
     for (const key of allowed) {
       if (input[key] === undefined) continue;
       const normalized = normalizeAdminSetting(key, input[key]);
@@ -815,14 +815,19 @@ export async function adminRoutes(app) {
         return { error: normalized.error };
       }
       if (normalized.skip) continue;
-      applySettingToConfig(app.config, key, normalized.value);
-      changedKeys.push(key);
+      normalizedSettings.push({ key, value: normalized.value });
+    }
+
+    const changedKeys = [];
+    for (const item of normalizedSettings) {
+      applySettingToConfig(app.config, item.key, item.value);
+      changedKeys.push(item.key);
       await exec(
         app.db,
         `INSERT INTO app_settings (key, value, updated_at)
          VALUES ($1, $2, now())
          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
-        [key, normalized.value],
+        [item.key, item.value],
       );
     }
     await writeAuditLog(app.db, request, {

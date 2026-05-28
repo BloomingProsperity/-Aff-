@@ -1209,49 +1209,49 @@
               <div className="adm-card-head">接码定价</div>
               <div className="adm-field">
                 <label>美元汇率（1 USD = ? 元）</label>
-                <input className="adm-input" type="number" step="0.01"
+                <input className="adm-input" type="number" min="1" max="20" step="0.01"
                   value={cfg.SMS_USD_CNY_RATE || ""}
                   onChange={e => setCfg(c => ({ ...c, SMS_USD_CNY_RATE: e.target.value }))}
                   placeholder="7.2" />
               </div>
               <div className="adm-field">
                 <label>固定加价（元/单）</label>
-                <input className="adm-input" type="number" step="0.01"
+                <input className="adm-input" type="number" min="0.01" max="500" step="0.01"
                   value={cfg.SMS_MARGIN_CNY || ""}
                   onChange={e => setCfg(c => ({ ...c, SMS_MARGIN_CNY: e.target.value }))}
                   placeholder="10" />
               </div>
               <div className="adm-field">
                 <label>单用户未完成号码上限</label>
-                <input className="adm-input" type="number" min="1" step="1"
+                <input className="adm-input" type="number" min="1" max="20" step="1"
                   value={cfg.SMS_ACTIVE_ORDER_LIMIT || ""}
                   onChange={e => setCfg(c => ({ ...c, SMS_ACTIVE_ORDER_LIMIT: e.target.value }))}
                   placeholder="3" />
               </div>
               <div className="adm-field">
                 <label>同用户下单间隔（秒）</label>
-                <input className="adm-input" type="number" min="0" step="1"
+                <input className="adm-input" type="number" min="0" max="3600" step="1"
                   value={cfg.SMS_BUY_COOLDOWN_SECONDS || ""}
                   onChange={e => setCfg(c => ({ ...c, SMS_BUY_COOLDOWN_SECONDS: e.target.value }))}
                   placeholder="10" />
               </div>
               <div className="adm-field">
                 <label>订单超时关闭（分钟）</label>
-                <input className="adm-input" type="number" min="5" step="1"
+                <input className="adm-input" type="number" min="5" max="180" step="1"
                   value={cfg.SMS_ORDER_TIMEOUT_MINUTES || ""}
                   onChange={e => setCfg(c => ({ ...c, SMS_ORDER_TIMEOUT_MINUTES: e.target.value }))}
                   placeholder="30" />
               </div>
               <div className="adm-field">
                 <label>自动清理间隔（秒）</label>
-                <input className="adm-input" type="number" min="10" step="1"
+                <input className="adm-input" type="number" min="10" max="3600" step="1"
                   value={cfg.SMS_MAINTENANCE_INTERVAL_SECONDS || ""}
                   onChange={e => setCfg(c => ({ ...c, SMS_MAINTENANCE_INTERVAL_SECONDS: e.target.value }))}
                   placeholder="60" />
               </div>
               <div className="adm-field">
                 <label>单次清理上限</label>
-                <input className="adm-input" type="number" min="1" step="1"
+                <input className="adm-input" type="number" min="1" max="500" step="1"
                   value={cfg.SMS_MAINTENANCE_BATCH_LIMIT || ""}
                   onChange={e => setCfg(c => ({ ...c, SMS_MAINTENANCE_BATCH_LIMIT: e.target.value }))}
                   placeholder="100" />
@@ -1262,7 +1262,7 @@
               <div className="adm-card-head">密钥配置</div>
               <div className="adm-field">
                 <label>5sim API 密钥</label>
-                <input className="adm-input" type="password"
+                <input className="adm-input" type="password" maxLength="4096"
                   value={cfg.FIVESIM_API_KEY || ""}
                   onChange={e => setCfg(c => ({ ...c, FIVESIM_API_KEY: e.target.value }))}
                   placeholder={secrets.FIVESIM_API_KEY?.configured ? "已设置，填新密钥后替换" : "未设置"} />
@@ -1274,7 +1274,7 @@
               </div>
               <div className="adm-field">
                 <label>SMSPool API 密钥</label>
-                <input className="adm-input" type="password"
+                <input className="adm-input" type="password" maxLength="4096"
                   value={cfg.SMSPOOL_API_KEY || ""}
                   onChange={e => setCfg(c => ({ ...c, SMSPOOL_API_KEY: e.target.value }))}
                   placeholder={secrets.SMSPOOL_API_KEY?.configured ? "已设置，填新密钥后替换" : "未设置"} />
@@ -1286,7 +1286,7 @@
               </div>
               <div className="adm-field">
                 <label>Bee-SMS API Token</label>
-                <input className="adm-input" type="password"
+                <input className="adm-input" type="password" maxLength="4096"
                   value={cfg.BEESMS_API_TOKEN || ""}
                   onChange={e => setCfg(c => ({ ...c, BEESMS_API_TOKEN: e.target.value }))}
                   placeholder={secrets.BEESMS_API_TOKEN?.configured ? "已设置，填新 Token 后替换" : "未设置"} />
@@ -1298,14 +1298,14 @@
               </div>
               <div className="adm-field">
                 <label>Turnstile 站点密钥</label>
-                <input className="adm-input"
+                <input className="adm-input" maxLength="200"
                   value={cfg.TURNSTILE_SITE_KEY || ""}
                   onChange={e => setCfg(c => ({ ...c, TURNSTILE_SITE_KEY: e.target.value }))}
                   placeholder="0x4AAAA..." />
               </div>
               <div className="adm-field">
                 <label>Turnstile 私钥</label>
-                <input className="adm-input" type="password"
+                <input className="adm-input" type="password" maxLength="4096"
                   value={cfg.TURNSTILE_SECRET_KEY || ""}
                   onChange={e => setCfg(c => ({ ...c, TURNSTILE_SECRET_KEY: e.target.value }))}
                   placeholder={secrets.TURNSTILE_SECRET_KEY?.configured ? "已设置，填新私钥后替换" : "未设置"} />

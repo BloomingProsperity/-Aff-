@@ -101,9 +101,16 @@ test("blank turnstile site key update is skipped to avoid login lockout", () => 
 
 test("numeric settings reject unsafe values", () => {
   assert.equal(normalizeAdminSetting("SMS_USD_CNY_RATE", "-1").ok, false);
+  assert.equal(normalizeAdminSetting("SMS_USD_CNY_RATE", "21").ok, false);
   assert.equal(normalizeAdminSetting("SMS_ACTIVE_ORDER_LIMIT", "0").ok, false);
+  assert.equal(normalizeAdminSetting("SMS_ACTIVE_ORDER_LIMIT", "21").ok, false);
   assert.equal(normalizeAdminSetting("SMS_BUY_COOLDOWN_SECONDS", "-1").ok, false);
+  assert.equal(normalizeAdminSetting("SMS_BUY_COOLDOWN_SECONDS", "3601").ok, false);
   assert.equal(normalizeAdminSetting("SMS_ORDER_TIMEOUT_MINUTES", "0").ok, false);
+  assert.equal(normalizeAdminSetting("SMS_ORDER_TIMEOUT_MINUTES", "181").ok, false);
   assert.equal(normalizeAdminSetting("SMS_MAINTENANCE_INTERVAL_SECONDS", "0").ok, false);
+  assert.equal(normalizeAdminSetting("SMS_MAINTENANCE_INTERVAL_SECONDS", "3601").ok, false);
   assert.equal(normalizeAdminSetting("SMS_MAINTENANCE_BATCH_LIMIT", "0").ok, false);
+  assert.equal(normalizeAdminSetting("SMS_MAINTENANCE_BATCH_LIMIT", "501").ok, false);
+  assert.equal(normalizeAdminSetting("FIVESIM_API_KEY", "x".repeat(4097)).ok, false);
 });
