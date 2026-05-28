@@ -200,7 +200,15 @@ export async function authRoutes(app) {
       windowSeconds: 3600,
       config: app.config,
     });
-    if (accountLimited) return accountLimited;
+    if (accountLimited) {
+      await writeAuditLog(app.db, request, {
+        action: "auth.login",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: { reason: "account_rate_limited", email },
+      });
+      return accountLimited;
+    }
 
     const user = await one(app.db, "SELECT * FROM users WHERE email = $1", [email]);
     if (!user || !verifyPassword(passwordInput.value, user.password_salt, user.password_hash)) {
