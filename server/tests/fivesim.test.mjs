@@ -17,6 +17,9 @@ test("5sim http errors do not expose upstream details", () => {
     data: { token: "secret", debug: "raw upstream body" },
   });
 
-  assert.equal(reply.statusCode, 400);
-  assert.deepEqual(body, { error: "5sim 返回失败。" });
+  assert.equal(reply.statusCode, 502);
+  assert.deepEqual(body, { error: "上游服务暂时不可用，请稍后重试。" });
+  assert.equal(JSON.stringify(body).includes("5sim"), false);
+  assert.equal(JSON.stringify(body).includes("secret"), false);
+  assert.equal(JSON.stringify(body).includes("raw upstream body"), false);
 });

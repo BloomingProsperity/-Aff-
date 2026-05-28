@@ -35,6 +35,6 @@ export async function fivesim(path, token, init = {}) {
 }
 
 export function fivesimHttpError(reply, result) {
-  reply.code(result.status || 502);
-  return { error: result.error || "上游服务暂时不可用，请稍后重试。" };
+  reply.code(Number(result?.status) === 429 ? 429 : 502);
+  return { error: "上游服务暂时不可用，请稍后重试。" };
 }
