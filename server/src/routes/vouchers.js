@@ -215,7 +215,22 @@ export async function voucherRoutes(app) {
       windowSeconds: 300,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      const body = request.body || {};
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        action: "admin.voucher_batch.create",
+        resourceType: "voucher_batch",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: {
+          reason: "rate_limited",
+          requestedCount: Number.parseInt(body.count, 10) || 0,
+          hasAmount: body.amount !== undefined,
+        },
+      });
+      return limited;
+    }
 
     const body = request.body || {};
     const count = Math.min(200, Math.max(1, Number.parseInt(body.count, 10) || 1));

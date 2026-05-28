@@ -378,7 +378,23 @@ export async function adminRoutes(app) {
       windowSeconds: 60,
       config: app.config,
     });
-    if (limited) return limited;
+    if (limited) {
+      const body = request.body || {};
+      await writeAuditLog(app.db, request, {
+        actorUserId: auth.user.id,
+        targetUserId: Number(body.userId) || null,
+        action: "admin.balance.adjust",
+        resourceType: "balance",
+        resourceId: Number(body.userId) || "",
+        status: "failed",
+        httpStatus: reply.statusCode || 429,
+        metadata: {
+          reason: "rate_limited",
+          hasAmount: body.amount !== undefined,
+        },
+      });
+      return limited;
+    }
 
     const body = request.body || {};
 
