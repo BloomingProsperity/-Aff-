@@ -38,8 +38,7 @@ function clientIdentity(request, config = {}) {
     || request.ip
     || request.socket?.remoteAddress
     || "unknown-ip";
-  const ua = header(request, "user-agent") || "unknown-agent";
-  return `${ip}|${ua}`;
+  return String(ip || "unknown-ip");
 }
 
 function normalizeOrigin(value) {

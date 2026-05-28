@@ -55,6 +55,23 @@ test("rate limit does not trust spoofed forwarded headers on direct requests", a
   assert.equal(await rateLimitKey(directA, "login"), await rateLimitKey(directB, "login"));
 });
 
+test("rate limit cannot be bypassed by rotating user agents from the same ip", async () => {
+  const base = {
+    ip: "198.51.100.7",
+    headers: {
+      "user-agent": "Mozilla/5.0 normal-browser",
+    },
+  };
+  const rotated = {
+    ip: "198.51.100.7",
+    headers: {
+      "user-agent": "curl-randomized-agent",
+    },
+  };
+
+  assert.equal(await rateLimitKey(base, "sms:quote"), await rateLimitKey(rotated, "sms:quote"));
+});
+
 test("rate limit trusts forwarded headers only from local proxy", async () => {
   const proxiedA = {
     ip: "127.0.0.1",
