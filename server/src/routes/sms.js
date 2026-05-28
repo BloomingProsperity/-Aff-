@@ -469,12 +469,20 @@ export async function smsRoutes(app) {
       return { error: "已有购买请求正在处理，请稍后再试。" };
     }
 
+    let country = "";
+    let operator = "";
+    let product = "";
+    let reservedCents = 0;
+    let bought = null;
+    let chosen = null;
+    let localOrderCommitted = false;
+
     try {
     const body = request.body || {};
 
-    const country = cleanPart(body.country || "usa");
-    const operator = cleanPart(body.operator || "any");
-    const product = cleanPart(body.product || "");
+    country = cleanPart(body.country || "usa");
+    operator = cleanPart(body.operator || "any");
+    product = cleanPart(body.product || "");
     if (!product) {
       reply.code(400);
       await auditSmsBuy(app, request, auth, "failed", 400, { reason: "missing_product", country, operator });
@@ -547,9 +555,6 @@ export async function smsRoutes(app) {
       return { error: "当前服务暂不可购买，请稍后重试。" };
     }
 
-    let reservedCents = 0;
-    let bought = null;
-    let chosen = null;
     let lastError = null;
     const attempts = [];
     const note = `${country}/${operator}/${product}`;
@@ -655,53 +660,72 @@ export async function smsRoutes(app) {
       return { error: "余额不足，号码已取消。" };
     }
 
-    const updatedUser = await one(app.db, "SELECT * FROM users WHERE id = $1", [auth.user.id]);
-    await exec(
-      app.db,
-      `INSERT INTO sms_orders
-        (user_id, fivesim_id, provider, country, operator, product, phone, price_cents, status, sms_json, raw_json)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-      [
-        auth.user.id,
-        providerOrderKey(chosen.provider, bought.id),
-        chosen.provider,
-        country,
-        operator,
-        product,
-        bought.phone || "",
-        realCost,
-        bought.status || "received",
-        JSON.stringify(bought.sms || []),
-        JSON.stringify({ provider: chosen.provider, providerName: chosen.providerName, data: bought.raw || {} }),
-      ],
-    );
-    await exec(
-      app.db,
-      `INSERT INTO balance_logs (user_id, delta_cents, balance_after_cents, reason, note)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [auth.user.id, -realCost, updatedUser.balance_cents, "sms_order", note],
-    );
-
-    const row = await one(app.db, "SELECT * FROM sms_orders WHERE fivesim_id = $1", [providerOrderKey(chosen.provider, bought.id)]);
-    await writeSmsOrderEvent(app.db, {
-      orderId: row.id,
-      userId: auth.user.id,
-      actorUserId: auth.user.id,
-      type: "order.created",
-      status: "success",
-      provider: chosen.provider,
-      message: "订单创建成功",
-      metadata: {
-        country,
-        operator,
-        product,
-        selectedProvider: chosen.provider,
-        attemptedFailures: attempts,
-        price: centsToAmount(realCost),
-        upstreamStatus: row.status,
-        quoteCount: quotes.length,
-      },
-    });
+    const client = await app.db.connect();
+    let updatedUser;
+    let row;
+    try {
+      await client.query("BEGIN");
+      updatedUser = await one(client, "SELECT * FROM users WHERE id = $1", [auth.user.id]);
+      await exec(
+        client,
+        `INSERT INTO sms_orders
+          (user_id, fivesim_id, provider, country, operator, product, phone, price_cents, status, sms_json, raw_json)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [
+          auth.user.id,
+          providerOrderKey(chosen.provider, bought.id),
+          chosen.provider,
+          country,
+          operator,
+          product,
+          bought.phone || "",
+          realCost,
+          bought.status || "received",
+          JSON.stringify(bought.sms || []),
+          JSON.stringify({ provider: chosen.provider, providerName: chosen.providerName, data: bought.raw || {} }),
+        ],
+      );
+      await exec(
+        client,
+        `INSERT INTO balance_logs (user_id, delta_cents, balance_after_cents, reason, note)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [auth.user.id, -realCost, updatedUser.balance_cents, "sms_order", note],
+      );
+      row = await one(client, "SELECT * FROM sms_orders WHERE fivesim_id = $1", [providerOrderKey(chosen.provider, bought.id)]);
+      await client.query("COMMIT");
+      localOrderCommitted = true;
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
+    try {
+      await writeSmsOrderEvent(app.db, {
+        orderId: row.id,
+        userId: auth.user.id,
+        actorUserId: auth.user.id,
+        type: "order.created",
+        status: "success",
+        provider: chosen.provider,
+        message: "订单创建成功",
+        metadata: {
+          country,
+          operator,
+          product,
+          selectedProvider: chosen.provider,
+          attemptedFailures: attempts,
+          price: centsToAmount(realCost),
+          upstreamStatus: row.status,
+          quoteCount: quotes.length,
+        },
+      });
+    } catch (eventError) {
+      request.log?.warn?.({
+        error: eventError instanceof Error ? eventError.message : String(eventError || "unknown"),
+        orderId: row.id,
+      }, "sms buy success event log failed");
+    }
     await auditSmsBuy(app, request, auth, "success", 200, {
       country,
       operator,
@@ -711,6 +735,63 @@ export async function smsRoutes(app) {
       status: row.status,
     }, row.id);
     return { order: normalizePublicSmsOrder(row), balance: centsToAmount(updatedUser.balance_cents), pricing: publicChargeQuote(realQuote) };
+    } catch (error) {
+      const recovery = {
+        providerCancelled: false,
+        balanceRefunded: false,
+        reservedAmount: centsToAmount(reservedCents),
+      };
+      if (!localOrderCommitted && bought && chosen) {
+        try {
+          const cancelled = await changeSmsProviderOrder(
+            app,
+            { ...bought, provider: chosen.provider, fivesim_id: providerOrderKey(chosen.provider, bought.id) },
+            "cancel",
+          );
+          recovery.providerCancelled = Boolean(cancelled?.ok);
+        } catch (cancelError) {
+          request.log?.warn?.({
+            error: cancelError instanceof Error ? cancelError.message : String(cancelError || "unknown"),
+            provider: chosen.provider,
+          }, "sms buy recovery provider cancel failed");
+        }
+      }
+      if (!localOrderCommitted && reservedCents > 0) {
+        try {
+          await refundBalance(app.db, auth.user.id, reservedCents);
+          recovery.balanceRefunded = true;
+        } catch (refundError) {
+          request.log?.error?.({
+            error: refundError instanceof Error ? refundError.message : String(refundError || "unknown"),
+            reservedAmount: recovery.reservedAmount,
+          }, "sms buy recovery balance refund failed");
+        }
+      }
+      try {
+        await writeSmsOrderEvent(app.db, {
+          userId: auth.user.id,
+          actorUserId: auth.user.id,
+          type: "order.create_failed",
+          status: "failed",
+          provider: chosen?.provider || "",
+          publicCode: "local_order_create_failed",
+          message: "订单创建失败",
+          metadata: { country, operator, product, recovery },
+        });
+        await auditSmsBuy(app, request, auth, "failed", 500, {
+          reason: "local_order_create_failed",
+          country,
+          operator,
+          product,
+          provider: chosen?.provider || "",
+          recovery,
+        });
+      } catch (logError) {
+        request.log?.warn?.({
+          error: logError instanceof Error ? logError.message : String(logError || "unknown"),
+        }, "sms buy recovery log failed");
+      }
+      throw error;
     } finally {
       await releaseOperationLock(app.db, buyLock);
     }
