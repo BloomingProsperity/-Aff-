@@ -12,6 +12,8 @@ import { smsRoutes } from "./routes/sms.js";
 import { statsRoutes } from "./routes/stats.js";
 import { voucherRoutes } from "./routes/vouchers.js";
 
+export const API_BODY_LIMIT_BYTES = 64 * 1024;
+
 function allowOrigin(config, origin, callback) {
   if (!origin) {
     callback(null, true);
@@ -35,7 +37,7 @@ function originFromReferer(request) {
 }
 
 export async function buildApp({ db, config, fivesimClient = fivesim, logger = true }) {
-  const app = Fastify({ logger });
+  const app = Fastify({ logger, bodyLimit: API_BODY_LIMIT_BYTES });
   app.decorate("db", db);
   app.decorate("config", config);
   app.decorate("fivesim", fivesimClient);

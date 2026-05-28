@@ -163,6 +163,38 @@ test("api responses disable browser and proxy caching", async () => {
   }
 });
 
+test("api rejects oversized JSON bodies before route handlers", async () => {
+  const calls = [];
+  const db = {
+    query: async (sql, params = []) => {
+      calls.push({ sql, params });
+      if (sql.includes("FROM app_settings")) return { rows: [] };
+      throw new Error(`Oversized request reached database: ${sql}`);
+    },
+  };
+  const app = await buildApp({ db, config: loadConfig({ PUBLIC_URL: "https://hkai.shop" }), logger: false });
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      headers: {
+        host: "api.hkai.shop",
+        "content-type": "application/json",
+      },
+      payload: JSON.stringify({
+        email: "buyer@gmail.com",
+        password: "correct-password",
+        padding: "x".repeat(70 * 1024),
+      }),
+    });
+
+    assert.equal(response.statusCode, 413);
+    assert.equal(calls.some(call => !call.sql.includes("FROM app_settings")), false);
+  } finally {
+    await app.close();
+  }
+});
+
 test("secure cookies default on for production and https public url", () => {
   assert.equal(loadConfig({ NODE_ENV: "production" }).cookieSecure, true);
   assert.equal(loadConfig({ PUBLIC_URL: "https://hkai.shop" }).cookieSecure, true);
