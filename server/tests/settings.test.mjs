@@ -89,6 +89,16 @@ test("blank secret updates are skipped instead of wiping keys", () => {
   assert.equal(normalized.skip, true);
 });
 
+test("blank turnstile site key update is skipped to avoid login lockout", () => {
+  const config = { turnstileSiteKey: "0x4AAAAAADWtP4gvLTD6rL6R" };
+  const normalized = normalizeAdminSetting("TURNSTILE_SITE_KEY", "   ");
+
+  assert.equal(normalized.ok, true);
+  assert.equal(normalized.skip, true);
+  assert.equal(applySettingToConfig(config, "TURNSTILE_SITE_KEY", "   "), false);
+  assert.equal(config.turnstileSiteKey, "0x4AAAAAADWtP4gvLTD6rL6R");
+});
+
 test("numeric settings reject unsafe values", () => {
   assert.equal(normalizeAdminSetting("SMS_USD_CNY_RATE", "-1").ok, false);
   assert.equal(normalizeAdminSetting("SMS_ACTIVE_ORDER_LIMIT", "0").ok, false);

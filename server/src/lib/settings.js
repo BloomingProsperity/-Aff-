@@ -11,7 +11,7 @@ const SETTING_DEFS = {
   FIVESIM_API_KEY: { prop: "fivesimApiKey", type: "secret" },
   SMSPOOL_API_KEY: { prop: "smspoolApiKey", type: "secret" },
   BEESMS_API_TOKEN: { prop: "beeSmsApiToken", type: "secret" },
-  TURNSTILE_SITE_KEY: { prop: "turnstileSiteKey", type: "text" },
+  TURNSTILE_SITE_KEY: { prop: "turnstileSiteKey", type: "text", skipBlank: true },
   TURNSTILE_SECRET_KEY: { prop: "turnstileSecretKey", type: "secret" },
 };
 
@@ -46,7 +46,7 @@ export function normalizeAdminSetting(key, value) {
   if (!def) return { ok: false, error: "设置项不存在。" };
   const raw = String(value ?? "").trim();
 
-  if (def.type === "secret" && !raw) {
+  if ((def.type === "secret" || def.skipBlank) && !raw) {
     return { ok: true, skip: true };
   }
 
