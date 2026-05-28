@@ -23,6 +23,41 @@ function quoteCacheDb() {
   };
 }
 
+test("sms countries uses a public cache to avoid repeated upstream calls", async () => {
+  const db = quoteCacheDb();
+  const upstreamCalls = [];
+  const countries = {
+    usa: { iso: "US", name: "United States" },
+    india: { iso: "IN", name: "India" },
+  };
+  const app = await buildApp({
+    db,
+    logger: false,
+    config: loadConfig({ FIVESIM_API_KEY: "token", PUBLIC_URL: "https://hkai.shop" }),
+    fivesimClient: async (path) => {
+      upstreamCalls.push(path);
+      if (path === "/guest/countries") {
+        return { ok: true, data: countries };
+      }
+      return { ok: false, status: 404, data: {} };
+    },
+  });
+
+  try {
+    const first = await app.inject({ method: "GET", url: "/api/sms/countries" });
+    const second = await app.inject({ method: "GET", url: "/api/sms/countries" });
+
+    assert.equal(first.statusCode, 200);
+    assert.equal(second.statusCode, 200);
+    assert.equal(first.headers["x-cache"], "MISS");
+    assert.equal(second.headers["x-cache"], "HIT");
+    assert.deepEqual(second.json(), countries);
+    assert.deepEqual(upstreamCalls, ["/guest/countries"]);
+  } finally {
+    await app.close();
+  }
+});
+
 test("selected sms quote uses a short public cache to avoid repeated upstream calls", async () => {
   const db = quoteCacheDb();
   const upstreamCalls = [];

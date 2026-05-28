@@ -24,6 +24,11 @@ import {
 
 const PRODUCT_CACHE_SECONDS = 60;
 const QUOTE_CACHE_SECONDS = 20;
+const COUNTRIES_CACHE_SECONDS = 3600;
+
+function countriesCacheKey() {
+  return "countries:5sim";
+}
 
 function productCacheKey(country, operator) {
   return `products:${country}:${operator}`;
@@ -68,6 +73,22 @@ async function loadProductCatalog(app, country, operator) {
   const result = await app.fivesim(`/guest/products/${country}/${operator}`, "");
   if (result.ok) {
     await writeProductCache(app.db, cacheKey, result.data || {}, now);
+    return { ok: true, data: result.data || {}, cache: "MISS" };
+  }
+
+  if (cached?.data) return { ok: true, data: cached.data, cache: "STALE" };
+  return { ok: false, result };
+}
+
+async function loadCountries(app) {
+  const now = Math.floor(Date.now() / 1000);
+  const cacheKey = countriesCacheKey();
+  const cached = await readProductCache(app.db, cacheKey, now);
+  if (cached?.fresh) return { ok: true, data: cached.data, cache: "HIT" };
+
+  const result = await app.fivesim("/guest/countries", "");
+  if (result.ok) {
+    await writeProductCache(app.db, cacheKey, result.data || {}, now, COUNTRIES_CACHE_SECONDS);
     return { ok: true, data: result.data || {}, cache: "MISS" };
   }
 
@@ -358,8 +379,10 @@ export async function smsRoutes(app) {
     });
     if (limited) return limited;
 
-    const result = await app.fivesim("/guest/countries", "");
-    return result.ok ? result.data : fivesimHttpError(reply, result);
+    const countries = await loadCountries(app);
+    if (!countries.ok) return fivesimHttpError(reply, countries.result);
+    reply.header("x-cache", countries.cache);
+    return countries.data;
   });
 
   app.get("/api/sms/products", async (request, reply) => {
