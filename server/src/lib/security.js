@@ -58,6 +58,11 @@ export function isAllowedRequestOrigin(origin, config = {}) {
   return allowed.has(value);
 }
 
+export function isAllowedFetchSite(request) {
+  const value = String(header(request, "sec-fetch-site") || "").trim().toLowerCase();
+  return value !== "cross-site";
+}
+
 export function isMutatingRequest(request) {
   return !SAFE_METHODS.has(String(request.method || "GET").toUpperCase());
 }

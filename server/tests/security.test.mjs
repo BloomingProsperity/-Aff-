@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { buildApp } from "../src/app.js";
 import { loadConfig } from "../src/lib/config.js";
 import { isAllowedAuthEmail } from "../src/lib/common.js";
-import { isAllowedRequestOrigin, rateLimitKey, turnstileEnabled, verifyTurnstile } from "../src/lib/security.js";
+import { isAllowedFetchSite, isAllowedRequestOrigin, rateLimitKey, turnstileEnabled, verifyTurnstile } from "../src/lib/security.js";
 
 test("only allows QQ, 163 and Gmail accounts", () => {
   assert.equal(isAllowedAuthEmail("user@qq.com"), true);
@@ -72,6 +73,34 @@ test("request origin must match configured site origins", () => {
   assert.equal(isAllowedRequestOrigin("", config), true);
   assert.equal(isAllowedRequestOrigin("https://hkai.shop", config), true);
   assert.equal(isAllowedRequestOrigin("https://evil.example", config), false);
+});
+
+test("fetch metadata rejects cross-site browser mutations but allows same-site and non-browser requests", () => {
+  assert.equal(isAllowedFetchSite({ headers: { "sec-fetch-site": "cross-site" } }), false);
+  assert.equal(isAllowedFetchSite({ headers: { "sec-fetch-site": "same-origin" } }), true);
+  assert.equal(isAllowedFetchSite({ headers: { "sec-fetch-site": "same-site" } }), true);
+  assert.equal(isAllowedFetchSite({ headers: { "sec-fetch-site": "none" } }), true);
+  assert.equal(isAllowedFetchSite({ headers: {} }), true);
+});
+
+test("api hook blocks cross-site browser mutations before route handlers", async () => {
+  const db = { query: async () => ({ rows: [] }) };
+  const app = await buildApp({ db, config: loadConfig({ PUBLIC_URL: "https://hkai.shop" }), logger: false });
+  try {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/auth/logout",
+      headers: {
+        "sec-fetch-site": "cross-site",
+        origin: "https://evil.example",
+      },
+    });
+
+    assert.equal(response.statusCode, 403);
+    assert.deepEqual(response.json(), { error: "请求来源无效。" });
+  } finally {
+    await app.close();
+  }
 });
 
 test("secure cookies default on for production and https public url", () => {
