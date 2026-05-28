@@ -117,3 +117,5 @@ cd C:\Users\h\Desktop\银行卡Aff项目
 systemctl list-timers --all hkai-db-backup.timer
 ls -lh /root/hkai-db-backups
 ```
+
+备份成功后会写入 `runtime/backup-status.json`，管理员后台概览会显示最近一次备份状态。

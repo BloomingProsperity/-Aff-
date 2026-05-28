@@ -90,5 +90,7 @@ export function loadConfig(env = process.env) {
     smsMaintenanceBatchLimit: Number(env.SMS_MAINTENANCE_BATCH_LIMIT || 100),
     turnstileSiteKey: env.TURNSTILE_SITE_KEY || env.TURNSTILE_SITEKEY || "",
     turnstileSecretKey: env.TURNSTILE_SECRET_KEY || env.TURNSTILE_SECRET || "",
+    backupStatusFile: env.BACKUP_STATUS_FILE || "runtime/backup-status.json",
+    backupStaleHours: Number(env.BACKUP_STALE_HOURS || 36),
   };
 }

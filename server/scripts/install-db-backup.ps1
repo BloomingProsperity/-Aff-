@@ -5,6 +5,7 @@ param(
   [string] $IdentityFile = "$env:USERPROFILE\.ssh\greencloud_hkai_api_rsa",
   [string] $RemotePath = "/opt/hkai-shop/server",
   [string] $BackupDir = "/root/hkai-db-backups",
+  [string] $StatusFile = "/opt/hkai-shop/server/runtime/backup-status.json",
   [int] $KeepDays = 14,
   [string] $OnCalendar = "*-*-* 03:20:00"
 )
@@ -36,6 +37,7 @@ set -euo pipefail
 
 REMOTE_PATH=__REMOTE_PATH__
 BACKUP_DIR=__BACKUP_DIR__
+STATUS_FILE=__STATUS_FILE__
 KEEP_DAYS=__KEEP_DAYS__
 
 mkdir -p "$BACKUP_DIR"
@@ -73,6 +75,26 @@ mv "$TMP" "$OUT"
 sha256sum "$OUT" > "$OUT.sha256"
 chmod 600 "$OUT.sha256"
 
+mkdir -p "$(dirname "$STATUS_FILE")"
+OUT="$OUT" STATUS_FILE="$STATUS_FILE" KEEP_DAYS="$KEEP_DAYS" node - <<'NODE'
+const fs = require("fs");
+const path = require("path");
+const out = process.env.OUT;
+const shaFile = `${out}.sha256`;
+const sha256 = fs.readFileSync(shaFile, "utf8").trim().split(/\s+/)[0] || "";
+const stat = fs.statSync(out);
+const status = {
+  ok: true,
+  finishedAt: new Date().toISOString(),
+  file: path.basename(out),
+  sizeBytes: stat.size,
+  sha256,
+  keepDays: Number(process.env.KEEP_DAYS || 0),
+};
+fs.writeFileSync(process.env.STATUS_FILE, `${JSON.stringify(status, null, 2)}\n`, { mode: 0o644 });
+NODE
+chmod 644 "$STATUS_FILE"
+
 find "$BACKUP_DIR" -type f \( -name 'hkai-sms-*.sql.gz' -o -name 'hkai-sms-*.sql.gz.sha256' \) -mtime +"$KEEP_DAYS" -delete
 ls -lh "$OUT"
 '@
@@ -80,6 +102,7 @@ ls -lh "$OUT"
 $BackupBody = $BackupBody `
   -replace "__REMOTE_PATH__", (ConvertTo-BashSingleQuoted $RemotePath) `
   -replace "__BACKUP_DIR__", (ConvertTo-BashSingleQuoted $BackupDir) `
+  -replace "__STATUS_FILE__", (ConvertTo-BashSingleQuoted $StatusFile) `
   -replace "__KEEP_DAYS__", ([string] [Math]::Max(1, $KeepDays))
 
 $ServiceBody = @'

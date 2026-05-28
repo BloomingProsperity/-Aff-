@@ -19,6 +19,29 @@
       return s;
     }
   }
+  function fmtFileSize(bytes) {
+    const size = Number(bytes || 0);
+    if (!Number.isFinite(size) || size <= 0) return "—";
+    if (size >= 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)} MB`;
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
+  }
+  function backupStatusText(backup = {}) {
+    if (!backup.enabled) return { value: "未启用", sub: "未配置状态文件" };
+    if (backup.status === "ok") {
+      return {
+        value: "正常",
+        sub: `${fmtDate(backup.finishedAt)} · ${fmtFileSize(backup.sizeBytes)}`,
+      };
+    }
+    if (backup.status === "stale") {
+      return {
+        value: "已过期",
+        sub: backup.finishedAt ? `上次备份 ${fmtDate(backup.finishedAt)}` : "超过检查时间",
+      };
+    }
+    if (backup.status === "missing") return { value: "未找到", sub: "还没有备份状态" };
+    return { value: "异常", sub: "请检查 VPS 定时任务" };
+  }
   function toDateTimeLocal(s) {
     if (!s) return "";
     const date = new Date(s);
@@ -163,9 +186,10 @@
     if (err)   return <div className="adm-err adm-err--block">{err}</div>;
     if (!data) return <div className="adm-loading">加载中…</div>;
 
-    const { users = {}, orders = {}, revenue = {}, pageviews = [], risk = {}, logRetention = {}, housekeeping = {} } = data;
+    const { users = {}, orders = {}, revenue = {}, pageviews = [], risk = {}, logRetention = {}, housekeeping = {}, backup = {} } = data;
     const page_views = pageviews;
     const maxPv = Math.max(...page_views.map(x => Number(x.total) || 0), 1);
+    const backupView = backupStatusText(backup);
 
     return (
       <div className="adm-content-inner">
@@ -247,6 +271,8 @@
               sub={logRetention.lastRunAt ? `上次清理 ${fmtDate(logRetention.lastRunAt)}` : "每天自动检查"} />
             <AdmStatCard label="临时数据清理" value={housekeeping.enabled ? `${fmt(housekeeping.pageViewRetentionDays || 90)} 天` : "未启用"}
               sub={housekeeping.lastRunAt ? `上次清理 ${fmtDate(housekeeping.lastRunAt)}` : "每小时自动检查"} />
+            <AdmStatCard label="数据库备份" value={backupView.value}
+              sub={backupView.sub} accent={backup.status !== "ok"} />
           </div>
           {maintenanceMsg && <div className="adm-maintenance-msg">{maintenanceMsg}</div>}
         </div>

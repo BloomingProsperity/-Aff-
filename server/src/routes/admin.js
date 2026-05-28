@@ -1,5 +1,6 @@
 import { destroyUserSessions, normalizeUserStatus, publicUser, requireAdmin } from "../lib/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
+import { readBackupStatus } from "../lib/backupStatus.js";
 import { validateBalanceAdjustment } from "../lib/balance.js";
 import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
@@ -157,6 +158,7 @@ export async function adminRoutes(app) {
       risk,
       logRetention: app.logRetention?.status?.() || logRetentionStatus(),
       housekeeping: app.housekeeping?.status?.() || housekeepingStatus(),
+      backup: await readBackupStatus(app.config),
     };
   });
 
