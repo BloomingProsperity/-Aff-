@@ -12,6 +12,24 @@ function normalizeOrigin(value) {
   }
 }
 
+function normalizeHost(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(raw.includes("://") ? raw : `http://${raw}`);
+    return url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  } catch {
+    return "";
+  }
+}
+
+function parseHosts(value) {
+  return String(value || "")
+    .split(",")
+    .map(normalizeHost)
+    .filter(Boolean);
+}
+
 export const DEFAULT_ADMIN_EMAIL = "huakaifugui2.0@gmail.com";
 
 export function loadConfig(env = process.env) {
@@ -36,6 +54,14 @@ export function loadConfig(env = process.env) {
   ].filter(Boolean))];
   const cookieSecureDefault = String(env.NODE_ENV || "").toLowerCase() === "production"
     || normalizeOrigin(publicUrl).startsWith("https://");
+  const allowedHosts = [...new Set([
+    ...parseHosts(env.API_ALLOWED_HOSTS || env.ALLOWED_HOSTS),
+    normalizeHost(env.API_PUBLIC_URL || env.API_ORIGIN),
+    "api.hkai.shop",
+    "localhost",
+    "127.0.0.1",
+    "::1",
+  ].filter(Boolean))];
 
   return {
     nodeEnv: env.NODE_ENV || "development",
@@ -45,6 +71,7 @@ export function loadConfig(env = process.env) {
     publicUrl,
     siteUrl: env.SITE_URL || env.PUBLIC_SITE_URL || "https://hkai.shop",
     corsOrigins,
+    allowedHosts,
     cookieDomain: env.COOKIE_DOMAIN || "",
     cookieSecure: parseBool(env.COOKIE_SECURE, cookieSecureDefault),
     trustProxyHeaders: parseBool(env.TRUST_PROXY_HEADERS, false),

@@ -51,10 +51,34 @@ function normalizeOrigin(value) {
   }
 }
 
+function normalizeHost(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(raw.includes("://") ? raw : `http://${raw}`);
+    return url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  } catch {
+    return "";
+  }
+}
+
 export function isAllowedRequestOrigin(origin, config = {}) {
   const value = normalizeOrigin(origin);
   if (!value) return true;
   const allowed = new Set((config.corsOrigins || []).map(normalizeOrigin).filter(Boolean));
+  return allowed.has(value);
+}
+
+export function isAllowedRequestHost(host, config = {}) {
+  const value = normalizeHost(host);
+  if (!value) return false;
+  const allowed = new Set([
+    ...(config.allowedHosts || []),
+    "api.hkai.shop",
+    "localhost",
+    "127.0.0.1",
+    "::1",
+  ].map(normalizeHost).filter(Boolean));
   return allowed.has(value);
 }
 

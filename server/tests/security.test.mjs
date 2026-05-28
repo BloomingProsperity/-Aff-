@@ -3,7 +3,14 @@ import test from "node:test";
 import { buildApp } from "../src/app.js";
 import { loadConfig } from "../src/lib/config.js";
 import { isAllowedAuthEmail } from "../src/lib/common.js";
-import { isAllowedFetchSite, isAllowedRequestOrigin, rateLimitKey, turnstileEnabled, verifyTurnstile } from "../src/lib/security.js";
+import {
+  isAllowedFetchSite,
+  isAllowedRequestHost,
+  isAllowedRequestOrigin,
+  rateLimitKey,
+  turnstileEnabled,
+  verifyTurnstile,
+} from "../src/lib/security.js";
 
 test("only allows QQ, 163 and Gmail accounts", () => {
   assert.equal(isAllowedAuthEmail("user@qq.com"), true);
@@ -75,6 +82,20 @@ test("request origin must match configured site origins", () => {
   assert.equal(isAllowedRequestOrigin("https://evil.example", config), false);
 });
 
+test("request host must match the API host allowlist", () => {
+  const config = loadConfig({
+    PUBLIC_URL: "https://hkai.shop",
+    API_ALLOWED_HOSTS: "api.hkai.shop",
+  });
+
+  assert.equal(isAllowedRequestHost("api.hkai.shop", config), true);
+  assert.equal(isAllowedRequestHost("api.hkai.shop:443", config), true);
+  assert.equal(isAllowedRequestHost("localhost:8788", config), true);
+  assert.equal(isAllowedRequestHost("127.0.0.1:8788", config), true);
+  assert.equal(isAllowedRequestHost("45.8.114.249", config), false);
+  assert.equal(isAllowedRequestHost("evil.example", config), false);
+});
+
 test("fetch metadata rejects cross-site browser mutations but allows same-site and non-browser requests", () => {
   assert.equal(isAllowedFetchSite({ headers: { "sec-fetch-site": "cross-site" } }), false);
   assert.equal(isAllowedFetchSite({ headers: { "sec-fetch-site": "same-origin" } }), true);
@@ -98,6 +119,30 @@ test("api hook blocks cross-site browser mutations before route handlers", async
 
     assert.equal(response.statusCode, 403);
     assert.deepEqual(response.json(), { error: "请求来源无效。" });
+  } finally {
+    await app.close();
+  }
+});
+
+test("api hook blocks direct IP host scans before route handlers", async () => {
+  const db = { query: async () => ({ rows: [] }) };
+  const app = await buildApp({
+    db,
+    config: loadConfig({
+      PUBLIC_URL: "https://hkai.shop",
+      API_ALLOWED_HOSTS: "api.hkai.shop",
+    }),
+    logger: false,
+  });
+  try {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/health",
+      headers: { host: "45.8.114.249" },
+    });
+
+    assert.equal(response.statusCode, 421);
+    assert.ok(response.json().error);
   } finally {
     await app.close();
   }

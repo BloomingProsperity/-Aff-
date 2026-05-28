@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import Fastify from "fastify";
 import { fivesim } from "./lib/fivesim.js";
 import { applyRuntimeSettings } from "./lib/settings.js";
-import { isAllowedFetchSite, isAllowedRequestOrigin, isMutatingRequest } from "./lib/security.js";
+import { isAllowedFetchSite, isAllowedRequestHost, isAllowedRequestOrigin, isMutatingRequest } from "./lib/security.js";
 import { adminRoutes } from "./routes/admin.js";
 import { announcementRoutes } from "./routes/announcements.js";
 import { authRoutes } from "./routes/auth.js";
@@ -49,6 +49,10 @@ export async function buildApp({ db, config, fivesimClient = fivesim, logger = t
   await app.register(cookie);
 
   app.addHook("onRequest", async (request, reply) => {
+    if (!isAllowedRequestHost(request.headers.host, config)) {
+      reply.code(421).send({ error: "请求地址无效。" });
+      return;
+    }
     if (!isMutatingRequest(request)) return;
     if (!isAllowedFetchSite(request)) {
       reply.code(403).send({ error: "请求来源无效。" });
