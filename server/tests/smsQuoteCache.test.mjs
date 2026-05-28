@@ -85,8 +85,35 @@ test("selected sms quote uses a short public cache to avoid repeated upstream ca
     assert.equal(second.statusCode, 200);
     assert.equal(first.headers["x-cache"], "MISS");
     assert.equal(second.headers["x-cache"], "HIT");
-    assert.deepEqual(second.json(), { available: true, count: 9, charge: 15.33, currency: "CNY" });
+    assert.deepEqual(second.json(), { available: true, count: 9, charge: 19.9, currency: "CNY" });
     assert.deepEqual(upstreamCalls, ["/guest/products/usa/any", "/user/profile"]);
+  } finally {
+    await app.close();
+  }
+});
+
+test("selected sms quote shows out of stock when supplier price exceeds fixed customer price", async () => {
+  const db = quoteCacheDb();
+  const app = await buildApp({
+    db,
+    logger: false,
+    config: loadConfig({ FIVESIM_API_KEY: "token", PUBLIC_URL: "https://hkai.shop" }),
+    fivesimClient: async (path) => {
+      if (path === "/guest/products/usa/any") {
+        return { ok: true, data: { telegram: { cost: 3, count: 9 } } };
+      }
+      if (path === "/user/profile") {
+        return { ok: true, data: { balance: 100 } };
+      }
+      return { ok: false, status: 404, data: {} };
+    },
+  });
+
+  try {
+    const response = await app.inject({ method: "GET", url: "/api/sms/quote?country=usa&operator=any&product=telegram" });
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.json(), { available: false, count: 0, charge: 0, currency: "CNY" });
   } finally {
     await app.close();
   }

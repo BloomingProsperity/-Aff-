@@ -97,6 +97,13 @@ function money(value) {
 function yuan(value) {
   return `${money(value)} 元`;
 }
+function smsPriceLabel(item) {
+  if (!item) return "-";
+  const count = Number(item.count || 0);
+  const charge = Number(item.charge || 0);
+  if (item.available === false || count <= 0 || charge <= 0) return "缺货";
+  return yuan(charge);
+}
 function productLabel(code) {
   return SMS_PRODUCT_LABELS[code] || code.replace(/[-_]/g, " ").replace(/\b\w/g, x => x.toUpperCase());
 }
@@ -123,7 +130,7 @@ function SmsPriceBox({
 }) {
   return React.createElement("div", {
     className: "sms-price-box sms-price-box--single"
-  }, React.createElement("div", null, React.createElement("span", null, "\u4EF7\u683C"), React.createElement("strong", null, currentProduct ? yuan(currentProduct.charge) : "-")));
+  }, React.createElement("div", null, React.createElement("span", null, "\u4EF7\u683C"), React.createElement("strong", null, smsPriceLabel(currentProduct))));
 }
 function SmsAnnouncements({
   announcements
@@ -179,7 +186,7 @@ function SmsServiceBoard({
     className: `sms-service-card ${item.code === product ? "is-active" : ""}`,
     onClick: () => setProduct(item.code),
     type: "button"
-  }, React.createElement("strong", null, productLabel(item.code)), React.createElement("span", null, item.code), React.createElement("em", null, "\u5E93\u5B58 ", item.count ?? "-", " \xB7 ", yuan(item.charge)))) : React.createElement("div", {
+  }, React.createElement("strong", null, productLabel(item.code)), React.createElement("span", null, item.code), React.createElement("em", null, "\u5E93\u5B58 ", item.count ?? "-", " \xB7 ", smsPriceLabel(item)))) : React.createElement("div", {
     className: "sms-service-empty"
   }, "\u5F53\u524D\u7B5B\u9009\u6CA1\u6709\u670D\u52A1\u3002")));
 }
@@ -216,7 +223,7 @@ function SmsServicePanel({
     className: "sms-tp-meta"
   }, "\u5E93\u5B58 ", item.count ?? '—'), React.createElement("span", {
     className: "sms-tp-price"
-  }, yuan(item.charge)))), !filtered.length && React.createElement("div", {
+  }, smsPriceLabel(item)))), !filtered.length && React.createElement("div", {
     className: "sms-tp-empty"
   }, "\u6CA1\u6709\u5339\u914D\u7684\u670D\u52A1")));
 }
@@ -342,7 +349,7 @@ function SmsOrderPanel({
     className: "sms-order-row"
   }, React.createElement("span", null, "\u5E93\u5B58"), React.createElement("strong", null, currentProduct ? currentProduct.count ?? "—" : "—")), React.createElement("div", {
     className: "sms-order-row"
-  }, React.createElement("span", null, "\u4EF7\u683C"), React.createElement("strong", null, currentProduct ? yuan(currentProduct.charge) : '—')), user && React.createElement("div", {
+  }, React.createElement("span", null, "\u4EF7\u683C"), React.createElement("strong", null, smsPriceLabel(currentProduct))), user && React.createElement("div", {
     className: "sms-order-row"
   }, React.createElement("span", null, "\u4F59\u989D"), React.createElement("strong", null, yuan(user.balance)))), user ? React.createElement("div", {
     className: "sms-tp-actions"
@@ -350,7 +357,7 @@ function SmsOrderPanel({
     className: "ca-button ca-button--primary ca-button--lg sms-buy-btn",
     onClick: onBuy,
     disabled: busy || !productAvailable || Number(user.balance || 0) <= 0
-  }, busy ? '处理中…' : productAvailable ? '购买号码' : '当前不可买'), React.createElement("button", {
+  }, busy ? '处理中…' : productAvailable ? '购买号码' : '缺货'), React.createElement("button", {
     className: "ca-button ca-button--outline",
     onClick: onLoadOrders,
     disabled: busy

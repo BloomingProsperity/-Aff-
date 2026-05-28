@@ -64,6 +64,14 @@ function yuan(value) {
   return `${money(value)} 元`;
 }
 
+function smsPriceLabel(item) {
+  if (!item) return "-";
+  const count = Number(item.count || 0);
+  const charge = Number(item.charge || 0);
+  if (item.available === false || count <= 0 || charge <= 0) return "缺货";
+  return yuan(charge);
+}
+
 function productLabel(code) {
   return SMS_PRODUCT_LABELS[code] || code.replace(/[-_]/g, " ").replace(/\b\w/g, x => x.toUpperCase());
 }
@@ -94,7 +102,7 @@ function SmsPriceBox({ currentProduct }) {
     <div className="sms-price-box sms-price-box--single">
       <div>
         <span>价格</span>
-        <strong>{currentProduct ? yuan(currentProduct.charge) : "-"}</strong>
+        <strong>{smsPriceLabel(currentProduct)}</strong>
       </div>
     </div>
   );
@@ -160,7 +168,7 @@ function SmsServiceBoard({ products, product, setProduct, serviceQuery, setServi
             type="button">
             <strong>{productLabel(item.code)}</strong>
             <span>{item.code}</span>
-            <em>库存 {item.count ?? "-"} · {yuan(item.charge)}</em>
+            <em>库存 {item.count ?? "-"} · {smsPriceLabel(item)}</em>
           </button>
         )) : (
           <div className="sms-service-empty">当前筛选没有服务。</div>
@@ -190,7 +198,7 @@ function SmsServicePanel({ products, product, setProduct, serviceQuery, setServi
             onClick={() => setProduct(item.code)}>
             <span className="sms-tp-name">{productLabel(item.code)}</span>
             <span className="sms-tp-meta">库存 {item.count ?? '—'}</span>
-            <span className="sms-tp-price">{yuan(item.charge)}</span>
+            <span className="sms-tp-price">{smsPriceLabel(item)}</span>
           </button>
         ))}
         {!filtered.length && <div className="sms-tp-empty">没有匹配的服务</div>}
@@ -316,7 +324,7 @@ function SmsOrderPanel({ user, product, country, operator, countries, currentPro
         </div>
         <div className="sms-order-row">
           <span>价格</span>
-          <strong>{currentProduct ? yuan(currentProduct.charge) : '—'}</strong>
+          <strong>{smsPriceLabel(currentProduct)}</strong>
         </div>
         {user && (
           <div className="sms-order-row">
@@ -330,7 +338,7 @@ function SmsOrderPanel({ user, product, country, operator, countries, currentPro
           <button className="ca-button ca-button--primary ca-button--lg sms-buy-btn"
             onClick={onBuy}
             disabled={busy || !productAvailable || Number(user.balance || 0) <= 0}>
-            {busy ? '处理中…' : productAvailable ? '购买号码' : '当前不可买'}
+            {busy ? '处理中…' : productAvailable ? '购买号码' : '缺货'}
           </button>
           <button className="ca-button ca-button--outline" onClick={onLoadOrders} disabled={busy}>刷新订单</button>
           {message && <p className="sms-message">{message}</p>}

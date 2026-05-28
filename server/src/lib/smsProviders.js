@@ -1,5 +1,5 @@
 import { exec, one } from "./db.js";
-import { publicChargeQuote, quoteCharge } from "./pricing.js";
+import { publicChargeQuote, quoteCharge, supplierCostAllowed } from "./pricing.js";
 
 export const SMS_PROVIDERS = {
   FIVESIM: "5sim",
@@ -673,18 +673,18 @@ export async function smsProviderHealth(app, options = {}) {
   }));
 }
 
-export function sortBuyableQuotes(quotes) {
+export function sortBuyableQuotes(quotes, config = {}) {
   return [...(quotes || [])]
-    .filter(q => q && q.cost > 0 && q.count > 0 && q.balance >= q.cost)
+    .filter(q => q && q.cost > 0 && q.count > 0 && q.balance >= q.cost && supplierCostAllowed(config, q.cost))
     .sort((a, b) => a.cost - b.cost || String(a.provider).localeCompare(String(b.provider)));
 }
 
-export function selectBestSmsQuote(quotes) {
-  return sortBuyableQuotes(quotes)[0] || null;
+export function selectBestSmsQuote(quotes, config = {}) {
+  return sortBuyableQuotes(quotes, config)[0] || null;
 }
 
 export function publicBestSmsQuote(config, quotes) {
-  const buyable = sortBuyableQuotes(quotes);
+  const buyable = sortBuyableQuotes(quotes, config);
   const best = buyable[0] || null;
   if (!best) {
     return {

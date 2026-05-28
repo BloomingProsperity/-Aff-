@@ -6,7 +6,7 @@ import { fivesimHttpError } from "../lib/fivesim.js";
 import { writeSmsOrderEvent } from "../lib/smsEvents.js";
 import { normalizePublicSmsOrder } from "../lib/smsOrders.js";
 import { acquireOperationLock, operationLockKey, releaseOperationLock } from "../lib/operationLocks.js";
-import { publicChargeQuote, quoteCharge } from "../lib/pricing.js";
+import { publicChargeQuote, quoteCharge, supplierCostAllowed } from "../lib/pricing.js";
 import { maybeGrantReferralReward } from "../lib/referrals.js";
 import { enforceRateLimit, isAllowedStateChangingRead } from "../lib/security.js";
 import { shouldRefundSmsOrder, smsRefundCents, smsRefundNote } from "../lib/smsRefunds.js";
@@ -127,6 +127,13 @@ function enrichProducts(config, products) {
     const cost = Number(info?.cost || info?.Price || info?.price || 0);
     const count = Number(info?.count || info?.Qty || info?.qty || 0);
     const quote = quoteCharge(config, cost);
+    if (!supplierCostAllowed(config, cost)) {
+      return [code, {
+        count: 0,
+        charge: 0,
+        currency: "CNY",
+      }];
+    }
     return [code, {
       count,
       ...publicChargeQuote(quote),
@@ -560,8 +567,8 @@ export async function smsRoutes(app) {
     }
 
     const quotes = await quoteSmsProviders(app, { country, operator, product });
-    const bestQuote = selectBestSmsQuote(quotes);
-    const candidates = sortBuyableQuotes(quotes);
+    const bestQuote = selectBestSmsQuote(quotes, app.config);
+    const candidates = sortBuyableQuotes(quotes, app.config);
     if (!candidates.length) {
       reply.code(400);
       await writeSmsOrderEvent(app.db, {
@@ -654,6 +661,20 @@ export async function smsRoutes(app) {
         ...providerFailureMetadata(lastError),
       });
       return smsProviderHttpError(reply, lastError || { status: 502 });
+    }
+
+    if (!supplierCostAllowed(app.config, bought.cost || chosen.cost || 0)) {
+      await changeSmsProviderOrder(app, { ...bought, provider: chosen.provider, fivesim_id: providerOrderKey(chosen.provider, bought.id) }, "cancel");
+      await refundBalance(app.db, auth.user.id, reservedCents);
+      reply.code(400);
+      await auditSmsBuy(app, request, auth, "failed", 400, {
+        reason: "supplier_price_over_fixed_price",
+        country,
+        operator,
+        product,
+        provider: chosen.provider,
+      });
+      return { error: "当前服务暂时缺货，请稍后再试。" };
     }
 
     const realQuote = quoteCharge(app.config, bought.cost || chosen.cost || 0);

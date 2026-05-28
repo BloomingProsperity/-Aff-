@@ -14,10 +14,11 @@ import {
 test("sms provider router keeps only stocked quotes with enough supplier balance", () => {
   const quotes = sortBuyableQuotes([
     { provider: "5sim", cost: 0.9, count: 12, balance: 2 },
+    { provider: "smspool", cost: 3, count: 20, balance: 20 },
     { provider: "bee-sms", cost: 0.5, count: 0, balance: 10 },
     { provider: "smspool", cost: 0.7, count: 4, balance: 0.2 },
     { provider: "bee-sms", cost: 0.6, count: 8, balance: 8 },
-  ]);
+  ], { smsUsdCnyRate: 7.2, smsMarginCny: 19.9 });
 
   assert.deepEqual(quotes.map(q => q.provider), ["bee-sms", "5sim"]);
   assert.deepEqual(quotes.map(q => q.cost), [0.6, 0.9]);
@@ -27,35 +28,38 @@ test("sms provider router chooses the cheapest buyable supplier automatically", 
   const best = selectBestSmsQuote([
     { provider: "5sim", cost: 0.9, count: 12, balance: 2 },
     { provider: "bee-sms", cost: 0.4, count: 0, balance: 10 },
+    { provider: "smspool", cost: 3, count: 10, balance: 20 },
     { provider: "smspool", cost: 0.5, count: 4, balance: 0.2 },
     { provider: "bee-sms", cost: 0.6, count: 8, balance: 8 },
-  ]);
+  ], { smsUsdCnyRate: 7.2, smsMarginCny: 19.9 });
 
   assert.equal(best.provider, "bee-sms");
   assert.equal(best.cost, 0.6);
   assert.equal(selectBestSmsQuote([]), null);
 });
 
-test("public selected service quote hides supplier internals and uses cheapest buyable price", () => {
-  const quote = publicBestSmsQuote({ smsUsdCnyRate: 7, smsMarginCny: 10 }, [
+test("public selected service quote hides supplier internals and uses fixed customer price", () => {
+  const quote = publicBestSmsQuote({ smsUsdCnyRate: 7, smsMarginCny: 19.9 }, [
     { provider: "5sim", cost: 1.2, count: 5, balance: 20 },
     { provider: "bee-sms", cost: 0.8, count: 0, balance: 20 },
     { provider: "smspool", cost: 0.9, count: 8, balance: 20 },
     { provider: "bee-sms", cost: 0.7, count: 4, balance: 0.2 },
+    { provider: "smspool", cost: 3, count: 99, balance: 200 },
   ]);
 
   assert.deepEqual(quote, {
     available: true,
     count: 13,
-    charge: 16.3,
+    charge: 19.9,
     currency: "CNY",
   });
   assert.equal(JSON.stringify(quote).includes("provider"), false);
   assert.equal(JSON.stringify(quote).includes("cost"), false);
 
-  assert.deepEqual(publicBestSmsQuote({ smsUsdCnyRate: 7, smsMarginCny: 10 }, [
+  assert.deepEqual(publicBestSmsQuote({ smsUsdCnyRate: 7, smsMarginCny: 19.9 }, [
     { provider: "5sim", cost: 1.2, count: 0, balance: 20 },
     { provider: "smspool", cost: 0.9, count: 8, balance: 0.1 },
+    { provider: "bee-sms", cost: 3, count: 8, balance: 20 },
   ]), {
     available: false,
     count: 0,
