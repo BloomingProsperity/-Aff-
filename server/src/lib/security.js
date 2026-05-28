@@ -3,6 +3,7 @@ import { exec, one } from "./db.js";
 
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+export const FALLBACK_RATE_LIMIT_MAX_KEYS = 1000;
 const fallbackRateLimits = new Map();
 
 function rateLimitError(reply, retryAfter) {
@@ -18,6 +19,11 @@ function fallbackRateLimit(key, limit, resetAt, now) {
 
   const existing = fallbackRateLimits.get(key);
   if (!existing || Number(existing.resetAt || 0) <= now) {
+    while (fallbackRateLimits.size >= FALLBACK_RATE_LIMIT_MAX_KEYS) {
+      const oldestKey = fallbackRateLimits.keys().next().value;
+      if (!oldestKey) break;
+      fallbackRateLimits.delete(oldestKey);
+    }
     const entry = { count: 1, resetAt };
     fallbackRateLimits.set(key, entry);
     return entry;

@@ -8,6 +8,7 @@ import {
   isAllowedRequestHost,
   isAllowedRequestOrigin,
   enforceRateLimit,
+  FALLBACK_RATE_LIMIT_MAX_KEYS,
   rateLimitKey,
   turnstileEnabled,
   verifyTurnstile,
@@ -139,6 +140,40 @@ test("rate limit uses an in-memory fallback when the database limiter is unavail
   assert.deepEqual(limited, { error: "操作太频繁，请稍后再试。" });
   assert.equal(replies[2].statusCode, 429);
   assert.ok(Number(replies[2].headers["retry-after"]) > 0);
+});
+
+test("rate limit memory fallback evicts old keys instead of growing without bound", async () => {
+  const db = {
+    async query(sql) {
+      if (sql.includes("rate_limits")) {
+        const error = new Error("rate limiter unavailable");
+        error.code = "57P01";
+        throw error;
+      }
+      return { rows: [] };
+    },
+  };
+  const makeReply = () => ({
+    statusCode: 200,
+    headers: {},
+    code(value) {
+      this.statusCode = value;
+      return this;
+    },
+    header(key, value) {
+      this.headers[key.toLowerCase()] = value;
+      return this;
+    },
+  });
+  const firstRequest = { ip: "203.0.113.1", headers: {}, log: { warn() {} } };
+  const options = { scope: `fallback-cap-${Date.now()}`, limit: 1, windowSeconds: 300 };
+
+  assert.equal(await enforceRateLimit(db, firstRequest, makeReply(), options), null);
+  for (let i = 0; i < FALLBACK_RATE_LIMIT_MAX_KEYS + 5; i += 1) {
+    await enforceRateLimit(db, { ip: `198.51.${Math.floor(i / 255)}.${i % 255}`, headers: {}, log: { warn() {} } }, makeReply(), options);
+  }
+
+  assert.equal(await enforceRateLimit(db, firstRequest, makeReply(), options), null);
 });
 
 test("request origin must match configured site origins", () => {
