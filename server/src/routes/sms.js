@@ -5,6 +5,7 @@ import { exec, many, one } from "../lib/db.js";
 import { fivesimHttpError } from "../lib/fivesim.js";
 import { writeSmsOrderEvent } from "../lib/smsEvents.js";
 import { normalizePublicSmsOrder } from "../lib/smsOrders.js";
+import { acquireOperationLock, operationLockKey, releaseOperationLock } from "../lib/operationLocks.js";
 import { publicChargeQuote, quoteCharge } from "../lib/pricing.js";
 import { maybeGrantReferralReward } from "../lib/referrals.js";
 import { enforceRateLimit } from "../lib/security.js";
@@ -458,6 +459,17 @@ export async function smsRoutes(app) {
     });
     if (limited) return limited;
 
+    const buyLock = await acquireOperationLock(app.db, {
+      key: operationLockKey("sms:buy", auth.user.id),
+      ttlSeconds: 90,
+    });
+    if (!buyLock.acquired) {
+      reply.code(409);
+      await auditSmsBuy(app, request, auth, "failed", 409, { reason: "buy_in_progress" });
+      return { error: "已有购买请求正在处理，请稍后再试。" };
+    }
+
+    try {
     const body = request.body || {};
 
     const country = cleanPart(body.country || "usa");
@@ -699,6 +711,9 @@ export async function smsRoutes(app) {
       status: row.status,
     }, row.id);
     return { order: normalizePublicSmsOrder(row), balance: centsToAmount(updatedUser.balance_cents), pricing: publicChargeQuote(realQuote) };
+    } finally {
+      await releaseOperationLock(app.db, buyLock);
+    }
   });
 
   app.get("/api/sms/check/:id", async (request, reply) => {

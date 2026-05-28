@@ -17,11 +17,13 @@ export async function cleanupOperationalData(db, { nowEpoch } = {}) {
     "DELETE FROM product_cache WHERE expires_at < $1",
     [now - PRODUCT_CACHE_GRACE_SECONDS],
   );
+  const operationLocks = await db.query("DELETE FROM operation_locks WHERE expires_at <= now()");
 
   return {
     sessions: Number(sessions.rowCount || 0),
     rateLimits: Number(rateLimits.rowCount || 0),
     productCache: Number(productCache.rowCount || 0),
+    operationLocks: Number(operationLocks.rowCount || 0),
   };
 }
 
@@ -34,7 +36,7 @@ export function startHousekeeping(app, options = {}) {
     state.running = true;
     try {
       const summary = await cleanupOperationalData(app.db, options);
-      if (summary.sessions || summary.rateLimits || summary.productCache) {
+      if (summary.sessions || summary.rateLimits || summary.productCache || summary.operationLocks) {
         app.log?.info?.({ summary }, "temporary data cleaned");
       }
       return summary;
