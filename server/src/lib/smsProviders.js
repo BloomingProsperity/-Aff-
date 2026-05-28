@@ -1,4 +1,5 @@
 import { exec, one } from "./db.js";
+import { publicChargeQuote, quoteCharge } from "./pricing.js";
 
 export const SMS_PROVIDERS = {
   FIVESIM: "5sim",
@@ -594,6 +595,26 @@ export function sortBuyableQuotes(quotes) {
 
 export function selectBestSmsQuote(quotes) {
   return sortBuyableQuotes(quotes)[0] || null;
+}
+
+export function publicBestSmsQuote(config, quotes) {
+  const buyable = sortBuyableQuotes(quotes);
+  const best = buyable[0] || null;
+  if (!best) {
+    return {
+      available: false,
+      count: 0,
+      charge: 0,
+      currency: "CNY",
+    };
+  }
+
+  const count = buyable.reduce((sum, quote) => sum + Math.max(0, Number(quote.count || 0)), 0);
+  return {
+    available: true,
+    count,
+    ...publicChargeQuote(quoteCharge(config, best.cost)),
+  };
 }
 
 export async function quoteSmsProviders(app, input) {

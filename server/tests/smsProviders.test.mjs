@@ -5,6 +5,7 @@ import {
   normalizeProviderStatus,
   providerOrderKey,
   rawProviderOrderId,
+  publicBestSmsQuote,
   publicSmsProviderError,
   selectBestSmsQuote,
   sortBuyableQuotes,
@@ -33,6 +34,34 @@ test("sms provider router chooses the cheapest buyable supplier automatically", 
   assert.equal(best.provider, "bee-sms");
   assert.equal(best.cost, 0.6);
   assert.equal(selectBestSmsQuote([]), null);
+});
+
+test("public selected service quote hides supplier internals and uses cheapest buyable price", () => {
+  const quote = publicBestSmsQuote({ smsUsdCnyRate: 7, smsMarginCny: 10 }, [
+    { provider: "5sim", cost: 1.2, count: 5, balance: 20 },
+    { provider: "bee-sms", cost: 0.8, count: 0, balance: 20 },
+    { provider: "smspool", cost: 0.9, count: 8, balance: 20 },
+    { provider: "bee-sms", cost: 0.7, count: 4, balance: 0.2 },
+  ]);
+
+  assert.deepEqual(quote, {
+    available: true,
+    count: 13,
+    charge: 16.3,
+    currency: "CNY",
+  });
+  assert.equal(JSON.stringify(quote).includes("provider"), false);
+  assert.equal(JSON.stringify(quote).includes("cost"), false);
+
+  assert.deepEqual(publicBestSmsQuote({ smsUsdCnyRate: 7, smsMarginCny: 10 }, [
+    { provider: "5sim", cost: 1.2, count: 0, balance: 20 },
+    { provider: "smspool", cost: 0.9, count: 8, balance: 0.1 },
+  ]), {
+    available: false,
+    count: 0,
+    charge: 0,
+    currency: "CNY",
+  });
 });
 
 test("non-5sim upstream ids are namespaced locally", () => {

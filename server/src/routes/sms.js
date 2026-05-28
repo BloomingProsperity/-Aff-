@@ -15,6 +15,7 @@ import {
   changeSmsProviderOrder,
   checkSmsProviderOrder,
   providerOrderKey,
+  publicBestSmsQuote,
   quoteSmsProviders,
   selectBestSmsQuote,
   smsProviderHttpError,
@@ -359,6 +360,27 @@ export async function smsRoutes(app) {
     if (!catalog.ok) return fivesimHttpError(reply, catalog.result);
     reply.header("x-cache", catalog.cache);
     return enrichProducts(app.config, catalog.data);
+  });
+
+  app.get("/api/sms/quote", async (request, reply) => {
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "sms:quote",
+      limit: 120,
+      windowSeconds: 60,
+      config: app.config,
+    });
+    if (limited) return limited;
+
+    const country = cleanPart(request.query.country || "usa");
+    const operator = cleanPart(request.query.operator || "any");
+    const product = cleanPart(request.query.product || "");
+    if (!product) {
+      reply.code(400);
+      return { error: "请选择服务。" };
+    }
+
+    const quotes = await quoteSmsProviders(app, { country, operator, product });
+    return publicBestSmsQuote(app.config, quotes);
   });
 
   app.get("/api/sms/orders", async (request, reply) => {

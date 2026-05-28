@@ -403,6 +403,7 @@ function SmsDesk() {
   const [refCode, setRefCode] = useState(new URLSearchParams(window.location.search).get("ref") || "");
   const [countries, setCountries] = useState(SMS_COUNTRY_FALLBACK);
   const [products, setProducts] = useState([]);
+  const [selectedQuote, setSelectedQuote] = useState(null);
   const [country, setCountry] = useState("usa");
   const [operator, setOperator] = useState("any");
   const [product, setProduct] = useState("telegram");
@@ -504,6 +505,7 @@ function SmsDesk() {
   }, [country, countries, operator]);
 
   React.useEffect(() => {
+    setSelectedQuote(null);
     api(`/api/sms/products?country=${encodeURIComponent(country)}&operator=${encodeURIComponent(operator)}`)
       .then(data => {
         const list = Object.entries(data || {}).map(([code, info]) => ({
@@ -522,6 +524,36 @@ function SmsDesk() {
       })
       .catch(() => setProducts([]));
   }, [country, operator]);
+
+  React.useEffect(() => {
+    if (!product) {
+      setSelectedQuote(null);
+      return undefined;
+    }
+    let cancelled = false;
+    setSelectedQuote(null);
+    api(`/api/sms/quote?country=${encodeURIComponent(country)}&operator=${encodeURIComponent(operator)}&product=${encodeURIComponent(product)}`)
+      .then(data => {
+        if (cancelled) return;
+        const quote = {
+          code: product,
+          available: Boolean(data?.available),
+          count: data?.count ?? 0,
+          charge: data?.charge ?? 0,
+          currency: data?.currency || "CNY",
+        };
+        setSelectedQuote(quote);
+        setProducts(prev => prev.map(item => (
+          item.code === product
+            ? { ...item, count: quote.count, charge: quote.charge, currency: quote.currency, available: quote.available }
+            : item
+        )));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [country, operator, product]);
 
   React.useEffect(() => {
     if (!user) return;
@@ -675,7 +707,10 @@ function SmsDesk() {
     setMessage("号码已复制。");
   };
 
-  const currentProduct = products.find(x => x.code === product);
+  const listedProduct = products.find(x => x.code === product);
+  const currentProduct = selectedQuote?.code === product
+    ? { ...(listedProduct || { code: product }), ...selectedQuote }
+    : listedProduct;
   const countryLabel = countries.find(x => x.code === country);
   const operators = countryLabel?.operators?.length ? countryLabel.operators : SMS_DEFAULT_OPERATORS;
   const smsList = order?.sms || [];
