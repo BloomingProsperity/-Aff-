@@ -26,3 +26,15 @@ assert.equal(
   false,
   "SMS buying page should not load or manage Turnstile; verification belongs to the login flow",
 );
+
+assert.equal(
+  smsJsx.includes('retry: "never"'),
+  false,
+  "Turnstile should be allowed to retry automatically so normal logins do not get stuck",
+);
+
+assert.equal(
+  smsJsx.includes('"refresh-timeout"'),
+  false,
+  "Non-interactive Turnstile ignores refresh-timeout, so the login flow should not set it",
+);

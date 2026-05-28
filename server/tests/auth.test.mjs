@@ -290,7 +290,7 @@ test("account-level login rate limits are written to audit logs", async () => {
       if (sql.includes("INTO rate_limits")) {
         const key = String(params[0] || "");
         if (key.startsWith("auth:login-email:")) {
-          return { rows: [{ count: 21, reset_at: Math.floor(Date.now() / 1000) + 60 }] };
+          return { rows: [{ count: 61, reset_at: Math.floor(Date.now() / 1000) + 60 }] };
         }
         return { rows: [{ count: 1, reset_at: Math.floor(Date.now() / 1000) + 60 }] };
       }

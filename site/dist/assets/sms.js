@@ -403,9 +403,8 @@ function TurnstileBox({
         size: "normal",
         appearance: "always",
         language: "zh-cn",
-        retry: "never",
+        retry: "auto",
         "refresh-expired": "auto",
-        "refresh-timeout": "manual",
         callback: token => {
           const value = String(token || "").trim();
           if (!value) {

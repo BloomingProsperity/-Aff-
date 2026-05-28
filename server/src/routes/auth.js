@@ -28,7 +28,7 @@ export async function authRoutes(app) {
   app.post("/api/auth/register", async (request, reply) => {
     const limited = await enforceRateLimit(app.db, request, reply, {
       scope: "auth:register",
-      limit: 5,
+      limit: 20,
       windowSeconds: 3600,
       config: app.config,
     });
@@ -142,7 +142,7 @@ export async function authRoutes(app) {
   app.post("/api/auth/login", async (request, reply) => {
     const limited = await enforceRateLimit(app.db, request, reply, {
       scope: "auth:login",
-      limit: 8,
+      limit: 30,
       windowSeconds: 600,
       config: app.config,
     });
@@ -197,7 +197,7 @@ export async function authRoutes(app) {
       scope: "auth:login-email",
       extra: email,
       identity: "extra",
-      limit: 20,
+      limit: 60,
       windowSeconds: 3600,
       config: app.config,
     });
