@@ -4,7 +4,9 @@ import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
 import { enforceRateLimit } from "../lib/security.js";
 import { adminSettingsView, applySettingToConfig, normalizeAdminSetting, settingKeys } from "../lib/settings.js";
-import { smsProviderHealth } from "../lib/smsProviders.js";
+import { changeSmsProviderOrder, smsProviderHealth } from "../lib/smsProviders.js";
+import { adminClosableSmsOrderStatus, shouldRefundSmsOrder, smsRefundCents, smsRefundNote } from "../lib/smsRefunds.js";
+import { activeSmsOrderStatuses } from "../lib/smsRisk.js";
 
 function pageParams(query = {}) {
   const page = Math.max(1, Number.parseInt(query.page, 10) || 1);
@@ -64,6 +66,10 @@ function normalizeAuditLog(row) {
   };
 }
 
+function activeAdminCloseStatus(status) {
+  return activeSmsOrderStatuses().includes(String(status || "").trim().toLowerCase());
+}
+
 export async function adminRoutes(app) {
   app.get("/api/admin/stats", async (request, reply) => {
     const auth = await requireAdmin(app.db, request, reply, app.config);
@@ -81,7 +87,7 @@ export async function adminRoutes(app) {
               COUNT(*) FILTER (WHERE lower(status) IN ('pending', 'received'))::int AS pending,
               COUNT(*) FILTER (WHERE lower(status) IN ('finish', 'finished', 'completed'))::int AS completed,
               COUNT(*) FILTER (WHERE lower(status) IN ('banned', 'failed', 'expired', 'timeout'))::int AS failed,
-              COUNT(*) FILTER (WHERE lower(status) IN ('cancelled', 'canceled'))::int AS cancelled
+              COUNT(*) FILTER (WHERE lower(status) IN ('cancelled', 'canceled', 'admin_closed', 'refunded'))::int AS cancelled
          FROM sms_orders`,
     );
     const revenue = await one(
@@ -303,8 +309,13 @@ export async function adminRoutes(app) {
     const params = [];
     let where = "";
     if (status) {
-      params.push(status);
-      where = `WHERE lower(o.status) = $${params.length}`;
+      if (status === "cancelled") {
+        params.push(["cancelled", "canceled", "admin_closed", "refunded"]);
+        where = `WHERE lower(o.status) = ANY($${params.length})`;
+      } else {
+        params.push(status);
+        where = `WHERE lower(o.status) = $${params.length}`;
+      }
     }
     const count = await one(
       app.db,
@@ -323,6 +334,160 @@ export async function adminRoutes(app) {
       params,
     );
     return { orders: rows, total: Number(count?.total || 0), page };
+  });
+
+  app.post("/api/admin/orders/:id/close", async (request, reply) => {
+    const auth = await requireAdmin(app.db, request, reply, app.config);
+    if (auth.response) return auth.response;
+
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "admin:order-close",
+      extra: `admin:${auth.user.id}`,
+      limit: 30,
+      windowSeconds: 300,
+      config: app.config,
+    });
+    if (limited) return limited;
+
+    const orderId = Number(request.params.id);
+    const note = String(request.body?.note || "后台关闭订单").trim().slice(0, 200);
+    if (!orderId) {
+      reply.code(400);
+      return { error: "订单编号无效。" };
+    }
+
+    const existing = await one(app.db, "SELECT * FROM sms_orders WHERE id = $1", [orderId]);
+    if (!existing) {
+      reply.code(404);
+      return { error: "订单不存在。" };
+    }
+    if (!adminClosableSmsOrderStatus(existing.status)) {
+      reply.code(409);
+      return { error: "已完成订单不能关闭退款。" };
+    }
+
+    const client = await app.db.connect();
+    let result = null;
+    try {
+      await client.query("BEGIN");
+      const locked = await one(
+        client,
+        `SELECT o.*, u.email AS user_email
+           FROM sms_orders o
+           JOIN users u ON u.id = o.user_id
+          WHERE o.id = $1
+          FOR UPDATE OF o`,
+        [orderId],
+      );
+      if (!locked) {
+        await client.query("ROLLBACK");
+        reply.code(404);
+        return { error: "订单不存在。" };
+      }
+      if (!adminClosableSmsOrderStatus(locked.status)) {
+        await client.query("ROLLBACK");
+        reply.code(409);
+        return { error: "已完成订单不能关闭退款。" };
+      }
+
+      const oldStatus = locked.status;
+      const marked = await one(
+        client,
+        `UPDATE sms_orders
+            SET status = 'admin_closed',
+                updated_at = now()
+          WHERE id = $1
+        RETURNING *`,
+        [orderId],
+      );
+
+      let refunded = false;
+      let refundCents = 0;
+      if (shouldRefundSmsOrder(marked)) {
+        refundCents = smsRefundCents(marked);
+        const user = await one(
+          client,
+          `UPDATE users
+              SET balance_cents = balance_cents + $1,
+                  updated_at = now()
+            WHERE id = $2
+          RETURNING *`,
+          [refundCents, marked.user_id],
+        );
+        await one(
+          client,
+          `UPDATE sms_orders
+              SET refund_cents = $1,
+                  refunded_at = now(),
+                  updated_at = now()
+            WHERE id = $2
+          RETURNING *`,
+          [refundCents, orderId],
+        );
+        await exec(
+          client,
+          `INSERT INTO balance_logs (user_id, admin_id, delta_cents, balance_after_cents, reason, note)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [marked.user_id, auth.user.id, refundCents, user.balance_cents, "sms_refund", `${smsRefundNote(marked)} 后台关闭`],
+        );
+        refunded = true;
+      }
+
+      const finalOrder = await one(
+        client,
+        `SELECT o.*, u.email AS user_email
+           FROM sms_orders o
+           JOIN users u ON u.id = o.user_id
+          WHERE o.id = $1`,
+        [orderId],
+      );
+      await client.query("COMMIT");
+      result = { order: finalOrder, oldStatus, refunded, refundCents };
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    let providerCancel = { attempted: false, ok: false, publicCode: "" };
+    if (activeAdminCloseStatus(result.oldStatus)) {
+      providerCancel.attempted = true;
+      try {
+        const changed = await changeSmsProviderOrder(app, { ...result.order, status: result.oldStatus }, "cancel");
+        providerCancel = {
+          attempted: true,
+          ok: Boolean(changed?.ok),
+          publicCode: changed?.publicCode || "",
+        };
+      } catch {
+        providerCancel = { attempted: true, ok: false, publicCode: "unavailable" };
+      }
+    }
+
+    await writeAuditLog(app.db, request, {
+      actorUserId: auth.user.id,
+      targetUserId: result.order?.user_id,
+      action: "admin.sms_order.close",
+      resourceType: "sms_order",
+      resourceId: orderId,
+      status: "success",
+      httpStatus: 200,
+      metadata: {
+        oldStatus: result.oldStatus,
+        newStatus: result.order?.status || "",
+        refunded: result.refunded,
+        refundAmount: centsToAmount(result.refundCents),
+        note,
+        providerCancel,
+      },
+    });
+
+    return {
+      order: result.order,
+      refunded: result.refunded,
+      refundAmount: centsToAmount(result.refundCents),
+    };
   });
 
   app.get("/api/admin/logs", async (request, reply) => {

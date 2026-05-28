@@ -1,4 +1,5 @@
 const REFUNDABLE_SMS_STATUSES = new Set([
+  "admin_closed",
   "ban",
   "banned",
   "cancel",
@@ -10,6 +11,8 @@ const REFUNDABLE_SMS_STATUSES = new Set([
   "timeout",
 ]);
 
+const COMPLETED_SMS_STATUSES = new Set(["complete", "completed", "finish", "finished"]);
+
 function cleanNotePart(value) {
   return String(value || "")
     .trim()
@@ -20,6 +23,11 @@ function cleanNotePart(value) {
 
 export function refundableSmsOrderStatus(status) {
   return REFUNDABLE_SMS_STATUSES.has(String(status || "").trim().toLowerCase());
+}
+
+export function adminClosableSmsOrderStatus(status) {
+  const normalized = String(status || "").trim().toLowerCase();
+  return Boolean(normalized) && !COMPLETED_SMS_STATUSES.has(normalized);
 }
 
 export function isRefundedSmsOrder(order = {}) {

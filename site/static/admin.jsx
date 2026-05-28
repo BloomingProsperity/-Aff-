@@ -37,6 +37,7 @@
     failed:    ["adm-badge--err",   "失败"],
     cancelled: ["adm-badge--muted", "已取消"],
     expired:   ["adm-badge--muted", "已超时"],
+    admin_closed: ["adm-badge--muted", "已关闭"],
     topup:     ["adm-badge--ok",    "充值"],
     deduct:    ["adm-badge--err",   "扣除"],
     refund:    ["adm-badge--warn",  "退款"],
@@ -369,6 +370,8 @@
     const [page,    setPage]    = useState(1);
     const [status,  setStatus]  = useState("");
     const [loading, setLoading] = useState(false);
+    const [busyOrderId, setBusyOrderId] = useState(null);
+    const [actionErr, setActionErr] = useState(null);
 
     function load(p, s) {
       setLoading(true);
@@ -380,6 +383,25 @@
     }
 
     useEffect(() => { load(1, ""); }, []);
+
+    function canCloseOrder(order) {
+      const s = String(order?.status || "").toLowerCase();
+      return Boolean(s) && !["complete", "completed", "finish", "finished"].includes(s);
+    }
+
+    function closeOrder(order) {
+      if (!order || !canCloseOrder(order)) return;
+      if (!window.confirm(`确认关闭订单 #${order.id} 并按订单金额退款？`)) return;
+      setBusyOrderId(order.id);
+      setActionErr(null);
+      admApi(`/admin/orders/${order.id}/close`, {
+        method: "POST",
+        body: JSON.stringify({ note: "后台手动关闭" }),
+      })
+        .then(() => load(page, status))
+        .catch(() => setActionErr("操作失败，请稍后重试"))
+        .finally(() => setBusyOrderId(null));
+    }
 
     return (
       <div className="adm-content-inner">
@@ -403,15 +425,15 @@
             <thead>
               <tr>
                 <th>ID</th><th>用户</th><th>服务</th><th>国家</th>
-                <th>号码</th><th>金额</th><th>退款</th><th>状态</th><th>时间</th>
+                <th>号码</th><th>金额</th><th>退款</th><th>状态</th><th>时间</th><th>操作</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={9} className="adm-empty">加载中…</td></tr>
+                <tr><td colSpan={10} className="adm-empty">加载中…</td></tr>
               )}
               {!loading && orders.length === 0 && (
-                <tr><td colSpan={9} className="adm-empty">暂无数据</td></tr>
+                <tr><td colSpan={10} className="adm-empty">暂无数据</td></tr>
               )}
               {orders.map(o => (
                 <tr key={o.id}>
@@ -424,10 +446,20 @@
                   <td>{Number(o.refund_cents || 0) > 0 ? fmtCny(Number(o.refund_cents || 0) / 100) : "—"}</td>
                   <td><AdmBadge s={o.status} /></td>
                   <td className="adm-td--date">{fmtDate(o.created_at)}</td>
+                  <td className="adm-actions-cell">
+                    {canCloseOrder(o) && Number(o.refund_cents || 0) <= 0 ? (
+                      <button className="adm-btn adm-btn--sm adm-btn--outline"
+                        disabled={busyOrderId === o.id}
+                        onClick={() => closeOrder(o)}>
+                        {busyOrderId === o.id ? "处理中" : "关闭并退款"}
+                      </button>
+                    ) : Number(o.refund_cents || 0) > 0 ? "已退款" : "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {actionErr && <div className="adm-err" style={{ margin: "10px 16px" }}>{actionErr}</div>}
           <AdmPager page={page} hasMore={orders.length >= 20}
             onPrev={() => { const p = page - 1; setPage(p); load(p, status); }}
             onNext={() => { const p = page + 1; setPage(p); load(p, status); }} />

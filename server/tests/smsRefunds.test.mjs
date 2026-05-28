@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  adminClosableSmsOrderStatus,
   isRefundedSmsOrder,
   refundableSmsOrderStatus,
   smsRefundCents,
@@ -14,9 +15,21 @@ test("sms refund statuses include cancelled and banned variants", () => {
   assert.equal(refundableSmsOrderStatus("banned"), true);
   assert.equal(refundableSmsOrderStatus("ban"), true);
   assert.equal(refundableSmsOrderStatus("refunded"), true);
+  assert.equal(refundableSmsOrderStatus("admin_closed"), true);
   assert.equal(refundableSmsOrderStatus("failed"), true);
   assert.equal(refundableSmsOrderStatus("completed"), false);
   assert.equal(refundableSmsOrderStatus("received"), false);
+});
+
+test("admins can close unresolved orders but not completed orders", () => {
+  assert.equal(adminClosableSmsOrderStatus("pending"), true);
+  assert.equal(adminClosableSmsOrderStatus("received"), true);
+  assert.equal(adminClosableSmsOrderStatus("failed"), true);
+  assert.equal(adminClosableSmsOrderStatus("admin_closed"), true);
+  assert.equal(adminClosableSmsOrderStatus("completed"), false);
+  assert.equal(adminClosableSmsOrderStatus("finished"), false);
+  assert.equal(adminClosableSmsOrderStatus("finish"), false);
+  assert.equal(adminClosableSmsOrderStatus(""), false);
 });
 
 test("sms refund eligibility is idempotent and requires a positive paid order", () => {
