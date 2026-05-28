@@ -2998,6 +2998,9 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
   width: 420px; max-width: 100%; overflow: hidden;
   box-shadow: 0 20px 60px rgb(11 21 56 / .14);
 }
+.adm-modal--wide {
+  width: min(840px, 100%);
+}
 .adm-modal-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 20px; border-bottom: 1px solid #e4eaf7;
@@ -3011,6 +3014,43 @@ a.cmodal-item .cmodal-action { color: var(--fg-brand); font-weight: 600; }
 .adm-modal-body { padding: 20px; }
 .adm-modal-meta { font-size: 13px; color: #596784; margin-bottom: 16px; }
 .adm-modal-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+.adm-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: min(62vh, 620px);
+  overflow: auto;
+}
+.adm-event-item {
+  border: 1px solid #e4eaf7;
+  border-radius: 10px;
+  background: #fbfdff;
+  padding: 12px;
+}
+.adm-event-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.adm-event-top strong {
+  color: #111a38;
+  font-size: 13px;
+}
+.adm-event-top span {
+  color: #8a93b0;
+  font-size: 12px;
+}
+.adm-event-sub {
+  color: #596784;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.adm-event-meta {
+  max-width: none;
+  max-height: 120px;
+}
 
 /* ── state ── */
 .adm-loading    { padding: 48px 0; text-align: center; color: #8a93b0; font-size: 14px; }

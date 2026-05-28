@@ -3,6 +3,7 @@ import { writeAuditLog } from "../lib/audit.js";
 import { centsToAmount, cleanOrderId, cleanPart } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
 import { fivesimHttpError } from "../lib/fivesim.js";
+import { writeSmsOrderEvent } from "../lib/smsEvents.js";
 import { normalizePublicSmsOrder } from "../lib/smsOrders.js";
 import { publicChargeQuote, quoteCharge } from "../lib/pricing.js";
 import { maybeGrantReferralReward } from "../lib/referrals.js";
@@ -191,6 +192,20 @@ async function refundSmsOrderIfNeeded(app, request, auth, orderId, triggerAction
         refundAmount: centsToAmount(result.order?.refund_cents),
       },
     });
+    await writeSmsOrderEvent(app.db, {
+      orderId: result.order?.id || orderId,
+      userId: auth.user.id,
+      actorUserId: auth.user.id,
+      type: "balance.refund",
+      status: "success",
+      provider: result.order?.provider || "",
+      message: "订单退款",
+      metadata: {
+        triggerAction,
+        orderStatus: result.order?.status || "",
+        refundAmount: centsToAmount(result.order?.refund_cents),
+      },
+    });
   }
 
   return result;
@@ -236,6 +251,19 @@ async function expireStaleSmsOrdersForUser(app, request, auth, { limit = 20 } = 
     if (!updated) continue;
 
     expired += 1;
+    await writeSmsOrderEvent(app.db, {
+      orderId: updated.id,
+      userId: auth.user.id,
+      actorUserId: auth.user.id,
+      type: "order.expired",
+      status: "success",
+      provider: updated.provider || row.provider || "",
+      message: "订单超时关闭",
+      metadata: {
+        previousStatus: row.status,
+        orderTimeoutMinutes: settings.orderTimeoutMinutes,
+      },
+    });
     const refundResult = await refundSmsOrderIfNeeded(app, request, auth, updated.id, "timeout");
     if (refundResult.refunded) refunded += 1;
     await writeAuditLog(app.db, request, {
@@ -418,6 +446,22 @@ export async function smsRoutes(app) {
     const candidates = sortBuyableQuotes(quotes);
     if (!candidates.length) {
       reply.code(400);
+      await writeSmsOrderEvent(app.db, {
+        userId: auth.user.id,
+        actorUserId: auth.user.id,
+        type: "provider.no_buyable",
+        status: "failed",
+        provider: bestQuote?.provider || "",
+        publicCode: "no_buyable_provider",
+        message: "没有可购买供应商",
+        metadata: {
+          country,
+          operator,
+          product,
+          quoteCount: quotes.length,
+          bestProvider: bestQuote?.provider || "",
+        },
+      });
       await auditSmsBuy(app, request, auth, "failed", 400, {
         reason: "no_buyable_provider",
         country,
@@ -432,6 +476,7 @@ export async function smsRoutes(app) {
     let bought = null;
     let chosen = null;
     let lastError = null;
+    const attempts = [];
     const note = `${country}/${operator}/${product}`;
 
     for (const candidate of candidates) {
@@ -460,10 +505,32 @@ export async function smsRoutes(app) {
         break;
       }
       lastError = attempt;
+      attempts.push({
+        provider: candidate.provider,
+        status: attempt.status || null,
+        apiCode: attempt.apiCode || null,
+        publicCode: attempt.publicCode || "unavailable",
+      });
     }
 
     if (!bought || !chosen) {
       if (reservedCents > 0) await refundBalance(app.db, auth.user.id, reservedCents);
+      await writeSmsOrderEvent(app.db, {
+        userId: auth.user.id,
+        actorUserId: auth.user.id,
+        type: "provider.buy_failed",
+        status: "failed",
+        provider: lastError?.provider || "",
+        publicCode: lastError?.publicCode || "unavailable",
+        message: "供应商下单失败",
+        metadata: {
+          country,
+          operator,
+          product,
+          attempts,
+          lastError: providerFailureMetadata(lastError),
+        },
+      });
       await auditSmsBuy(app, request, auth, "failed", lastError?.status || 502, {
         reason: "provider_buy_failed",
         country,
@@ -541,6 +608,25 @@ export async function smsRoutes(app) {
     );
 
     const row = await one(app.db, "SELECT * FROM sms_orders WHERE fivesim_id = $1", [providerOrderKey(chosen.provider, bought.id)]);
+    await writeSmsOrderEvent(app.db, {
+      orderId: row.id,
+      userId: auth.user.id,
+      actorUserId: auth.user.id,
+      type: "order.created",
+      status: "success",
+      provider: chosen.provider,
+      message: "订单创建成功",
+      metadata: {
+        country,
+        operator,
+        product,
+        selectedProvider: chosen.provider,
+        attemptedFailures: attempts,
+        price: centsToAmount(realCost),
+        upstreamStatus: row.status,
+        quoteCount: quotes.length,
+      },
+    });
     await auditSmsBuy(app, request, auth, "success", 200, {
       country,
       operator,
@@ -578,6 +664,17 @@ export async function smsRoutes(app) {
 
     const checked = await checkSmsProviderOrder(app, row);
     if (!checked.ok) {
+      await writeSmsOrderEvent(app.db, {
+        orderId: row.id,
+        userId: auth.user.id,
+        actorUserId: auth.user.id,
+        type: "provider.check_failed",
+        status: "failed",
+        provider: checked.provider || row.provider || "",
+        publicCode: checked.publicCode || "unavailable",
+        message: "查询短信失败",
+        metadata: providerFailureMetadata(checked, row),
+      });
       await writeAuditLog(app.db, request, {
         actorUserId: auth.user.id,
         targetUserId: auth.user.id,
@@ -613,6 +710,21 @@ export async function smsRoutes(app) {
     const oldStatus = String(row.status || "");
     const newStatus = String(responseOrder?.status || "");
     if (oldStatus !== newStatus || (responseOrder?.sms_json || "[]") !== (row.sms_json || "[]") || refundResult.refunded) {
+      await writeSmsOrderEvent(app.db, {
+        orderId: row.id,
+        userId: auth.user.id,
+        actorUserId: auth.user.id,
+        type: "provider.check",
+        status: "success",
+        provider: checked.provider || row.provider || "",
+        message: "订单状态更新",
+        metadata: {
+          oldStatus,
+          newStatus,
+          refunded: refundResult.refunded,
+          hasSms: normalizePublicSmsOrder(responseOrder).sms.length > 0,
+        },
+      });
       await writeAuditLog(app.db, request, {
         actorUserId: auth.user.id,
         targetUserId: auth.user.id,
@@ -663,6 +775,17 @@ export async function smsRoutes(app) {
 
       const changed = await changeSmsProviderOrder(app, row, action);
       if (!changed.ok) {
+        await writeSmsOrderEvent(app.db, {
+          orderId: row.id,
+          userId: auth.user.id,
+          actorUserId: auth.user.id,
+          type: `provider.${action}_failed`,
+          status: "failed",
+          provider: changed.provider || row.provider || "",
+          publicCode: changed.publicCode || "unavailable",
+          message: "供应商操作失败",
+          metadata: providerFailureMetadata(changed, row),
+        });
         await writeAuditLog(app.db, request, {
           actorUserId: auth.user.id,
           targetUserId: auth.user.id,
@@ -694,6 +817,20 @@ export async function smsRoutes(app) {
       }
       const refundResult = await refundSmsOrderIfNeeded(app, request, auth, updated.id, action);
       const responseOrder = refundResult.order || updated;
+      await writeSmsOrderEvent(app.db, {
+        orderId: row.id,
+        userId: auth.user.id,
+        actorUserId: auth.user.id,
+        type: `provider.${action}`,
+        status: "success",
+        provider: changed.provider || row.provider || "",
+        message: "供应商操作成功",
+        metadata: {
+          oldStatus: row.status,
+          newStatus: responseOrder.status,
+          refunded: refundResult.refunded,
+        },
+      });
       await writeAuditLog(app.db, request, {
         actorUserId: auth.user.id,
         targetUserId: auth.user.id,

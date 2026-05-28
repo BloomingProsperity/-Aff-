@@ -259,6 +259,67 @@
     );
   }
 
+  function eventMetaText(meta) {
+    if (!meta || Object.keys(meta).length === 0) return "—";
+    try {
+      return JSON.stringify(meta, null, 2);
+    } catch {
+      return "—";
+    }
+  }
+
+  function OrderEventsModal({ order, onClose }) {
+    const [events, setEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [err, setErr] = useState(null);
+
+    useEffect(() => {
+      if (!order?.id) return;
+      setLoading(true);
+      setErr(null);
+      admApi(`/admin/orders/${order.id}/events`)
+        .then(d => setEvents(d.events || []))
+        .catch(() => setErr("加载失败，请稍后重试"))
+        .finally(() => setLoading(false));
+    }, [order?.id]);
+
+    return (
+      <div className="adm-overlay" onClick={onClose}>
+        <div className="adm-modal adm-modal--wide" onClick={e => e.stopPropagation()}>
+          <div className="adm-modal-head">
+            <span className="adm-modal-title">订单事件 #{order?.id}</span>
+            <button className="adm-modal-close" onClick={onClose}>×</button>
+          </div>
+          <div className="adm-modal-body">
+            <div className="adm-modal-meta">
+              {order?.user_email || order?.email || "—"} · {order?.country || "—"} / {order?.product || "—"}
+            </div>
+            {loading && <div className="adm-empty">加载中…</div>}
+            {err && <div className="adm-err">{err}</div>}
+            {!loading && !err && events.length === 0 && <div className="adm-empty">暂无事件</div>}
+            {!loading && !err && events.length > 0 && (
+              <div className="adm-event-list">
+                {events.map(ev => (
+                  <div className="adm-event-item" key={ev.id}>
+                    <div className="adm-event-top">
+                      <strong>{ev.type}</strong>
+                      <AdmBadge s={ev.status} />
+                      <span>{fmtDate(ev.createdAt)}</span>
+                    </div>
+                    <div className="adm-event-sub">
+                      {ev.provider || "内部"}{ev.publicCode ? ` · ${ev.publicCode}` : ""}{ev.message ? ` · ${ev.message}` : ""}
+                    </div>
+                    <code className="adm-audit-meta adm-event-meta">{eventMetaText(ev.metadata)}</code>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   /* ─── Users ──────────────────────────────────────────────── */
   function AdminUsers() {
     const [users,     setUsers]     = useState([]);
@@ -372,6 +433,7 @@
     const [loading, setLoading] = useState(false);
     const [busyOrderId, setBusyOrderId] = useState(null);
     const [actionErr, setActionErr] = useState(null);
+    const [eventOrder, setEventOrder] = useState(null);
 
     function load(p, s) {
       setLoading(true);
@@ -447,6 +509,8 @@
                   <td><AdmBadge s={o.status} /></td>
                   <td className="adm-td--date">{fmtDate(o.created_at)}</td>
                   <td className="adm-actions-cell">
+                    <button className="adm-btn adm-btn--sm adm-btn--outline"
+                      onClick={() => setEventOrder(o)}>事件</button>
                     {canCloseOrder(o) && Number(o.refund_cents || 0) <= 0 ? (
                       <button className="adm-btn adm-btn--sm adm-btn--outline"
                         disabled={busyOrderId === o.id}
@@ -464,6 +528,7 @@
             onPrev={() => { const p = page - 1; setPage(p); load(p, status); }}
             onNext={() => { const p = page + 1; setPage(p); load(p, status); }} />
         </div>
+        {eventOrder && <OrderEventsModal order={eventOrder} onClose={() => setEventOrder(null)} />}
       </div>
     );
   }

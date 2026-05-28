@@ -4,6 +4,7 @@ import { amountToCents, centsToAmount } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
 import { enforceRateLimit } from "../lib/security.js";
 import { adminSettingsView, applySettingToConfig, normalizeAdminSetting, settingKeys } from "../lib/settings.js";
+import { normalizeSmsOrderEvent, writeSmsOrderEvent } from "../lib/smsEvents.js";
 import { changeSmsProviderOrder, smsProviderHealth } from "../lib/smsProviders.js";
 import { adminClosableSmsOrderStatus, shouldRefundSmsOrder, smsRefundCents, smsRefundNote } from "../lib/smsRefunds.js";
 import { activeSmsOrderStatuses } from "../lib/smsRisk.js";
@@ -336,6 +337,50 @@ export async function adminRoutes(app) {
     return { orders: rows, total: Number(count?.total || 0), page };
   });
 
+  app.get("/api/admin/orders/:id/events", async (request, reply) => {
+    const auth = await requireAdmin(app.db, request, reply, app.config);
+    if (auth.response) return auth.response;
+
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "admin:order-events",
+      extra: `admin:${auth.user.id}`,
+      limit: 60,
+      windowSeconds: 60,
+      config: app.config,
+    });
+    if (limited) return limited;
+
+    const orderId = Number(request.params.id);
+    if (!orderId) {
+      reply.code(400);
+      return { error: "订单编号无效。" };
+    }
+    const order = await one(
+      app.db,
+      `SELECT o.*, u.email AS user_email
+         FROM sms_orders o
+         JOIN users u ON u.id = o.user_id
+        WHERE o.id = $1`,
+      [orderId],
+    );
+    if (!order) {
+      reply.code(404);
+      return { error: "订单不存在。" };
+    }
+    const rows = await many(
+      app.db,
+      `SELECT e.*, u.email AS user_email, a.email AS actor_email
+         FROM sms_order_events e
+    LEFT JOIN users u ON u.id = e.user_id
+    LEFT JOIN users a ON a.id = e.actor_user_id
+        WHERE e.order_id = $1
+        ORDER BY e.id DESC
+        LIMIT 100`,
+      [orderId],
+    );
+    return { order, events: rows.map(normalizeSmsOrderEvent) };
+  });
+
   app.post("/api/admin/orders/:id/close", async (request, reply) => {
     const auth = await requireAdmin(app.db, request, reply, app.config);
     if (auth.response) return auth.response;
@@ -473,6 +518,23 @@ export async function adminRoutes(app) {
       resourceId: orderId,
       status: "success",
       httpStatus: 200,
+      metadata: {
+        oldStatus: result.oldStatus,
+        newStatus: result.order?.status || "",
+        refunded: result.refunded,
+        refundAmount: centsToAmount(result.refundCents),
+        note,
+        providerCancel,
+      },
+    });
+    await writeSmsOrderEvent(app.db, {
+      orderId,
+      userId: result.order?.user_id,
+      actorUserId: auth.user.id,
+      type: "admin.close",
+      status: "success",
+      provider: result.order?.provider || "",
+      message: "后台关闭订单",
       metadata: {
         oldStatus: result.oldStatus,
         newStatus: result.order?.status || "",
