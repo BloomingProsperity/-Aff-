@@ -34,6 +34,7 @@ $InstallScript = Join-Path $TempDir "hkai-db-backup-install.sh"
 $BackupBody = @'
 #!/usr/bin/env bash
 set -euo pipefail
+umask 077
 
 REMOTE_PATH=__REMOTE_PATH__
 BACKUP_DIR=__BACKUP_DIR__

@@ -11,6 +11,7 @@ assert.match(source, /backup-status\.json/);
 assert.match(source, /pg_dump/);
 assert.match(source, /gzip -9/);
 assert.match(source, /sha256sum/);
+assert.match(source, /umask 077/);
 assert.match(source, /find "\$BACKUP_DIR" -type f/);
 assert.match(source, /OnCalendar=/);
 assert.match(source, /RandomizedDelaySec=/);
