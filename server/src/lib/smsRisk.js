@@ -46,7 +46,7 @@ export function cooldownSecondsLeft(lastCreatedAt, now = new Date(), config = {}
 export function isStaleActiveSmsOrder(order = {}, now = new Date(), config = {}) {
   if (!ACTIVE_SMS_ORDER_STATUSES.includes(String(order.status || "").toLowerCase())) return false;
   const { orderTimeoutMinutes } = smsRiskSettings(config);
-  const timestamp = order.updated_at || order.created_at;
+  const timestamp = order.created_at;
   if (!timestamp) return false;
   const orderMs = new Date(timestamp).getTime();
   const nowMs = new Date(now).getTime();

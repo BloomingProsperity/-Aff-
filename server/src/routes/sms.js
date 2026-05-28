@@ -259,7 +259,7 @@ async function expireStaleSmsOrdersForUser(app, request, auth, { limit = 20 } = 
        FROM sms_orders
       WHERE user_id = $1
         AND lower(status) = ANY($2)
-        AND COALESCE(updated_at, created_at) <= now() - ($3::int * INTERVAL '1 minute')
+        AND created_at <= now() - ($3::int * INTERVAL '1 minute')
       ORDER BY id ASC
       LIMIT $4`,
     [auth.user.id, activeSmsOrderStatuses(), settings.orderTimeoutMinutes, limit],

@@ -61,7 +61,7 @@ async function expireOneSmsOrder(app, orderId, { actorUserId = null, trigger = "
               updated_at = now()
         WHERE id = $2
           AND lower(status) = ANY($3)
-          AND COALESCE(updated_at, created_at) <= now() - ($4::int * INTERVAL '1 minute')
+          AND created_at <= now() - ($4::int * INTERVAL '1 minute')
       RETURNING *`,
       [JSON.stringify(raw), orderId, activeSmsOrderStatuses(), settings.orderTimeoutMinutes],
     );
@@ -156,7 +156,7 @@ export async function expireStaleSmsOrders(app, { actorUserId = null, limit, tri
     `SELECT id
        FROM sms_orders
       WHERE lower(status) = ANY($1)
-        AND COALESCE(updated_at, created_at) <= now() - ($2::int * INTERVAL '1 minute')
+        AND created_at <= now() - ($2::int * INTERVAL '1 minute')
       ORDER BY id ASC
       LIMIT $3`,
     [activeSmsOrderStatuses(), risk.orderTimeoutMinutes, batchLimit],
