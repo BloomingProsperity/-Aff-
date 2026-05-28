@@ -19,3 +19,10 @@ export function quoteCharge(config, cost) {
     currency: "CNY",
   };
 }
+
+export function publicChargeQuote(quote = {}) {
+  return {
+    charge: Number(Number(quote.charge || 0).toFixed(2)),
+    currency: quote.currency || "CNY",
+  };
+}

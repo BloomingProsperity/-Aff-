@@ -6,6 +6,7 @@ import {
   providerOrderKey,
   rawProviderOrderId,
   publicSmsProviderError,
+  selectBestSmsQuote,
   sortBuyableQuotes,
 } from "../src/lib/smsProviders.js";
 
@@ -19,6 +20,19 @@ test("sms provider router keeps only stocked quotes with enough supplier balance
 
   assert.deepEqual(quotes.map(q => q.provider), ["bee-sms", "5sim"]);
   assert.deepEqual(quotes.map(q => q.cost), [0.6, 0.9]);
+});
+
+test("sms provider router chooses the cheapest buyable supplier automatically", () => {
+  const best = selectBestSmsQuote([
+    { provider: "5sim", cost: 0.9, count: 12, balance: 2 },
+    { provider: "bee-sms", cost: 0.4, count: 0, balance: 10 },
+    { provider: "smspool", cost: 0.5, count: 4, balance: 0.2 },
+    { provider: "bee-sms", cost: 0.6, count: 8, balance: 8 },
+  ]);
+
+  assert.equal(best.provider, "bee-sms");
+  assert.equal(best.cost, 0.6);
+  assert.equal(selectBestSmsQuote([]), null);
 });
 
 test("non-5sim upstream ids are namespaced locally", () => {

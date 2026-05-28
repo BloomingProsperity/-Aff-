@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { quoteCharge } from "../src/lib/pricing.js";
+import { publicChargeQuote, quoteCharge } from "../src/lib/pricing.js";
 
 test("quotes 5sim USD cost as CNY price with fixed margin", () => {
   const quote = quoteCharge({ smsUsdCnyRate: 7.2, smsMarginCny: 10 }, 0.74);
@@ -19,4 +19,12 @@ test("keeps margin non-negative and rate sane", () => {
   assert.equal(quote.rate, 7.2);
   assert.equal(quote.margin, 10);
   assert.equal(quote.charge, 17.2);
+});
+
+test("public price quotes expose only customer-facing price", () => {
+  const quote = publicChargeQuote(quoteCharge({ smsUsdCnyRate: 7.2, smsMarginCny: 10 }, 0.74));
+
+  assert.deepEqual(quote, { charge: 15.33, currency: "CNY" });
+  assert.equal(Object.hasOwn(quote, "cost"), false);
+  assert.equal(Object.hasOwn(quote, "margin"), false);
 });

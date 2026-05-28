@@ -592,6 +592,10 @@ export function sortBuyableQuotes(quotes) {
     .sort((a, b) => a.cost - b.cost || String(a.provider).localeCompare(String(b.provider)));
 }
 
+export function selectBestSmsQuote(quotes) {
+  return sortBuyableQuotes(quotes)[0] || null;
+}
+
 export async function quoteSmsProviders(app, input) {
   const providers = configuredProviders(app.config);
   const quotes = await Promise.all(providers.map(async provider => {

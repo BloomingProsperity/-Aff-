@@ -508,13 +508,8 @@ function SmsDesk() {
       .then(data => {
         const list = Object.entries(data || {}).map(([code, info]) => ({
           code,
-          cost: info?.cost ?? info?.Price ?? info?.price,
           count: info?.count ?? info?.Qty ?? info?.qty,
           charge: info?.charge,
-          rate: info?.rate,
-          fixed: info?.fixed,
-          margin: info?.margin,
-          costCny: info?.costCny,
           currency: info?.currency,
         })).filter(x => x.code).sort((a, b) => {
           const pa = SMS_PRODUCT_PRIORITY.has(a.code) ? SMS_PRODUCT_PRIORITY.get(a.code) : 9999;

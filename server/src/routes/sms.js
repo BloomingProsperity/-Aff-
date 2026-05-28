@@ -1,9 +1,10 @@
 import { requirePaidUser, requireUser } from "../lib/auth.js";
 import { writeAuditLog } from "../lib/audit.js";
-import { centsToAmount, cleanOrderId, cleanPart, toIso } from "../lib/common.js";
+import { centsToAmount, cleanOrderId, cleanPart } from "../lib/common.js";
 import { exec, many, one } from "../lib/db.js";
 import { fivesimHttpError } from "../lib/fivesim.js";
-import { quoteCharge } from "../lib/pricing.js";
+import { normalizePublicSmsOrder } from "../lib/smsOrders.js";
+import { publicChargeQuote, quoteCharge } from "../lib/pricing.js";
 import { maybeGrantReferralReward } from "../lib/referrals.js";
 import { enforceRateLimit } from "../lib/security.js";
 import { shouldRefundSmsOrder, smsRefundCents, smsRefundNote } from "../lib/smsRefunds.js";
@@ -14,33 +15,12 @@ import {
   checkSmsProviderOrder,
   providerOrderKey,
   quoteSmsProviders,
+  selectBestSmsQuote,
   smsProviderHttpError,
   sortBuyableQuotes,
 } from "../lib/smsProviders.js";
 
 const PRODUCT_CACHE_SECONDS = 60;
-
-function normalizeOrder(row) {
-  if (!row) return null;
-  let sms = [];
-  try { sms = JSON.parse(row.sms_json || "[]"); } catch {}
-  return {
-    id: Number(row.id),
-    fivesimId: row.fivesim_id,
-    provider: row.provider || "5sim",
-    country: row.country,
-    operator: row.operator,
-    product: row.product,
-    phone: row.phone,
-    price: centsToAmount(row.price_cents),
-    status: row.status,
-    refund: centsToAmount(row.refund_cents),
-    refundedAt: toIso(row.refunded_at),
-    sms,
-    createdAt: toIso(row.created_at),
-    updatedAt: toIso(row.updated_at),
-  };
-}
 
 function productCacheKey(country, operator) {
   return `products:${country}:${operator}`;
@@ -94,16 +74,8 @@ function enrichProducts(config, products) {
     const count = Number(info?.count || info?.Qty || info?.qty || 0);
     const quote = quoteCharge(config, cost);
     return [code, {
-      ...info,
-      cost: quote.cost,
-      costCurrency: quote.costCurrency,
-      costCny: quote.costCny,
       count,
-      charge: quote.charge,
-      rate: quote.rate,
-      fixed: quote.fixed,
-      margin: quote.margin,
-      currency: quote.currency,
+      ...publicChargeQuote(quote),
     }];
   }));
 }
@@ -374,7 +346,7 @@ export async function smsRoutes(app) {
         LIMIT 50`,
       [auth.user.id],
     );
-    return { orders: rows.map(normalizeOrder) };
+    return { orders: rows.map(normalizePublicSmsOrder) };
   });
 
   app.post("/api/sms/buy", async (request, reply) => {
@@ -442,10 +414,17 @@ export async function smsRoutes(app) {
     }
 
     const quotes = await quoteSmsProviders(app, { country, operator, product });
+    const bestQuote = selectBestSmsQuote(quotes);
     const candidates = sortBuyableQuotes(quotes);
     if (!candidates.length) {
       reply.code(400);
-      await auditSmsBuy(app, request, auth, "failed", 400, { reason: "no_buyable_provider", country, operator, product });
+      await auditSmsBuy(app, request, auth, "failed", 400, {
+        reason: "no_buyable_provider",
+        country,
+        operator,
+        product,
+        bestProvider: bestQuote?.provider || "",
+      });
       return { error: "当前服务暂不可购买，请稍后重试。" };
     }
 
@@ -570,7 +549,7 @@ export async function smsRoutes(app) {
       price: centsToAmount(realCost),
       status: row.status,
     }, row.id);
-    return { order: normalizeOrder(row), balance: centsToAmount(updatedUser.balance_cents), pricing: realQuote };
+    return { order: normalizePublicSmsOrder(row), balance: centsToAmount(updatedUser.balance_cents), pricing: publicChargeQuote(realQuote) };
   });
 
   app.get("/api/sms/check/:id", async (request, reply) => {
@@ -646,12 +625,12 @@ export async function smsRoutes(app) {
           oldStatus,
           newStatus,
           refunded: refundResult.refunded,
-          hasSms: normalizeOrder(responseOrder).sms.length > 0,
+          hasSms: normalizePublicSmsOrder(responseOrder).sms.length > 0,
         },
       });
     }
     return {
-      order: normalizeOrder(responseOrder),
+      order: normalizePublicSmsOrder(responseOrder),
       balance: refundResult.balanceCents == null ? undefined : centsToAmount(refundResult.balanceCents),
     };
   });
@@ -730,7 +709,7 @@ export async function smsRoutes(app) {
         },
       });
       return {
-        order: normalizeOrder(responseOrder),
+        order: normalizePublicSmsOrder(responseOrder),
         balance: refundResult.balanceCents == null ? undefined : centsToAmount(refundResult.balanceCents),
       };
     });
