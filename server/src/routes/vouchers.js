@@ -295,6 +295,15 @@ export async function voucherRoutes(app) {
       return { error: "兑换券不存在。" };
     }
 
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "admin:voucher-void",
+      extra: `admin:${auth.user.id}`,
+      limit: 30,
+      windowSeconds: 300,
+      config: app.config,
+    });
+    if (limited) return limited;
+
     const row = await one(
       app.db,
       `UPDATE balance_vouchers

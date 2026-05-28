@@ -141,6 +141,15 @@ export async function announcementRoutes(app) {
       return { error: "公告编号无效。" };
     }
 
+    const limited = await enforceRateLimit(app.db, request, reply, {
+      scope: "admin:announcements",
+      extra: `admin:${auth.user.id}`,
+      limit: 20,
+      windowSeconds: 300,
+      config: app.config,
+    });
+    if (limited) return limited;
+
     const row = await one(app.db, "DELETE FROM announcements WHERE id = $1 RETURNING *", [id]);
     if (!row) {
       reply.code(404);
